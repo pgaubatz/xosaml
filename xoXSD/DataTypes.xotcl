@@ -1,0 +1,70 @@
+package provide xoXSD::DataTypes 0.1
+
+package require XOTcl
+
+namespace eval ::xoXSD::DataTypes {
+
+::xotcl::Class DataType -slots {
+	::xotcl::Attribute data		
+}
+
+DataType instproc export args {
+	return [my data]
+}
+
+::xotcl::Class String 		-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class ID 		-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class NCName 		-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class DateTime 	-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class AnyURI 		-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class Boolean 		-superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class UnsignedShort 	-superclass ::xoXSD::DataTypes::DataType
+
+String instproc init { str } {
+	my data $str
+	next
+}
+
+ID instproc init { ID } {
+	my data $ID
+	next
+}
+
+NCName instproc init { NCN } {
+	my data $NCN
+	next
+}
+
+DateTime instproc init { { timestamp "now" } } {
+	if { $timestamp eq "now" } {
+		 set timestamp [clock seconds]
+	}
+	my data [clock format $timestamp \
+		 -format {%Y-%m-%dT%H:%M:%SZ} \
+		 -locale en_US \
+		 -timezone :UTC]
+	next
+}
+
+AnyURI instproc init { uri } {
+	my data $uri
+	next
+}
+
+Boolean instproc init { bool } {
+	my data $bool
+	next
+}
+
+UnsignedShort instproc init { short } {
+	if { $short < 0 } {
+		set short 0
+	}
+	if { $short > 65535 } {
+		set short 65535	
+	}
+	my data $short
+	next
+}
+
+}
