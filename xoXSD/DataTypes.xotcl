@@ -12,30 +12,75 @@ DataType instproc export args {
 	return [my data]
 }
 
-::xotcl::Class String 		-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class ID 		-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class NCName 		-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class DateTime 	-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class AnyURI 		-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class Boolean 		-superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class UnsignedShort 	-superclass ::xoXSD::DataTypes::DataType
+DataType instproc init { data } {
+	my data $data	
+}
 
-String instproc init { str } {
+# String Data Types
+::xotcl::Class string 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class normalizedString   -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class token 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class ENTITIES 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class ENTITY 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class ID 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class IDREF 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class IDREFS 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class language 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class Name 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class NCName 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class NMTOKEN 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class NMTOKENS 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class QName 		  -superclass ::xoXSD::DataTypes::DataType
+
+# Date and Time Data Types
+::xotcl::Class date 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class dateTime 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class time 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class duration 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class gDay 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class gMonth 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class gMonthDay 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class gYear 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class gYearMonth 	  -superclass ::xoXSD::DataTypes::DataType
+
+# Numeric Data Types
+::xotcl::Class decimal 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class integer 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class byte 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class int 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class negativeInteger 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class nonNegativeInteger -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class nonPositiveInteger -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class positiveInteger 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class short 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class unsignedLong 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class unsignedInt 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class unsignedShort 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class unsignedByte 	  -superclass ::xoXSD::DataTypes::DataType
+
+# Miscellaneous Data Types
+::xotcl::Class anyURI 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class base64Binary 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class boolean 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class double 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class float 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class hexBinary 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class NOTATION 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class QName 		  -superclass ::xoXSD::DataTypes::DataType
+
+string instproc init { str } {
 	my data $str
-	next
 }
 
 ID instproc init { ID } {
 	my data $ID
-	next
 }
 
 NCName instproc init { NCN } {
 	my data $NCN
-	next
 }
 
-DateTime instproc init { { timestamp "now" } } {
+dateTime instproc init { { timestamp "now" } } {
 	if { $timestamp eq "now" } {
 		 set timestamp [clock seconds]
 	}
@@ -43,20 +88,17 @@ DateTime instproc init { { timestamp "now" } } {
 		 -format {%Y-%m-%dT%H:%M:%SZ} \
 		 -locale en_US \
 		 -timezone :UTC]
-	next
 }
 
-AnyURI instproc init { uri } {
+anyURI instproc init { uri } {
 	my data $uri
-	next
 }
 
-Boolean instproc init { bool } {
+boolean instproc init { bool } {
 	my data $bool
-	next
 }
 
-UnsignedShort instproc init { short } {
+unsignedShort instproc init { short } {
 	if { $short < 0 } {
 		set short 0
 	}
@@ -64,7 +106,6 @@ UnsignedShort instproc init { short } {
 		set short 65535	
 	}
 	my data $short
-	next
 }
 
 }
