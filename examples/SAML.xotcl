@@ -1,0 +1,341 @@
+package require XOTcl
+package require xoXSD
+
+namespace import -force ::xotcl::*
+namespace import -force ::xoXSD::Slots::*
+
+namespace eval ::xoXSD addNamespace "::SAML::Assertions"
+namespace eval ::xoXSD addNamespace "::SAML::Protocols"
+
+namespace eval ::SAML::Assertions {
+Class IDNameQualifiers
+Class BaseIDAbstractType
+Class BaseID
+Class NameIDType
+Class NameID
+Class EncryptedElementType
+Class EncryptedID
+Class Issuer
+Class AssertionIDRef
+Class AssertionURIRef
+Class AssertionType
+Class Assertion
+Class SubjectType
+Class Subject
+Class SubjectConfirmationType
+Class SubjectConfirmation
+Class SubjectConfirmationDataType
+Class SubjectConfirmationData
+Class ConditionAbstractType
+Class Condition
+Class ConditionsType
+Class Conditions
+Class AudienceRestrictionType
+Class AudienceRestriction
+Class Audience
+Class StatementAbstractType
+Class Statement
+Class AuthnStatementType
+Class AuthnStatement
+Class SubjectLocalityType
+Class SubjectLocality
+Class AuthnContextType
+Class AuthnContext
+Class AuthnContextClassRef
+Class AuthnContextDeclRef
+Class AuthnContextDecl
+}
+
+namespace eval ::SAML::Protocols {
+Class Extensions
+Class RequestAbstractType
+Class StatusResponseType
+Class StatusType
+Class Status
+Class StatusCodeType
+Class StatusCode
+Class StatusMessage
+Class StatusDetailType
+Class StatusDetail
+Class AuthnRequest
+Class NameIDPolicyType
+Class NameIDPolicy
+Class RequestedAuthnContext
+Class Scoping
+Class StatusResponseType
+Class ResponseType
+Class Response
+}
+
+namespace eval ::SAML::Assertions {
+
+variable xmlNamespace 	"urn:oasis:names:tc:SAML:2.0:assertion"
+variable xmlPrefix 	"saml"
+
+Class IDNameQualifiers -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute NameQualifier		-type ::xoXSD::DataTypes::String 
+	XML:Attribute SPNameQualifier 		-type ::xoXSD::DataTypes::String 		
+}  
+
+Class BaseIDAbstractType -superclass ::SAML::Assertions::IDNameQualifiers 
+
+Class BaseID -superclass ::SAML::Assertions::BaseIDAbstractType
+
+Class NameIDType -superclass ::SAML::Assertions::IDNameQualifiers -slots {
+	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::String -text true
+
+	XML:Attribute Format 			-type ::xoXSD::DataTypes::AnyURI 
+	XML:Attribute SPProvidedID 		-type ::xoXSD::DataTypes::String 	
+}
+
+Class NameID -superclass ::SAML::Assertions::NameIDType
+
+Class EncryptedElementType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element EncryptedData 		-type ::xoXSD::DataTypes::String 
+	XML:Element EncryptedKey 		-type ::xoXSD::DataTypes::String -minOccurs 0
+	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedElementType
+}
+
+Class EncryptedID -superclass ::SAML::Assertions::EncryptedElementType
+
+Class Issuer -superclass ::SAML::Assertions::NameIDType
+
+Class AssertionIDRef -superclass ::xoXSD::DataTypes::NCName
+
+Class AssertionURIRef -superclass ::xoXSD::DataTypes::AnyURI
+
+Class AssertionType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element Issuer 			-type ::SAML::Assertions::Issuer
+	XML:Element Signature 			-type ::SAML::Lib::Core::Signature -minOccurs 0
+	XML:Element Subject 			-type ::SAML::Assertions::Subject  -minOccurs 0
+	XML:Element Conditions 			-type ::SAML::Assertions::Conditions -minOccurs 0
+	XML:Element Advice 			-type ::SAML::Assertions::Advice -minOccurs 0
+
+	XML:Element Statement 			-type ::SAML::Assertions::Statement -minOccurs 0
+	XML:Element AuthnStatement 		-type ::SAML::Assertions::AuthnStatement -minOccurs 0 
+	XML:Element AuthzDecisionStatement 	-type ::SAML::Assertions::AuthzDecisionStatement -minOccurs 0
+	XML:Element AttributeStatement 		-type ::SAML::Assertions::AttributeStatement -minOccurs 0
+
+	XML:Attribute Version 			-type ::xoXSD::DataTypes::String -use required
+	XML:Attribute ID 			-type ::xoXSD::DataTypes::ID -use required
+	XML:Attribute IssueInstant 		-type ::xoXSD::DataTypes::DateTime -use required
+}    
+
+Class Assertion -superclass ::SAML::Assertions::AssertionType
+   
+Class SubjectType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element BaseID 			-type ::SAML::Assertions::BaseID -minOccurs 0 
+	XML:Element NameID 			-type ::SAML::Assertions::NameID -minOccurs 0
+	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedID -minOccurs 0
+	XML:Element SubjectConfirmation 	-type ::SAML::Assertions::SubjectConfirmation -minOccurs 0
+}
+
+Class Subject -superclass ::SAML::Assertions::SubjectType
+
+Class SubjectConfirmationType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element BaseID 			-type ::SAML::Assertions::BaseID -minOccurs 0
+	XML:Element NameID 			-type ::SAML::Assertions::NameID -minOccurs 0
+	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedID -minOccurs 0
+	XML:Element SubjectConfirmationData 	-type ::SAML::Assertions::SubjectConfirmationData -minOccurs 0
+
+	XML:Attribute Method 			-type ::xoXSD::DataTypes::AnyURI -use required
+}
+
+Class SubjectConfirmation -superclass ::SAML::Assertions::SubjectConfirmationType
+ 
+Class SubjectConfirmationDataType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute NotBefore 		-type ::xoXSD::DataTypes::DateTime
+	XML:Attribute NotOnOrAfter 		-type ::xoXSD::DataTypes::DateTime 
+	XML:Attribute Recipient 		-type ::xoXSD::DataTypes::AnyURI 
+	XML:Attribute InResponseTo 		-type ::xoXSD::DataTypes::NCName
+	XML:Attribute Address 			-type ::xoXSD::DataTypes::String
+	XML:Attribute Any 			-type ::xoXSD::DataTypes::Any
+}
+
+Class SubjectConfirmationData -superclass ::SAML::Assertions::SubjectConfirmationDataType
+
+Class ConditionAbstractType -superclass ::xoXSD::Core::CoreClass
+
+Class Condition -superclass ::SAML::Assertions::ConditionAbstractType
+
+Class ConditionsType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element Condition 			-type ::SAML::Assertions::Condition -minOccurs 0
+	XML:Element AudienceRestriction 	-type ::SAML::Assertions::AudienceRestriction -minOccurs 0
+	XML:Element OneTimeUse 			-type ::SAML::Assertions::OneTimeUse -minOccurs 0
+	XML:Element ProxyRestriction 		-type ::SAML::Assertions::ProxyRestriction -minOccurs 0
+
+	XML:Attribute NotBefore 		-type ::xoXSD::DataTypes::DateTime
+	XML:Attribute NotOnOrAfter 		-type ::xoXSD::DataTypes::DateTime 
+}
+
+Class Conditions -superclass ::SAML::Assertions::ConditionsType
+
+Class AudienceRestrictionType -superclass ::SAML::Assertions::ConditionAbstractType -slots {
+	XML:Element Audience 			-type ::SAML::Assertions::Audience
+}
+
+Class AudienceRestriction -superclass ::SAML::Assertions::AudienceRestrictionType
+
+Class Audience -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::AnyURI -text true
+}
+
+Class StatementAbstractType -superclass ::xoXSD::Core::CoreClass
+
+Class Statement -superclass ::SAML::Assertions::StatementAbstractType
+
+Class AuthnStatementType -superclass ::SAML::Assertions::StatementAbstractType -slots {
+	XML:Element SubjectLocality 		-type ::SAML::Assertions::SubjectLocality -minOccurs 0
+	XML:Element AuthnContext 		-type ::SAML::Assertions::AuthnContext
+
+	XML:Attribute AuthnInstant 		-type ::xoXSD::DataTypes::DateTime -use required
+	XML:Attribute SessionIndex 		-type ::xoXSD::DataTypes::String
+	XML:Attribute SessionNotOnOrAfter 	-type ::xoXSD::DataTypes::DateTime 	
+}
+  
+Class AuthnStatement -superclass ::SAML::Assertions::AuthnStatementType
+
+Class SubjectLocalityType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute Address 			-type ::xoXSD::DataTypes::String
+	XML:Attribute DNSName 			-type ::xoXSD::DataTypes::String 	
+}
+  
+Class SubjectLocality -superclass ::SAML::Assertions::SubjectLocalityType
+  
+Class AuthnContextType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element AuthnContextClassRef 	-type ::SAML::Assertions::AuthnContextClassRef -minOccurs 0
+	XML:Element AuthnContextDecl 		-type ::SAML::Assertions::AuthnContextDecl -minOccurs 0
+	XML:Element AuthnContextDeclRef 	-type ::SAML::Assertions::AuthnContextDeclRef -minOccurs 0
+	XML:Element AuthnContextDecl 		-type ::SAML::Assertions::AuthnContextDecl -minOccurs 0
+	XML:Element AuthnContextDeclRef 	-type ::SAML::Assertions::AuthnContextDeclRef -minOccurs 0
+	XML:Element AuthenticatingAuthority 	-type ::SAML::Assertions::AuthenticatingAuthority -minOccurs 0
+}
+  
+Class AuthnContext -superclass ::SAML::Assertions::AuthnContextType
+ 
+Class AuthnContextClassRef -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::AnyURI -text true
+}
+
+Class AuthnContextDeclRef -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::AnyURI -text true
+}
+
+Class AuthnContextDecl -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::Any -text true
+}
+    
+}
+
+
+namespace eval ::SAML::Protocols {
+
+variable xmlNamespace 	"urn:oasis:names:tc:SAML:2.0:protocol"
+variable xmlPrefix 	"samlp"
+
+Class Extensions -superclass ::xoXSD::Core::CoreClass
+
+Class RequestAbstractType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
+	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
+	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0
+
+	XML:Attribute Version 		-type ::xoXSD::DataTypes::String -use required
+	XML:Attribute ID 		-type ::xoXSD::DataTypes::ID -use required
+	XML:Attribute IssueInstant 	-type ::xoXSD::DataTypes::DateTime -use required
+	XML:Attribute Destination 	-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute Consent 		-type ::xoXSD::DataTypes::AnyURI
+}
+
+Class StatusResponseType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
+	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
+	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0
+	XML:Element Status 		-type ::SAML::Protocols::Status 
+
+	XML:Attribute ID 		-type ::xoXSD::DataTypes::ID -use required
+	XML:Attribute InResponseTo 	-type ::xoXSD::DataTypes::NCName 
+	XML:Attribute Version 		-type ::xoXSD::DataTypes::String -use required
+	XML:Attribute IssueInstant	-type ::xoXSD::DataTypes::DateTime -use required
+	XML:Attribute Destination 	-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute Consent 		-type ::xoXSD::DataTypes::AnyURI
+}
+
+Class StatusType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element StatusCode 		-type ::SAML::Protocols::StatusCode
+	XML:Element StatusMessage 	-type ::SAML::Protocols::StatusMessage -minOccurs 0
+	XML:Element StatusDetail 	-type ::SAML::Protocols::StatusDetail -minOccurs 0
+}
+
+Class Status -superclass ::SAML::Protocols::StatusType
+    
+Class StatusCodeType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element StatusCode 		-type ::SAML::Protocols::StatusCode -minOccurs 0
+
+	XML:Attribute Value 		-type ::xoXSD::DataTypes::AnyURI -use required
+}    
+   
+Class StatusCode -superclass ::SAML::Protocols::StatusCodeType
+    
+Class StatusMessage -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 	-type ::xoXSD::DataTypes::String -text true
+}  
+    
+Class StatusDetailType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute SimpleContent 	-type ::xoXSD::DataTypes::Any -text true
+} 
+
+Class StatusDetail -superclass ::SAML::Protocols::StatusDetailType
+
+Class AuthnRequest -superclass ::SAML::Protocols::RequestAbstractType -slots {
+	XML:Attribute ForceAuthn 			-type ::xoXSD::DataTypes::Boolean
+	XML:Attribute IsPassive 			-type ::xoXSD::DataTypes::Boolean 
+	XML:Attribute ProtocolBinding			-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute AssertionConsumerServiceIndex	-type ::xoXSD::DataTypes::UnsignedShort
+	XML:Attribute AssertionConsumerServiceURL	-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute AssertionConsumingServiceIndex 	-type ::xoXSD::DataTypes::UnsignedShort
+	XML:Attribute ProviderName 			-type ::xoXSD::DataTypes::String
+	
+	XML:Element Subject 				-type ::SAML::Assertions::Subject -minOccurs 0
+	XML:Element NameIDPolicy 			-type ::SAML::Protocols::NameIDPolicy -minOccurs 0
+	XML:Element Conditions 				-type ::SAML::Assertions::Conditions -minOccurs 0 
+	XML:Element RequestedAuthnContext 		-type ::SAML::Protocols::RequestedAuthnContext -minOccurs 0
+	XML:Element Scoping 				-type ::SAML::Protocols::Scoping -minOccurs 0
+}
+
+Class NameIDPolicyType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Attribute Format 		-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute SPNameQualifier 	-type ::xoXSD::DataTypes::String
+	XML:Attribute AllowCreate 	-type ::xoXSD::DataTypes::Boolean
+}
+
+Class NameIDPolicy -superclass ::SAML::Protocols::NameIDPolicyType
+
+Class RequestedAuthnContext -superclass ::xoXSD::Core::CoreClass
+Class Scoping -superclass ::xoXSD::Core::CoreClass
+
+
+Class StatusResponseType -superclass ::xoXSD::Core::CoreClass -slots {
+	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
+	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
+	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0
+	XML:Element Status 		-type ::SAML::Protocols::Status
+
+	XML:Attribute ID 		-type ::xoXSD::DataTypes::ID -use required
+	XML:Attribute InResponseTo 	-type ::xoXSD::DataTypes::NCName
+	XML:Attribute Version		-type ::xoXSD::DataTypes::String -use required
+	XML:Attribute IssueInstant 	-type ::xoXSD::DataTypes::DateTime -use required
+	XML:Attribute Destination	-type ::xoXSD::DataTypes::AnyURI
+	XML:Attribute Consent 		-type ::xoXSD::DataTypes::AnyURI
+}
+
+Class ResponseType -superclass ::SAML::Protocols::StatusResponseType -slots {
+	XML:Element Assertion 		-type ::SAML::Assertions::Assertion -minOccurs 0
+	XML:Element EncryptedAssertion 	-type ::SAML::Assertions::EncryptedAssertion -minOccurs 0
+}  
+
+Class Response -superclass ::SAML::Protocols::ResponseType   
+
+}
+
+

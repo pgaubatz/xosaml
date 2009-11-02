@@ -1,0 +1,283 @@
+package provide xoXSD::Core 0.1
+
+package require tdom
+package require XOTcl
+
+namespace eval ::xoXSD::Core {
+	
+::xotcl::Class CoreClass -slots {
+	::xotcl::Attribute slotnames
+	
+	::xotcl::Attribute elements
+	::xotcl::Attribute attributes
+	
+	::xotcl::Attribute filledElements
+	::xotcl::Attribute filledAttributes
+	
+	::xotcl::Attribute choices
+}
+
+CoreClass instproc init args {
+	my slotnames [list]
+	my elements [list]
+	my attributes [list]
+	my filledElements [list]
+	my filledAttributes [list]
+	
+	# why doesn't this work? -> my choices(list) [list]
+	my instvar choices
+	set choices(list) [list]
+	
+	set slots [list]
+	foreach slot [my slotList] {	
+		lappend slots [list $slot [$slot sequence]]
+	}
+	
+	foreach slot [lsort -integer -index 1 $slots] {
+		set slot [lindex $slot 0]
+		set slotclass [namespace tail [$slot class]]
+		
+		my lappend slotnames [namespace tail $slot]
+		
+		if { $slotclass == "XML:Attribute" } {
+			my lappend attributes $slot	
+		} else {
+			my lappend elements $slot
+			
+			if { [$slot choice] } {
+				# my lappend choices(list) $slot
+				lappend choices(list) $slot
+				lappend choices([$slot choice]) $slot
+			}
+		}
+	}
+	
+	#puts "ELEMENTS -> [my elements]"
+	#puts "ATTRIBUTES -> [my attributes]"
+	#puts ""
+	
+	next
+}
+
+CoreClass instproc check {} {
+	set validity true
+	
+	foreach slot [my attributes] {
+		set name [namespace tail $slot]
+		
+		if { [$slot use] eq "required" && ![my exists $name] } {
+			set validity false
+			my errorMsg "needs object: $name (type: [$slot type])"
+		}
+	}
+	
+	foreach slot [my elements] {
+		set name [namespace tail $slot]
+		
+		if { [$slot minOccurs] > 0 && ![my exists $name] } {
+			set validity false
+			my errorMsg "needs object: $name (type: [$slot type])"
+		}
+		
+		#if { [$slot maxOccurs] != "unbounded" && [my exists $name] } {
+		#	set validity false
+		#	my errorMsg "needs object: $name (type: [$slot type])"
+		#}
+		
+	}
+	
+	return $validity
+}
+
+CoreClass instproc getXmlNamespace {} {
+	namespace upvar [namespace qualifiers [my class]] xmlNamespace xmlNamespace
+	return $xmlNamespace
+}
+
+CoreClass instproc getXmlPrefix {} {
+	namespace upvar [namespace qualifiers [my class]] xmlPrefix xmlPrefix
+	return $xmlPrefix
+}
+
+CoreClass instproc export { {addXmlNamespaces true} } {
+	if { ![my check] } {
+		my errorMsg "is not valid."
+		return ""
+	}
+	
+	set className [namespace tail [my class]]
+	set classNamespace [namespace qualifiers [my class]]
+	set attributes [my filledAttributes]
+	set elements [my filledElements]
+	
+	set xmlPrefix [my getXmlPrefix]
+	set xmlNamespace [my getXmlNamespace]
+	
+	if { $xmlPrefix != "" } {
+		set className "$xmlPrefix:$className"
+	} 
+		
+	# create the document:
+	set doc [dom createDocument $className]
+	set root [$doc documentElement]
+	
+	# add the xmlns-attributes:
+	if { $addXmlNamespaces } {	
+		$root setAttribute "xmlns:$xmlPrefix" $xmlNamespace
+		
+		foreach element $elements {
+			if { [$element text] } {
+				continue
+			}
+			
+			set element [namespace tail $element]
+			set ns [[my $element] getXmlNamespace]
+			set prefix [[my $element] getXmlPrefix]
+			
+			$root setAttribute "xmlns:$prefix" $ns
+		}
+	}
+	
+	# add the attributes:
+	foreach attribute $attributes {
+		set attr [namespace tail $attribute]
+		set value [[my $attr] export false]
+		
+		if { [$attribute text] } {
+			$root appendChild [$doc createTextNode $value]
+		} else {	
+			$root setAttribute $attr $value
+		}
+	}
+			
+	# add the sub-elements (recursive):
+	foreach element $elements {
+		set content [[my [namespace tail $element]] export false]
+		
+		if { [$element text] } {
+			puts "ELEMENT HAS TEXT -> $element"
+			set element [namespace tail $element]
+			set node [$doc createElement $element]
+			$node appendChild [$doc createTextNode $content]
+			$root appendChild $node
+		} else {
+			$root appendXML $content
+		}
+	}	
+
+	return [$root asXML]
+}
+
+CoreClass instproc slotList {} {
+	set slots [[my class] info slots]
+	
+	# remember slotnames
+	foreach slot $slots {set slotname([namespace tail $slot]) 1}
+	
+	# remove CoreClass from the list
+	set heritage [[my class] info heritage]
+	set idx [lsearch -exact $heritage "::xoXSD::Core::CoreClass"]
+	set heritage [lreplace $heritage $idx $idx]
+	
+	# iterate over class structure
+	foreach c $heritage {
+		foreach slot [$c info slots] {
+			set key slotname([namespace tail $slot])
+			
+			# don't add slots which are already defined in 
+			# more specialized classes
+			if {[info exists $key]} continue
+			set $key 1
+			lappend slots $slot
+		}
+	}
+	
+	return $slots
+}
+
+CoreClass instproc getSlot {slot} {
+	return [my [namespace tail $slot]]	
+}
+
+CoreClass instproc getSlotnames {} {
+	return [my slotnames]
+}
+
+CoreClass instproc getSlots {} {
+	return [concat [my elements] [my attributes]]
+}
+
+CoreClass instproc getSlotClass {slot} {
+	return [lsearch -inline -glob [my getSlots] "*::[namespace tail $slot]"]
+}
+
+CoreClass instproc getSlotType {slot} {
+	# returns either XML:Attribute or XML:Element
+	return [namespace tail [[my getSlotClass $slot] class]]
+}
+
+CoreClass instproc setSlot {slot value} {
+	set name [namespace tail $slot]
+	set class [my getSlotClass $slot]
+	set type [my getSlotType $slot]
+	
+	# check for choices...
+	if { [$class choice] } {
+		my instvar choices
+		foreach element $choices([$class choice]) {
+			if { [my exists [namespace tail $element]] } {
+				my errorMsg "cannot set $class because\
+				             $element is already set.\
+				             (choice-ID=[$class choice])"
+				return
+			}
+		}
+	}
+	
+	# finally set the slot
+	my $name $value
+	
+	if { $type == "XML:Attribute" } {
+		my lappend filledAttributes $class
+	} else {
+		my lappend filledElements $class
+	}
+}
+
+CoreClass instproc initSlot {slot args} {
+	set type [[my getSlotClass $slot] type]
+	if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
+		my errorMsg "\"$slot\" is no basic data type."
+		return
+	}
+	my setSlot $slot [$type new $args]
+}
+
+CoreClass instproc errorMsg {msg} {
+	puts "XML-Error: [self] (type: [my class]) $msg"
+}
+
+
+#DEBUG:
+
+CoreClass instproc printSlots {} {
+	puts "[self] ([namespace tail [my class]]) has the following slots:"
+	
+	foreach slot [my slotList] {
+		set slotname [namespace tail $slot]
+		set tmp " *) "
+		
+		if { [my exists $slotname] } {
+			append tmp "\[filled\] "
+		}
+		append tmp "$slotname ([namespace tail [$slot type]])"
+
+		puts $tmp
+	}		
+}
+
+}
+
+
+
+

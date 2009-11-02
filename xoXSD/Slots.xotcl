@@ -1,0 +1,26 @@
+package provide xoXSD::Slots 0.1
+
+package require XOTcl
+
+namespace eval ::xoXSD::Slots {
+
+namespace export *
+	
+::xotcl::Class XML:Base -superclass ::xotcl::Attribute -slots {
+	::xotcl::Attribute sequence -default 99999
+	::xotcl::Attribute choice   -default false
+	::xotcl::Attribute text     -default false
+}
+
+::xotcl::Class XML:Attribute -superclass ::xoXSD::Slots::XML:Base -slots {
+	::xotcl::Attribute use  -default "optional"
+}
+
+::xotcl::Class XML:Element -superclass ::xoXSD::Slots::XML:Base -slots {
+	::xotcl::Attribute minOccurs -default 1
+	::xotcl::Attribute maxOccurs -default 1
+}
+
+}
+
+

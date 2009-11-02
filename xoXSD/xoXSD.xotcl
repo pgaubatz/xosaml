@@ -1,0 +1,141 @@
+package provide xoXSD 0.1
+
+package require XOTcl
+package require xoXSD::Slots
+package require xoXSD::DataTypes
+package require xoXSD::Core
+
+namespace unknown [list ::xoXSD::unknown]
+
+namespace eval ::xoXSD {
+	
+::xotcl::Class BaseClass -slots {
+	::xotcl::Attribute Type
+	::xotcl::Attribute Namespace
+	::xotcl::Attribute Object
+}
+
+::xotcl::Class Generic -superclass ::xoXSD::BaseClass
+
+variable searchPath
+
+proc addNamespace {ns} {
+	global searchPath
+	lappend searchPath $ns
+}
+
+addNamespace "::xoXSD::Core"
+addNamespace "::xoXSD::DataTypes"
+
+proc unknown args { 
+	global searchPath
+	
+	set found false
+	set class [lindex $args 0]
+	
+	foreach path $searchPath {
+		append path "::[namespace tail $class]"
+		if { [Object isobject $path] } {	
+			set found true
+			break
+		}
+	}
+	
+	if { $found && [lindex $args 1] != ""} {
+		set cmdname [lindex $args 1]
+		set args [lrange $args 2 [llength $args]]
+		set cmd "::xoXSD::Generic $cmdname $path $args"
+		
+		uplevel #0 $cmd
+		
+	} else {
+		#fallback: invoke the standard unknown-handler...
+		::unknown $args
+	}
+}	
+
+
+BaseClass instproc init args {
+	if { [my Type] != "" } {
+		set object "[my Namespace]::[my Type]"
+		my Object [$object new]
+	} else {
+		error "ERROR: no Type given..."	
+	}
+}
+
+BaseClass instproc check {} {
+	puts "Checking [self]..."
+	if { [[my Object] check] } {
+		puts "OK - [self] seems to be valid.\n"	
+	} else {
+		puts "FAILURE - [self] has unmet dependencies. Check for errors above!\n"
+	}
+}
+
+BaseClass instproc export {} {
+	return [[my Object] export]
+}
+
+BaseClass instproc print {} {
+	puts "Exporting [self]..."
+	puts [[my Object] export]
+}
+
+BaseClass instproc getObject {} {
+	return [my Object]	
+}
+
+BaseClass instproc printSlots {} {
+	[my Object] printSlots	
+}
+
+BaseClass instproc unknown args {	
+	set first [lindex [split $args] 0]
+	
+	set from [expr {[string length $first] + 1}]
+	set to [string length $args]
+	set rest [string range $args $from $to]
+	
+	if { [lsearch [[my Object] getSlotnames] $first] == -1 } {
+		puts "ERROR: [[my Object] class] doesn't contain a slot named: $first"	
+		return
+	}	
+	if { $rest == "" } {
+		#read slot
+		return [[[my Object] getSlot $first] export]	
+	} else {
+		#set slot...
+		if { [[my Object] getSlotType $first] == "XML:Attribute" } {
+			return [[my Object] initSlot $first $rest]	
+		} else {
+			return [[my Object] setSlot $first [$rest getObject]]
+		}
+	}
+}
+
+Generic instproc init args {
+	my instvar Type Namespace
+	
+	set classpath [lindex $args 0]
+	set Namespace [namespace qualifiers $classpath]
+	set Type [namespace tail $classpath]	
+
+	next
+	
+	set args [lrange $args 1 [llength $args]]
+
+	if { [lindex $args 0] != "" } {
+		foreach slot [[my Object] getSlots] {
+			if { [$slot text] } {
+				[my Object] initSlot $slot $args
+				break
+			}
+		}
+	}
+	
+	return [my Object]
+}
+
+}
+
