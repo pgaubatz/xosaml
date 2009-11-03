@@ -11,9 +11,6 @@ namespace eval ::xoXSD::Core {
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
 	
-	::xotcl::Attribute filledElements
-	::xotcl::Attribute filledAttributes
-	
 	::xotcl::Attribute choices
 }
 
@@ -21,15 +18,13 @@ CoreClass instproc init args {
 	my slotnames [list]
 	my elements [list]
 	my attributes [list]
-	my filledElements [list]
-	my filledAttributes [list]
 	
 	# why doesn't this work? -> my choices(list) [list]
 	my instvar choices
 	set choices(list) [list]
 	
 	set slots [list]
-	foreach slot [my slotList] {	
+	foreach slot [my slotList] {
 		lappend slots [list $slot [$slot sequence]]
 	}
 	
@@ -90,12 +85,14 @@ CoreClass instproc check {} {
 }
 
 CoreClass instproc getXmlNamespace {} {
-	namespace upvar [namespace qualifiers [my class]] xmlNamespace xmlNamespace
+	set qualifiers [namespace qualifiers [my class]]
+	namespace upvar $qualifiers xmlNamespace xmlNamespace
 	return $xmlNamespace
 }
 
 CoreClass instproc getXmlPrefix {} {
-	namespace upvar [namespace qualifiers [my class]] xmlPrefix xmlPrefix
+	set qualifiers [namespace qualifiers [my class]]
+	namespace upvar $qualifiers xmlPrefix xmlPrefix
 	return $xmlPrefix
 }
 
@@ -107,8 +104,8 @@ CoreClass instproc export { {addXmlNamespaces true} } {
 	
 	set className [namespace tail [my class]]
 	set classNamespace [namespace qualifiers [my class]]
-	set attributes [my filledAttributes]
-	set elements [my filledElements]
+	set attributes [my attributes]
+	set elements [my elements]
 	
 	set xmlPrefix [my getXmlPrefix]
 	set xmlNamespace [my getXmlNamespace]
@@ -126,6 +123,8 @@ CoreClass instproc export { {addXmlNamespaces true} } {
 		$root setAttribute "xmlns:$xmlPrefix" $xmlNamespace
 		
 		foreach element $elements {
+			if { ![my exists [namespace tail $element]] } continue
+			
 			if { [$element text] } {
 				continue
 			}
@@ -140,6 +139,8 @@ CoreClass instproc export { {addXmlNamespaces true} } {
 	
 	# add the attributes:
 	foreach attribute $attributes {
+		if { ![my exists [namespace tail $attribute]] } continue
+	
 		set attr [namespace tail $attribute]
 		set value [[my $attr] export false]
 		
@@ -152,6 +153,8 @@ CoreClass instproc export { {addXmlNamespaces true} } {
 			
 	# add the sub-elements (recursive):
 	foreach element $elements {
+		if { ![my exists [namespace tail $element]] } continue
+
 		set content [[my [namespace tail $element]] export false]
 		
 		if { [$element text] } {
@@ -236,12 +239,6 @@ CoreClass instproc setSlot {slot value} {
 	
 	# finally set the slot
 	my $name $value
-	
-	if { $type == "XML:Attribute" } {
-		my lappend filledAttributes $class
-	} else {
-		my lappend filledElements $class
-	}
 }
 
 CoreClass instproc initSlot {slot args} {
