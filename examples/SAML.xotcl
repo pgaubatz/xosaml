@@ -72,7 +72,7 @@ namespace eval ::SAML::Assertions {
 variable xmlNamespace 	"urn:oasis:names:tc:SAML:2.0:assertion"
 variable xmlPrefix 	"saml"
 
-Class IDNameQualifiers -superclass ::xoXSD::Core::CoreClass -slots {
+Class IDNameQualifiers -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute NameQualifier		-type ::xoXSD::DataTypes::string 
 	XML:Attribute SPNameQualifier 		-type ::xoXSD::DataTypes::string 		
 }  
@@ -90,7 +90,7 @@ Class NameIDType -superclass ::SAML::Assertions::IDNameQualifiers -slots {
 
 Class NameID -superclass ::SAML::Assertions::NameIDType
 
-Class EncryptedElementType -superclass ::xoXSD::Core::CoreClass -slots {
+Class EncryptedElementType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element EncryptedData 		-type ::xoXSD::DataTypes::string 
 	XML:Element EncryptedKey 		-type ::xoXSD::DataTypes::string -minOccurs 0
 	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedElementType
@@ -104,7 +104,7 @@ Class AssertionIDRef -superclass ::xoXSD::DataTypes::NCName
 
 Class AssertionURIRef -superclass ::xoXSD::DataTypes::anyURI
 
-Class AssertionType -superclass ::xoXSD::Core::CoreClass -slots {
+Class AssertionType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element Issuer 			-type ::SAML::Assertions::Issuer
 	XML:Element Signature 			-type ::SAML::Lib::Core::Signature -minOccurs 0
 	XML:Element Subject 			-type ::SAML::Assertions::Subject  -minOccurs 0
@@ -123,7 +123,7 @@ Class AssertionType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class Assertion -superclass ::SAML::Assertions::AssertionType
    
-Class SubjectType -superclass ::xoXSD::Core::CoreClass -slots {
+Class SubjectType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element BaseID 			-type ::SAML::Assertions::BaseID -minOccurs 0 
 	XML:Element NameID 			-type ::SAML::Assertions::NameID -minOccurs 0
 	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedID -minOccurs 0
@@ -132,7 +132,7 @@ Class SubjectType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class Subject -superclass ::SAML::Assertions::SubjectType
 
-Class SubjectConfirmationType -superclass ::xoXSD::Core::CoreClass -slots {
+Class SubjectConfirmationType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element BaseID 			-type ::SAML::Assertions::BaseID -minOccurs 0
 	XML:Element NameID 			-type ::SAML::Assertions::NameID -minOccurs 0
 	XML:Element EncryptedID 		-type ::SAML::Assertions::EncryptedID -minOccurs 0
@@ -143,7 +143,7 @@ Class SubjectConfirmationType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class SubjectConfirmation -superclass ::SAML::Assertions::SubjectConfirmationType
  
-Class SubjectConfirmationDataType -superclass ::xoXSD::Core::CoreClass -slots {
+Class SubjectConfirmationDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute NotBefore 		-type ::xoXSD::DataTypes::dateTime
 	XML:Attribute NotOnOrAfter 		-type ::xoXSD::DataTypes::dateTime 
 	XML:Attribute Recipient 		-type ::xoXSD::DataTypes::anyURI 
@@ -154,11 +154,11 @@ Class SubjectConfirmationDataType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class SubjectConfirmationData -superclass ::SAML::Assertions::SubjectConfirmationDataType
 
-Class ConditionAbstractType -superclass ::xoXSD::Core::CoreClass
+Class ConditionAbstractType -superclass ::xoXSD::Core::xsd:complexType
 
 Class Condition -superclass ::SAML::Assertions::ConditionAbstractType
 
-Class ConditionsType -superclass ::xoXSD::Core::CoreClass -slots {
+Class ConditionsType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element Condition 			-type ::SAML::Assertions::Condition -minOccurs 0
 	XML:Element AudienceRestriction 	-type ::SAML::Assertions::AudienceRestriction -minOccurs 0
 	XML:Element OneTimeUse 			-type ::SAML::Assertions::OneTimeUse -minOccurs 0
@@ -176,11 +176,11 @@ Class AudienceRestrictionType -superclass ::SAML::Assertions::ConditionAbstractT
 
 Class AudienceRestriction -superclass ::SAML::Assertions::AudienceRestrictionType
 
-Class Audience -superclass ::xoXSD::Core::CoreClass -slots {
+Class Audience -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::anyURI -text true
 }
 
-Class StatementAbstractType -superclass ::xoXSD::Core::CoreClass
+Class StatementAbstractType -superclass ::xoXSD::Core::xsd:complexType
 
 Class Statement -superclass ::SAML::Assertions::StatementAbstractType
 
@@ -195,14 +195,14 @@ Class AuthnStatementType -superclass ::SAML::Assertions::StatementAbstractType -
   
 Class AuthnStatement -superclass ::SAML::Assertions::AuthnStatementType
 
-Class SubjectLocalityType -superclass ::xoXSD::Core::CoreClass -slots {
+Class SubjectLocalityType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Address 			-type ::xoXSD::DataTypes::string
 	XML:Attribute DNSName 			-type ::xoXSD::DataTypes::string 	
 }
   
 Class SubjectLocality -superclass ::SAML::Assertions::SubjectLocalityType
   
-Class AuthnContextType -superclass ::xoXSD::Core::CoreClass -slots {
+Class AuthnContextType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element AuthnContextClassRef 	-type ::SAML::Assertions::AuthnContextClassRef -minOccurs 0
 	XML:Element AuthnContextDecl 		-type ::SAML::Assertions::AuthnContextDecl -minOccurs 0
 	XML:Element AuthnContextDeclRef 	-type ::SAML::Assertions::AuthnContextDeclRef -minOccurs 0
@@ -213,15 +213,15 @@ Class AuthnContextType -superclass ::xoXSD::Core::CoreClass -slots {
   
 Class AuthnContext -superclass ::SAML::Assertions::AuthnContextType
  
-Class AuthnContextClassRef -superclass ::xoXSD::Core::CoreClass -slots {
+Class AuthnContextClassRef -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::anyURI -text true
 }
 
-Class AuthnContextDeclRef -superclass ::xoXSD::Core::CoreClass -slots {
+Class AuthnContextDeclRef -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::anyURI -text true
 }
 
-Class AuthnContextDecl -superclass ::xoXSD::Core::CoreClass -slots {
+Class AuthnContextDecl -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 		-type ::xoXSD::DataTypes::Any -text true
 }
     
@@ -233,9 +233,9 @@ namespace eval ::SAML::Protocols {
 variable xmlNamespace 	"urn:oasis:names:tc:SAML:2.0:protocol"
 variable xmlPrefix 	"samlp"
 
-Class Extensions -superclass ::xoXSD::Core::CoreClass
+Class Extensions -superclass ::xoXSD::Core::xsd:complexType
 
-Class RequestAbstractType -superclass ::xoXSD::Core::CoreClass -slots {
+Class RequestAbstractType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
 	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
 	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0
@@ -247,7 +247,7 @@ Class RequestAbstractType -superclass ::xoXSD::Core::CoreClass -slots {
 	XML:Attribute Consent 		-type ::xoXSD::DataTypes::anyURI
 }
 
-Class StatusResponseType -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusResponseType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
 	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
 	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0
@@ -261,7 +261,7 @@ Class StatusResponseType -superclass ::xoXSD::Core::CoreClass -slots {
 	XML:Attribute Consent 		-type ::xoXSD::DataTypes::anyURI
 }
 
-Class StatusType -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element StatusCode 		-type ::SAML::Protocols::StatusCode
 	XML:Element StatusMessage 	-type ::SAML::Protocols::StatusMessage -minOccurs 0
 	XML:Element StatusDetail 	-type ::SAML::Protocols::StatusDetail -minOccurs 0
@@ -269,7 +269,7 @@ Class StatusType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class Status -superclass ::SAML::Protocols::StatusType
     
-Class StatusCodeType -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusCodeType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element StatusCode 		-type ::SAML::Protocols::StatusCode -minOccurs 0
 
 	XML:Attribute Value 		-type ::xoXSD::DataTypes::anyURI -use required
@@ -277,11 +277,11 @@ Class StatusCodeType -superclass ::xoXSD::Core::CoreClass -slots {
    
 Class StatusCode -superclass ::SAML::Protocols::StatusCodeType
     
-Class StatusMessage -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusMessage -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 	-type ::xoXSD::DataTypes::string -text true
 }  
     
-Class StatusDetailType -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusDetailType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute SimpleContent 	-type ::xoXSD::DataTypes::Any -text true
 } 
 
@@ -303,7 +303,7 @@ Class AuthnRequest -superclass ::SAML::Protocols::RequestAbstractType -slots {
 	XML:Element Scoping 				-type ::SAML::Protocols::Scoping -minOccurs 0
 }
 
-Class NameIDPolicyType -superclass ::xoXSD::Core::CoreClass -slots {
+Class NameIDPolicyType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Format 		-type ::xoXSD::DataTypes::anyURI
 	XML:Attribute SPNameQualifier 	-type ::xoXSD::DataTypes::string
 	XML:Attribute AllowCreate 	-type ::xoXSD::DataTypes::boolean
@@ -311,11 +311,11 @@ Class NameIDPolicyType -superclass ::xoXSD::Core::CoreClass -slots {
 
 Class NameIDPolicy -superclass ::SAML::Protocols::NameIDPolicyType
 
-Class RequestedAuthnContext -superclass ::xoXSD::Core::CoreClass
-Class Scoping -superclass ::xoXSD::Core::CoreClass
+Class RequestedAuthnContext -superclass ::xoXSD::Core::xsd:complexType
+Class Scoping -superclass ::xoXSD::Core::xsd:complexType
 
 
-Class StatusResponseType -superclass ::xoXSD::Core::CoreClass -slots {
+Class StatusResponseType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Element Issuer 		-type ::SAML::Assertions::Issuer -minOccurs 0
 	XML:Element Signature 		-type ::SAML::Lib::Core::Signature -minOccurs 0
 	XML:Element Extensions 		-type ::SAML::Protocols::Extensions -minOccurs 0

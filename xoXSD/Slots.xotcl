@@ -7,13 +7,12 @@ namespace eval ::xoXSD::Slots {
 namespace export *
 	
 ::xotcl::Class XML:Base -superclass ::xotcl::Attribute -slots {
-	::xotcl::Attribute sequence -default 99999
-	::xotcl::Attribute choice   -default false
-	::xotcl::Attribute text     -default false
+	::xotcl::Attribute sequence  -default 99999
+	::xotcl::Attribute text      -default false
 }
 
 ::xotcl::Class XML:Attribute -superclass ::xoXSD::Slots::XML:Base -slots {
-	::xotcl::Attribute use  -default "optional"
+	::xotcl::Attribute use 	     -default "optional"
 }
 
 ::xotcl::Class XML:Element -superclass ::xoXSD::Slots::XML:Base -slots {
@@ -21,6 +20,7 @@ namespace export *
 	::xotcl::Attribute maxOccurs -default 1
 }
 
-}
+::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Base
 
+}
 

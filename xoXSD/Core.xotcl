@@ -5,56 +5,120 @@ package require XOTcl
 
 namespace eval ::xoXSD::Core {
 	
-::xotcl::Class CoreClass -slots {
-	::xotcl::Attribute slotnames
+##############################################
+#               * Definition *               #
+##############################################	
 	
+::xotcl::Class xsd:generic -slots {	
+	::xotcl::Attribute slotnames
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
-	
-	::xotcl::Attribute choices
 }
 
-CoreClass instproc init args {
+::xotcl::Class xsd:element 	-superclass ::xoXSD::Core::xsd:generic
+
+::xotcl::Class xsd:complexType 	-superclass ::xoXSD::Core::xsd:generic
+
+::xotcl::Class xsd:sequence 	-superclass ::xoXSD::Core::xsd:generic -slots {
+	::xotcl::Attribute sequence -default false
+}
+
+::xotcl::Class xsd:choice 	-superclass ::xoXSD::Core::xsd:generic -slots {
+	::xotcl::Attribute slotfree 	 -default true
+	::xotcl::Attribute choiceparents -default ""
+}
+
+##############################################
+#              * Constructors *              #
+##############################################
+
+xsd:generic instproc init args {
+	#puts "GENERIC -> INIT -> [self] [my class]"
+	
+	# create new instances of all classchildren
+	foreach	child [[my class] info classchildren] {
+		eval $child new -childof [self] 
+	}
+	
 	my slotnames [list]
 	my elements [list]
 	my attributes [list]
 	
-	# why doesn't this work? -> my choices(list) [list]
-	my instvar choices
-	set choices(list) [list]
-	
-	set slots [list]
-	foreach slot [my slotList] {
-		lappend slots [list $slot [$slot sequence]]
-	}
-	
-	foreach slot [lsort -integer -index 1 $slots] {
-		set slot [lindex $slot 0]
+	foreach slot [my getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
 		
 		my lappend slotnames [namespace tail $slot]
 		
 		if { $slotclass == "XML:Attribute" } {
 			my lappend attributes $slot	
-		} else {
+		} elseif { $slotclass == "XML:Element" } {
 			my lappend elements $slot
-			
-			if { [$slot choice] } {
-				# my lappend choices(list) $slot
-				lappend choices(list) $slot
-				lappend choices([$slot choice]) $slot
+		} 
+	}	
+
+	#puts "([my class]) -> ELEMENTS -> [my elements]"
+	#puts "([my class]) -> ATTRIBUTES -> [my attributes]"
+	#puts "([my class]) -> CHILDREN -> [my info children]"
+	#puts ""
+}
+
+xsd:sequence instproc init args {
+	next
+	#puts "SEQUENCE -> INIT -> [self] [my class]" 	
+	
+	set slots [list]
+	foreach slot [my getLocalSlots] {
+		# TODO: do we need attributes too?!
+		lappend slots [list $slot [$slot sequence]]
+	}
+	
+	my sequence [list]
+	foreach slot [lsort -integer -index 1 $slots] {
+		set slot [lindex $slot 0]
+		set slotname [namespace tail $slot]
+		set slotclass [namespace tail [$slot class]]
+		
+		if { $slotclass == "XML:Child" } {
+			foreach child [my info children] {
+				set childclass [namespace tail [$child class]]
+				if { $childclass == $slotname } {
+					my lappend sequence $child	
+				}
 			}
+		} else {
+			my lappend sequence $slot
 		}
 	}
 	
-	#puts "ELEMENTS -> [my elements]"
-	#puts "ATTRIBUTES -> [my attributes]"
-	#puts ""
-	
-	next
+	# add the missing childclasses (with no sequence)
+	foreach child [my info children] {
+		if { [lsearch [my sequence] $child] == -1 } {
+			#puts "Adding $child to the sequence..."
+			my lappend sequence $child
+		}
+	}
 }
 
-CoreClass instproc check {} {
+xsd:choice instproc init args {
+	next
+	#puts "CHOICE -> INIT -> [self] [my class]" 	
+	
+	# get "choice-parents"...
+	set parent [my info parent]
+	while { $parent != "::" } {
+		set cls [namespace tail [$parent class]]
+		if { [string match "__choice*" $cls] } {
+			my lappend choiceparents $parent	
+		}
+		set parent [$parent info parent]
+	}
+}
+
+##############################################
+# * Various "publicly" available functions * #
+##############################################
+
+xsd:generic instproc check {} {
 	set validity true
 	
 	foreach slot [my attributes] {
@@ -62,7 +126,7 @@ CoreClass instproc check {} {
 		
 		if { [$slot use] eq "required" && ![my exists $name] } {
 			set validity false
-			my errorMsg "needs object: $name (type: [$slot type])"
+			my error "needs object: $name (type: [$slot type])"
 		}
 	}
 	
@@ -71,12 +135,12 @@ CoreClass instproc check {} {
 		
 		if { [$slot minOccurs] > 0 && ![my exists $name] } {
 			set validity false
-			my errorMsg "needs object: $name (type: [$slot type])"
+			my error "needs object: $name (type: [$slot type])"
 		}
 		
 		#if { [$slot maxOccurs] != "unbounded" && [my exists $name] } {
 		#	set validity false
-		#	my errorMsg "needs object: $name (type: [$slot type])"
+		#	my error "needs object: $name (type: [$slot type])"
 		#}
 		
 	}
@@ -84,61 +148,116 @@ CoreClass instproc check {} {
 	return $validity
 }
 
-CoreClass instproc getXmlNamespace {} {
-	set qualifiers [namespace qualifiers [my class]]
-	namespace upvar $qualifiers xmlNamespace xmlNamespace
-	return $xmlNamespace
-}
-
-CoreClass instproc getXmlPrefix {} {
-	set qualifiers [namespace qualifiers [my class]]
-	namespace upvar $qualifiers xmlPrefix xmlPrefix
-	return $xmlPrefix
-}
-
-CoreClass instproc export { {addXmlNamespaces true} } {
+xsd:generic instproc export { {addXmlNamespaces true} } {
 	if { ![my check] } {
-		my errorMsg "is not valid."
+		my error "is not valid."
 		return ""
 	}
 	
-	set className [namespace tail [my class]]
-	set classNamespace [namespace qualifiers [my class]]
-	set attributes [my attributes]
-	set elements [my elements]
+	set name [namespace tail [my class]]	
+	set prefix [my getXmlPrefix]
+
+	if { $prefix != "" } {
+		set name "$prefix:$name"
+	}
 	
-	set xmlPrefix [my getXmlPrefix]
-	set xmlNamespace [my getXmlNamespace]
-	
-	if { $xmlPrefix != "" } {
-		set className "$xmlPrefix:$className"
-	} 
-		
 	# create the document:
-	set doc [dom createDocument $className]
+	set doc [dom createDocument $name]
 	set root [$doc documentElement]
 	
 	# add the xmlns-attributes:
 	if { $addXmlNamespaces } {	
-		$root setAttribute "xmlns:$xmlPrefix" $xmlNamespace
+		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
 		
-		foreach element $elements {
+		foreach element [my elements] {
 			if { ![my exists [namespace tail $element]] } continue
-			
-			if { [$element text] } {
-				continue
-			}
+			if { [$element text] } continue
 			
 			set element [namespace tail $element]
 			set ns [[my $element] getXmlNamespace]
 			set prefix [[my $element] getXmlPrefix]
 			
 			$root setAttribute "xmlns:$prefix" $ns
-		}
+		}	
 	}
 	
 	# add the attributes:
-	foreach attribute $attributes {
+	my exportAttributes $doc $root
+	
+	# add the containing sub-elements:
+	my exportElements $doc $root	
+
+	return [$root asXML]
+}
+
+xsd:generic instproc getSlot {slot} {
+	set slot [my doGetSlot $slot]
+	if { $slot == false } {
+		my error "there is no such Element/Attribute to be get: $slot"	
+		return false
+	} 
+	return $slot
+}
+
+xsd:generic instproc getSlotClass {slot} {
+	set slotclass [my doGetSlotClass $slot]
+	if { $slot == false } {
+		my error "there is no such slot: $slot"	
+		return false
+	} 
+	return $slotclass
+}
+
+xsd:generic instproc setSlot {slot value} {
+	if { [my doSetSlot $slot $value] == false } {
+		my error "there is no such Element/Attribute to be set: $slot"	
+		return false
+	}
+	return true
+}
+
+xsd:generic instproc initSlot {slot args} {	
+	set slotclass [my getSlotClass $slot]
+	if { $slotclass == "" } {
+		my error "there is no such slot: $slot"
+		return	
+	}
+	set slottype [$slotclass type]
+	if { [namespace qualifiers $slottype] != "::xoXSD::DataTypes" } {
+		my error "\"$slot\" is no basic data type."
+		return
+	}
+	my setSlot $slot [$slottype new $args]
+}
+
+xsd:generic instproc printSlots { {isRoot true} {c ""} } {
+	if { $isRoot } {
+		set c [my class]
+		puts "\n[self] ([namespace tail $c]) has the following slots:"
+	}
+	foreach slot [my getSlots] {	
+		set isset ""
+		if { [my exists [namespace tail $slot]] } {
+			set isset "(filled)"
+		}
+		set slot [string range $slot [expr {[string length $c]+2}] end]
+		set slot [string map {"::slot" ""} $slot]
+		set slot [string map {"::" " -> "} $slot]
+		set slot [string map {"__" ""} $slot]
+		puts " *) $slot $isset"
+	}	
+	foreach child [my info children] {
+		$child printSlots false	$c
+	}
+}
+
+##############################################
+#         * Various helper functions *       #
+# Note: you shouldn't call them directly.    #
+##############################################
+
+xsd:generic instproc exportAttributes {doc root} {
+	foreach attribute [my attributes] {
 		if { ![my exists [namespace tail $attribute]] } continue
 	
 		set attr [namespace tail $attribute]
@@ -150,40 +269,84 @@ CoreClass instproc export { {addXmlNamespaces true} } {
 			$root setAttribute $attr $value
 		}
 	}
-			
-	# add the sub-elements (recursive):
-	foreach element $elements {
-		if { ![my exists [namespace tail $element]] } continue
-
-		set content [[my [namespace tail $element]] export false]
-		
-		if { [$element text] } {
-			puts "ELEMENT HAS TEXT -> $element"
-			set element [namespace tail $element]
-			set node [$doc createElement $element]
-			$node appendChild [$doc createTextNode $content]
-			$root appendChild $node
-		} else {
-			$root appendXML $content
-		}
-	}	
-
-	return [$root asXML]
+	
+	# do the same with all children
+	foreach child [my info children] {
+		$child exportAttributes $doc $root	
+	}
 }
 
-CoreClass instproc slotList {} {
+xsd:generic instproc exportElements {doc root} {	
+	# iterate over all elements
+	foreach element [my elements] {
+		my exportElement $doc $root $element
+	}
+
+	# do the same with all children
+	foreach child [my info children] {
+		$child exportElements $doc $root	
+	}
+}
+
+xsd:sequence instproc exportElements {doc root} {
+	foreach obj [my sequence] {
+		#puts " -> SEQUCENE -> $obj"
+		if { [string match "*::slot::*" $obj ] } {
+			#puts "EXPORT ELEMENT -> $obj"
+			my exportElement $doc $root $obj
+		} else {
+			#puts "EXPORT ELEMENT(S) -> $obj"
+			$obj exportElements $doc $root	
+		}
+	}
+}
+
+xsd:generic instproc exportElement {doc root element} {
+	if { ![my exists [namespace tail $element]] } return
+	#puts "exportElement -> $element"
+	set content [[my [namespace tail $element]] export false]
+	if { [$element text] } {
+		#puts "ELEMENT HAS TEXT -> $element"
+		# TODO: fix me... (XML prefixes)
+		set element [namespace tail $element]
+		set node [$doc createElement $element]
+		$node appendChild [$doc createTextNode $content]
+		$root appendChild $node
+	} else {
+		$root appendXML $content
+	}	
+}
+
+xsd:generic instproc getXmlNamespace {} {
+	set qualifiers [namespace qualifiers [my class]]
+	namespace upvar $qualifiers xmlNamespace xmlNamespace
+	return $xmlNamespace
+}
+
+xsd:generic instproc getXmlPrefix {} {
+	set qualifiers [namespace qualifiers [my class]]
+	namespace upvar $qualifiers xmlPrefix xmlPrefix
+	return $xmlPrefix
+}
+
+xsd:generic instproc getSlotnames {} {
+	return [my slotnames]
+}
+
+xsd:generic instproc getSlots {} {
+	return [concat [my elements] [my attributes]]
+}
+
+xsd:generic instproc getLocalSlots {} {
+	# now create a list of all slots
 	set slots [[my class] info slots]
 	
 	# remember slotnames
 	foreach slot $slots {set slotname([namespace tail $slot]) 1}
 	
-	# remove CoreClass from the list
-	set heritage [[my class] info heritage]
-	set idx [lsearch -exact $heritage "::xoXSD::Core::CoreClass"]
-	set heritage [lreplace $heritage $idx $idx]
-	
 	# iterate over class structure
-	foreach c $heritage {
+	set heritage [[my class] info heritage]
+	foreach c [lsearch -inline -all -not $heritage "::xoXSD::Core::xsd:*"] {
 		foreach slot [$c info slots] {
 			set key slotname([namespace tail $slot])
 			
@@ -198,83 +361,80 @@ CoreClass instproc slotList {} {
 	return $slots
 }
 
-CoreClass instproc getSlot {slot} {
-	return [my [namespace tail $slot]]	
-}
-
-CoreClass instproc getSlotnames {} {
-	return [my slotnames]
-}
-
-CoreClass instproc getSlots {} {
-	return [concat [my elements] [my attributes]]
-}
-
-CoreClass instproc getSlotClass {slot} {
-	return [lsearch -inline -glob [my getSlots] "*::[namespace tail $slot]"]
-}
-
-CoreClass instproc getSlotType {slot} {
+xsd:generic instproc getSlotType {slot} {
 	# returns either XML:Attribute or XML:Element
 	return [namespace tail [[my getSlotClass $slot] class]]
 }
 
-CoreClass instproc setSlot {slot value} {
-	set name [namespace tail $slot]
-	set class [my getSlotClass $slot]
-	set type [my getSlotType $slot]
+xsd:generic instproc doGetSlot {slot} {
+	set slot [namespace tail $slot]
 	
-	# check for choices...
-	if { [$class choice] } {
-		my instvar choices
-		foreach element $choices([$class choice]) {
-			if { [my exists [namespace tail $element]] } {
-				my errorMsg "cannot set $class because\
-				             $element is already set.\
-				             (choice-ID=[$class choice])"
-				return
+	if { [lsearch [my slotnames] $slot] == -1 } {
+		foreach child [my info children] {
+			return [$child doGetSlot $slot]		
+		}
+	} else {
+		return [my $slot]
+	}
+	
+	return false
+}
+
+xsd:generic instproc doSetSlot {slot value} {
+	set slot [namespace tail $slot]
+	if { [lsearch [my slotnames] $slot] == -1 } {
+		foreach child [my info children] {
+			return [$child doSetSlot $slot $value]		
+		}
+	} else {
+		#puts "SETSLOT -> [my class] $slot"
+		return [my $slot $value]
+	}
+	return false
+}
+
+xsd:choice instproc doSetSlot {slot value} {
+	set slotIsLocal [expr {[lsearch [my getSlots] "*::slot::$slot"] != -1}]
+	if { [my slotfree] } {
+		if { [next] != false } {
+			my slotfree false
+			foreach parent [my choiceparents] {
+				$parent slotfree false	
 			}
 		}
+	} elseif { ![my slotfree] && $slotIsLocal } {
+		foreach child [my info children] {
+			return [$child doSetSlot $slot $value]
+		}
+	} else {
+		my error "is already set by another Element/Attribute."
+		return false 
 	}
-	
-	# finally set the slot
-	my $name $value
 }
 
-CoreClass instproc initSlot {slot args} {
-	set type [[my getSlotClass $slot] type]
-	if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
-		my errorMsg "\"$slot\" is no basic data type."
-		return
+xsd:generic instproc doGetSlotClass {slot} {
+	set slot [namespace tail $slot]
+	if { [lsearch [my slotnames] $slot] == -1 } {
+		foreach child [my info children] {
+			return [$child doGetSlotClass $slot]		
+		}
+	} else {
+		return [lsearch -inline -glob [my getSlots] "*::$slot"]
 	}
-	my setSlot $slot [$type new $args]
 }
 
-CoreClass instproc errorMsg {msg} {
+xsd:generic instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-
-#DEBUG:
-
-CoreClass instproc printSlots {} {
-	puts "[self] ([namespace tail [my class]]) has the following slots:"
-	
-	foreach slot [my slotList] {
-		set slotname [namespace tail $slot]
-		set tmp " *) "
-		
-		if { [my exists $slotname] } {
-			append tmp "\[filled\] "
-		}
-		append tmp "$slotname ([namespace tail [$slot type]])"
-
-		puts $tmp
-	}		
-}
+#xsd:generic instproc slotExists {slot} {
+#	set existance [lsearch [my getSlots] "*::slot::[namespace tail $slot]"]
+#	return [expr { $existance != -1 } ]
+#}
+#
+#xsd:generic instproc slotFilled {slot} {
+#	return [my exists [namespace tail $slot]]
+#}
 
 }
-
-
-
 
