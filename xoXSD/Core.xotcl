@@ -10,7 +10,6 @@ namespace eval ::xoXSD::Core {
 ##############################################	
 	
 ::xotcl::Class xsd:generic -slots {	
-	::xotcl::Attribute slotnames
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
 }
@@ -40,14 +39,11 @@ xsd:generic instproc init args {
 		eval $child new -childof [self] 
 	}
 	
-	my slotnames [list]
 	my elements [list]
 	my attributes [list]
 	
 	foreach slot [my getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
-		
-		my lappend slotnames [namespace tail $slot]
 		
 		if { $slotclass == "XML:Attribute" } {
 			my lappend attributes $slot	
@@ -325,10 +321,6 @@ xsd:generic instproc getXmlPrefix {} {
 	set qualifiers [namespace qualifiers [my class]]
 	namespace upvar $qualifiers xmlPrefix xmlPrefix
 	return $xmlPrefix
-}
-
-xsd:generic instproc getSlotnames {} {
-	return [my slotnames]
 }
 
 xsd:generic instproc getSlots {} {
