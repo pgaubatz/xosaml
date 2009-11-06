@@ -98,23 +98,23 @@ BaseClass instproc unknown args {
 	set rest [string range $args $from $to]
 	set obj [my Object]
 	
-	if { [lsearch [$obj getSlotnames] $first] == -1 } {
+	#read slot
+	if { $rest == "" } {	
+		return [[$obj getSlot $first] export]	
+	} 
+	
+	#set slot...
+	if { [$obj getSlotType $first] == "XML:Attribute" ||
+	     [[$obj getSlotClass $first] text]
+	} {
+		return [$obj initSlot $first $rest]	
+	} elseif {[$obj getSlotType $first] == "XML:Element"} {
+		return [$obj setSlot $first [$rest getObject]]
+	} else {
 		puts "ERROR: [$obj class] doesn't contain a slot named: $first"	
 		return
-	}	
-	if { $rest == "" } {
-		#read slot
-		return [[$obj getSlot $first] export]	
-	} else {
-		#set slot...
-		if { [$obj getSlotType $first] == "XML:Attribute" ||
-		     [[$obj getSlotClass $first] text]
-		} {
-			return [$obj initSlot $first $rest]	
-		} else {
-			return [$obj setSlot $first [$rest getObject]]
-		}
 	}
+	
 }
 
 Generic instproc init args {
