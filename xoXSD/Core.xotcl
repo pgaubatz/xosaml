@@ -367,7 +367,7 @@ xsd:generic instproc getSlotType {slot} {
 xsd:generic instproc doGetSlot {slot} {
 	set slot [namespace tail $slot]
 	
-	if { [lsearch [my slotnames] $slot] == -1 } {
+	if { ![my slotExists $slot] } {
 		foreach child [my info children] {
 			return [$child doGetSlot $slot]		
 		}
@@ -380,7 +380,7 @@ xsd:generic instproc doGetSlot {slot} {
 
 xsd:generic instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
-	if { [lsearch [my slotnames] $slot] == -1 } {
+	if { ![my slotExists $slot] } {
 		foreach child [my info children] {
 			return [$child doSetSlot $slot $value]		
 		}
@@ -392,7 +392,6 @@ xsd:generic instproc doSetSlot {slot value} {
 }
 
 xsd:choice instproc doSetSlot {slot value} {
-	set slotIsLocal [expr {[lsearch [my getSlots] "*::slot::$slot"] != -1}]
 	if { [my slotfree] } {
 		if { [next] != false } {
 			my slotfree false
@@ -400,7 +399,7 @@ xsd:choice instproc doSetSlot {slot value} {
 				$parent slotfree false	
 			}
 		}
-	} elseif { ![my slotfree] && $slotIsLocal } {
+	} elseif { ![my slotfree] && [my slotExists $slot] } {
 		foreach child [my info children] {
 			return [$child doSetSlot $slot $value]
 		}
@@ -412,7 +411,7 @@ xsd:choice instproc doSetSlot {slot value} {
 
 xsd:generic instproc doGetSlotClass {slot} {
 	set slot [namespace tail $slot]
-	if { [lsearch [my slotnames] $slot] == -1 } {
+	if { ![my slotExists $slot] } {
 		foreach child [my info children] {
 			return [$child doGetSlotClass $slot]		
 		}
@@ -425,10 +424,10 @@ xsd:generic instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-#xsd:generic instproc slotExists {slot} {
-#	set existance [lsearch [my getSlots] "*::slot::[namespace tail $slot]"]
-#	return [expr { $existance != -1 } ]
-#}
+xsd:generic instproc slotExists {slot} {
+	set existance [lsearch [my getSlots] "*::slot::[namespace tail $slot]"]
+	return [expr { $existance != -1 } ]
+}
 
 xsd:generic instproc slotFilled {slot} {
 	return [my exists [namespace tail $slot]]
