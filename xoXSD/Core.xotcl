@@ -124,7 +124,7 @@ xsd:generic instproc check {} {
 	foreach slot [my attributes] {
 		set name [namespace tail $slot]
 		
-		if { [$slot use] eq "required" && ![my exists $name] } {
+		if { [$slot use] eq "required" && ![my slotFilled $slot] } {
 			set validity false
 			my error "needs object: $name (type: [$slot type])"
 		}
@@ -133,12 +133,12 @@ xsd:generic instproc check {} {
 	foreach slot [my elements] {
 		set name [namespace tail $slot]
 		
-		if { [$slot minOccurs] > 0 && ![my exists $name] } {
+		if { [$slot minOccurs] > 0 && ![my slotFilled $slot] } {
 			set validity false
 			my error "needs object: $name (type: [$slot type])"
 		}
 		
-		#if { [$slot maxOccurs] != "unbounded" && [my exists $name] } {
+		#if { [$slot maxOccurs] != "unbounded" && [my slotFilled $slot] } {
 		#	set validity false
 		#	my error "needs object: $name (type: [$slot type])"
 		#}
@@ -170,7 +170,7 @@ xsd:generic instproc export { {addXmlNamespaces true} } {
 		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
 		
 		foreach element [my elements] {
-			if { ![my exists [namespace tail $element]] } continue
+			if { ![my slotFilled $element] } continue
 			if { [$element text] } continue
 			
 			set element [namespace tail $element]
@@ -237,9 +237,7 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 	}
 	foreach slot [my getSlots] {	
 		set isset ""
-		if { [my exists [namespace tail $slot]] } {
-			set isset "(filled)"
-		}
+		if { [my slotFilled $slot] } { set isset "(filled)" }
 		set slot [string range $slot [expr {[string length $c]+2}] end]
 		set slot [string map {"::slot" ""} $slot]
 		set slot [string map {"::" " -> "} $slot]
@@ -258,7 +256,7 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 
 xsd:generic instproc exportAttributes {doc root} {
 	foreach attribute [my attributes] {
-		if { ![my exists [namespace tail $attribute]] } continue
+		if { ![my slotFilled $attribute] } continue
 	
 		set attr [namespace tail $attribute]
 		set value [[my $attr] export false]
@@ -302,7 +300,7 @@ xsd:sequence instproc exportElements {doc root} {
 }
 
 xsd:generic instproc exportElement {doc root element} {
-	if { ![my exists [namespace tail $element]] } return
+	if { ![my slotFilled $element] } return
 	#puts "exportElement -> $element"
 	set content [[my [namespace tail $element]] export false]
 	if { [$element text] } {
@@ -431,10 +429,10 @@ xsd:generic instproc error {msg} {
 #	set existance [lsearch [my getSlots] "*::slot::[namespace tail $slot]"]
 #	return [expr { $existance != -1 } ]
 #}
-#
-#xsd:generic instproc slotFilled {slot} {
-#	return [my exists [namespace tail $slot]]
-#}
+
+xsd:generic instproc slotFilled {slot} {
+	return [my exists [namespace tail $slot]]
+}
 
 }
 
