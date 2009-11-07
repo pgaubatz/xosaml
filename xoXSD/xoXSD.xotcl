@@ -105,9 +105,7 @@ BaseClass instproc unknown args {
 	
 	#set slot...
 	set success false
-	if { [$obj getSlotType $first] == "XML:Attribute" ||
-	     [[$obj getSlotClass $first] text]
-	} {
+	if { [$obj getSlotType $first] == "XML:Attribute" } {
 		set success [$obj initSlot $first $rest]	
 	} else {
 		set success [$obj setSlot $first [$rest getObject]]
@@ -133,7 +131,7 @@ Generic instproc init args {
 	set args [lrange $args 1 [llength $args]]
 
 	if { [lindex $args 0] != "" } {
-		foreach slot [[my Object] getSlots] {
+		foreach slot [[my Object] attributes] {
 			if { [$slot text] } {
 				[my Object] initSlot $slot $args
 				break

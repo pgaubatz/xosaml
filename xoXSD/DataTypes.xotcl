@@ -1,14 +1,19 @@
 package provide xoXSD::DataTypes 0.1
 
 package require XOTcl
+package require xoXSD::Core
 
 namespace eval ::xoXSD::DataTypes {
-
-::xotcl::Class DataType -slots {
-	::xotcl::Attribute data		
+	
+::xotcl::Class DataType -superclass ::xoXSD::Core::xsd:generic -slots {
+	::xotcl::Attribute data
 }
 
-DataType instproc export args {
+DataType instproc export {ignored name} {
+	return "<$name>[my data]</$name>"
+}
+
+DataType instproc getContent {} {	
 	return [my data]
 }
 
