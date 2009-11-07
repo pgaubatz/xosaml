@@ -9,7 +9,8 @@ namespace eval ::xoXSD::Core {
 #               * Definition *               #
 ##############################################	
 	
-::xotcl::Class xsd:generic -slots {	
+::xotcl::Class xsd:generic -slots {
+	::xotcl::Attribute rootClass	
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
 }
@@ -31,12 +32,18 @@ namespace eval ::xoXSD::Core {
 #              * Constructors *              #
 ##############################################
 
-xsd:generic instproc init args {
+xsd:generic instproc init { {rootClass ""} } {
 	#puts "GENERIC -> INIT -> [self] [my class]"
 	
+	if { $rootClass == "" } {
+		my rootClass [my class]
+	} else {
+		my rootClass $rootClass
+	}
+		
 	# create new instances of all classchildren
 	foreach	child [[my class] info classchildren] {
-		eval $child new -childof [self] 
+		eval $child new -childof [self] [my rootClass]
 	}
 	
 	my elements [list]
@@ -64,7 +71,9 @@ xsd:sequence instproc init args {
 	
 	set slots [list]
 	foreach slot [my getLocalSlots] {
-		# TODO: do we need attributes too?!
+		if { [namespace tail [$slot class]] == "XML:Attribute" } {
+			continue
+		}
 		lappend slots [list $slot [$slot sequence]]
 	}
 	
@@ -144,30 +153,23 @@ xsd:generic instproc check {} {
 	return $validity
 }
 
-xsd:generic instproc export { {addXmlNamespaces true} } {
+xsd:generic instproc export { {addXmlNamespaces true} {name ""}} {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
 	}
 	
-	set name [namespace tail [my class]]	
-	set prefix [my getXmlPrefix]
-
-	if { $prefix != "" } {
-		set name "$prefix:$name"
-	}
-	
 	# create the document:
-	set doc [dom createDocument $name]
+	set doc [dom createDocument [my getXmlElementExportName]]
 	set root [$doc documentElement]
 	
 	# add the xmlns-attributes:
-	if { $addXmlNamespaces } {	
+	if { $addXmlNamespaces } {
+		set prefix [my getXmlPrefix]	
 		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
 		
 		foreach element [my elements] {
 			if { ![my slotFilled $element] } continue
-			if { [$element text] } continue
 			
 			set element [namespace tail $element]
 			set ns [[my $element] getXmlNamespace]
@@ -251,17 +253,9 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 ##############################################
 
 xsd:generic instproc exportAttributes {doc root} {
+	# iterate over all attributes
 	foreach attribute [my attributes] {
-		if { ![my slotFilled $attribute] } continue
-	
-		set attr [namespace tail $attribute]
-		set value [[my $attr] export false]
-		
-		if { [$attribute text] } {
-			$root appendChild [$doc createTextNode $value]
-		} else {	
-			$root setAttribute $attr $value
-		}
+		my exportAttribute $doc $root $attribute
 	}
 	
 	# do the same with all children
@@ -270,7 +264,18 @@ xsd:generic instproc exportAttributes {doc root} {
 	}
 }
 
-xsd:generic instproc exportElements {doc root} {	
+xsd:generic instproc exportAttribute {doc root attribute} {
+	if { ![my slotFilled $attribute] } return
+	
+	set content [[my [namespace tail $attribute]] getContent]
+	if { [$attribute text] } {
+		$root appendChild [$doc createTextNode $content]
+	} else {	
+		$root setAttribute [namespace tail $attribute] $content
+	}
+}
+
+xsd:generic instproc exportElements {doc root} {
 	# iterate over all elements
 	foreach element [my elements] {
 		my exportElement $doc $root $element
@@ -297,30 +302,41 @@ xsd:sequence instproc exportElements {doc root} {
 
 xsd:generic instproc exportElement {doc root element} {
 	if { ![my slotFilled $element] } return
-	#puts "exportElement -> $element"
-	set content [[my [namespace tail $element]] export false]
-	if { [$element text] } {
-		#puts "ELEMENT HAS TEXT -> $element"
-		# TODO: fix me... (XML prefixes)
-		set element [namespace tail $element]
-		set node [$doc createElement $element]
-		$node appendChild [$doc createTextNode $content]
-		$root appendChild $node
-	} else {
-		$root appendXML $content
+	
+	set name [my getXmlElementExportName $element]
+	set content [[my [namespace tail $element]] export false $name]
+	
+	$root appendXML $content
+}
+
+xsd:generic instproc getXmlElementExportName { {element ""} } {
+	if { $element == "" } { 
+		set element [my class] 
+	}
+	set name [namespace tail $element]
+	set prefix [my getXmlPrefix]
+	if { $prefix != "" } {
+		set name "$prefix:$name"
 	}	
+	return $name
 }
 
 xsd:generic instproc getXmlNamespace {} {
-	set qualifiers [namespace qualifiers [my class]]
-	namespace upvar $qualifiers xmlNamespace xmlNamespace
-	return $xmlNamespace
+	set qualifiers [namespace qualifiers [my rootClass]]
+	if { [namespace eval $qualifiers info exists xmlNamespace] } {
+		namespace upvar $qualifiers xmlNamespace xmlNamespace
+		return $xmlNamespace
+	}
+	return ""
 }
 
 xsd:generic instproc getXmlPrefix {} {
-	set qualifiers [namespace qualifiers [my class]]
-	namespace upvar $qualifiers xmlPrefix xmlPrefix
-	return $xmlPrefix
+	set qualifiers [namespace qualifiers [my rootClass]]
+	if { [namespace eval $qualifiers info exists xmlPrefix] } {
+		namespace upvar $qualifiers xmlPrefix xmlPrefix
+		return $xmlPrefix
+	}
+	return ""
 }
 
 xsd:generic instproc getSlots {} {

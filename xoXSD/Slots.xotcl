@@ -6,21 +6,22 @@ namespace eval ::xoXSD::Slots {
 
 namespace export *
 	
-::xotcl::Class XML:Base -superclass ::xotcl::Attribute -slots {
-	::xotcl::Attribute sequence  -default 99999
+::xotcl::Class XML:Attribute -superclass ::xotcl::Attribute -slots {
+	::xotcl::Attribute use 	     -default "optional"
+	
+	# System-specific attributes:
 	::xotcl::Attribute text      -default false
 }
 
-::xotcl::Class XML:Attribute -superclass ::xoXSD::Slots::XML:Base -slots {
-	::xotcl::Attribute use 	     -default "optional"
-}
-
-::xotcl::Class XML:Element -superclass ::xoXSD::Slots::XML:Base -slots {
+::xotcl::Class XML:Element -superclass ::xotcl::Attribute -slots {
 	::xotcl::Attribute minOccurs -default 1
 	::xotcl::Attribute maxOccurs -default 1
+	
+	# System-specific attributes:
+	::xotcl::Attribute sequence  -default 99999
 }
 
-::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Base
+::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
 
 }
 

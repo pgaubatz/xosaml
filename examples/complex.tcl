@@ -34,18 +34,18 @@ variable xmlPrefix 	"saml"
 Class SubjectType -superclass ::xoXSD::Core::xsd:complexType 
 
 Class SubjectType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots { 
-	XML:Element SubjectConfirmation -type ::xoXSD::DataTypes::string -maxOccurs unbounded -text true
+	XML:Element SubjectConfirmation -type ::xoXSD::DataTypes::string -maxOccurs unbounded
 }
 
 Class SubjectType::__choice0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
 	XML:Child   __choice0 		-sequence 1
-	XML:Element SubjectConfirmation -type ::xoXSD::DataTypes::string -maxOccurs unbounded -text true -sequence 2
+	XML:Element SubjectConfirmation -type ::xoXSD::DataTypes::string -maxOccurs unbounded -sequence 2
 }
 
 Class SubjectType::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element BaseID		-type ::xoXSD::DataTypes::string -minOccurs 0 -text true 
-	XML:Element NameID		-type ::xoXSD::DataTypes::string -minOccurs 0 -text true 
-	XML:Element EncryptedID		-type ::xoXSD::DataTypes::string -minOccurs 0 -text true 
+	XML:Element BaseID		-type ::xoXSD::DataTypes::string -minOccurs 0 
+	XML:Element NameID		-type ::xoXSD::DataTypes::string -minOccurs 0 
+	XML:Element EncryptedID		-type ::xoXSD::DataTypes::string -minOccurs 0 
 }
 
 }
