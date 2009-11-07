@@ -321,22 +321,21 @@ xsd:generic instproc getXmlElementExportName { {element ""} } {
 	return $name
 }
 
-xsd:generic instproc getXmlNamespace {} {
+xsd:generic instproc getRootNamespaceVariable {varname} {
 	set qualifiers [namespace qualifiers [my rootClass]]
-	if { [namespace eval $qualifiers info exists xmlNamespace] } {
-		namespace upvar $qualifiers xmlNamespace xmlNamespace
-		return $xmlNamespace
+	if { [namespace eval $qualifiers info exists $varname] } {
+		namespace upvar $qualifiers $varname var
+		return $var
 	}
 	return ""
 }
 
+xsd:generic instproc getXmlNamespace {} {
+	return [my getRootNamespaceVariable xmlNamespace]
+}
+
 xsd:generic instproc getXmlPrefix {} {
-	set qualifiers [namespace qualifiers [my rootClass]]
-	if { [namespace eval $qualifiers info exists xmlPrefix] } {
-		namespace upvar $qualifiers xmlPrefix xmlPrefix
-		return $xmlPrefix
-	}
-	return ""
+	return [my getRootNamespaceVariable xmlPrefix]
 }
 
 xsd:generic instproc getSlots {} {
