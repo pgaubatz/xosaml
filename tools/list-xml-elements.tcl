@@ -1,9 +1,6 @@
 #!/usr/bin/env tclsh
 
 package require tdom
-package require XOTcl
-
-namespace import ::xotcl::*
 
 if { $argc < 1 } {
 	puts "Usage: $argv0 \[file 1\] ... \[file n\]"
