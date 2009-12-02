@@ -1,0 +1,26 @@
+This list has been generated via:
+$ tools/list-xml-elements.tcl xsd/saml-schema-assertion-2.0.xsd xsd/saml-schema-protocol-2.0.xsd
+
+These (XSD)-Elements need to be handled by the generator
+in order to support the SAML Core standard:
+
+Occurences Element
+======================
+159	-> element
+58	-> attribute
+48	-> complexType
+32	-> sequence
+21	-> extension
+21	-> complexContent
+18	-> choice
+7	-> enumeration
+5	-> any
+4	-> restriction
+4	-> import
+3	-> attributeGroup
+2	-> simpleType
+2	-> simpleContent
+2	-> schema
+2	-> documentation
+2	-> anyAttribute
+2	-> annotation

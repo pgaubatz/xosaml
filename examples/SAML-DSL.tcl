@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 
-set auto_path [linsert $auto_path 0 ../xoXSD/]
+set auto_path [linsert $auto_path 0 ../packages/xoXSD/]
 source SAML.xotcl
 
 #

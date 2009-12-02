@@ -72,7 +72,7 @@ namespace eval ::SAML::Assertions {
 variable xmlNamespace 	"urn:oasis:names:tc:SAML:2.0:assertion"
 variable xmlPrefix 	"saml"
 
-Class IDNameQualifiers -superclass ::xoXSD::Core::xsd:attributeGroup -slots {
+Class IDNameQualifiers -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute NameQualifier		-type ::xoXSD::DataTypes::string
 	XML:Attribute SPNameQualifier 		-type ::xoXSD::DataTypes::string 		
 }  
