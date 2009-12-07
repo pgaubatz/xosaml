@@ -1,4 +1,4 @@
-#!/usr/bin/env tclsh
+#!/usr/bin/tclsh
 
 package require tdom
 
