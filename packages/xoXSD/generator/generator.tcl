@@ -44,13 +44,6 @@ proc generateClasses {data} {
 
 variable xoNamespacePrefix "::SAML"
 
-set parsers [list]
-foreach arg $argv {
-	set fd [open $arg]
-	lappend parsers [generateClasses [read $fd]]
-	close $fd 
-}
-
 puts {#!/usr/bin/tclsh
 
 set auto_path [linsert $auto_path 0 /Users/patailama/xoSAML/packages/xoXSD/] 
@@ -61,6 +54,13 @@ package require xoXSD
 namespace import -force ::xotcl::*
 namespace import -force ::xoXSD::Slots::*
 	
+}
+
+set parsers [list]
+foreach arg $argv {
+	set fd [open $arg]
+	lappend parsers [generateClasses [read $fd]]
+	close $fd 
 }
 
 foreach parser $parsers {
