@@ -1,0 +1,91 @@
+package provide xoXSD::Generator::Virtual 0.1
+
+package require tdom
+package require XOTcl
+
+namespace eval ::xoXSD::Generator::Virtual {
+
+#####################################################
+#			xoClass			    #
+#####################################################	
+	
+::xotcl::Class xoClass -slots {
+	::xotcl::Attribute name
+	::xotcl::Attribute type
+	::xotcl::Attribute xoslots
+}
+
+xoClass instproc init {{name} {type "NONE"}} {
+	my name $name
+	if { $type != "" } {
+		my type $type
+	}
+	my type $type
+	my xoslots [list]
+}
+
+xoClass instproc asXOTcl {} {
+	set output "Class [my name] -superclass [my type]"
+	if { [llength [my xoslots]] != 0 } {
+		append output " -slots \{\n"
+		foreach slot [my xoslots] {
+			append output [$slot asXOTcl]
+		}
+		append output "\}"
+	}
+	return "$output\n"
+}
+
+xoClass instproc addSlot {slot} {
+	foreach s [my getSlots] {
+		if { [$s name] == [$slot name] } {
+			puts "#ERROR: there is already a slot named [$slot name]."
+			return
+		}
+	}
+	my lappend xoslots $slot
+}
+
+xoClass instproc getSlots {} {
+	return [my xoslots]
+}
+
+	
+#####################################################
+#			xoSlot			    #
+#####################################################
+	
+::xotcl::Class xoSlot -slots {
+	::xotcl::Attribute name
+	::xotcl::Attribute type
+	::xotcl::Attribute xmltype -default ""
+	::xotcl::Attribute args
+}
+
+xoSlot instproc init {{name} {type ""} {xmltype ""}} {
+	my name $name
+	if { $type != "" } {
+		my type $type
+	}
+	if { $xmltype != "" } {
+		my xmltype $xmltype
+	}
+	my args [list]
+}
+
+xoSlot instproc addArg {arg} {
+	my lappend args $arg
+}
+
+xoSlot instproc asXOTcl {} {
+	set output "\t[my type] [my name]"
+	if { [my xmltype] != ""} {
+		append output " -type [my xmltype]"
+	}
+	foreach arg [my args] {
+		append output " $arg"
+	}
+	return "$output\n"
+}
+	
+}
