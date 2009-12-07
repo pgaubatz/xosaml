@@ -1,4 +1,4 @@
-#!/usr/bin/env tclsh
+#!/usr/bin/tclsh
 
 set auto_path [linsert $auto_path 0 ../packages/xoXSD/] 
  
