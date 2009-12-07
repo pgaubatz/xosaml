@@ -72,7 +72,9 @@ DataType instproc init { data } {
 ::xotcl::Class hexBinary 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class NOTATION 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class QName 		  -superclass ::xoXSD::DataTypes::DataType
-
+	
+::xotcl::Class anyType 		  -superclass ::xoXSD::DataTypes::DataType
+	
 string instproc init { str } {
 	my data $str
 }

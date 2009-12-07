@@ -15,15 +15,17 @@ namespace eval ::xoXSD::Core {
 	::xotcl::Attribute attributes
 }
 
-::xotcl::Class xsd:element 	-superclass ::xoXSD::Core::xsd:generic
+::xotcl::Class xsd:element 	  -superclass ::xoXSD::Core::xsd:generic
 
-::xotcl::Class xsd:complexType 	-superclass ::xoXSD::Core::xsd:generic
+::xotcl::Class xsd:complexType 	  -superclass ::xoXSD::Core::xsd:generic
+	
+::xotcl::Class xsd:attributeGroup -superclass ::xoXSD::Core::xsd:generic	
 
-::xotcl::Class xsd:sequence 	-superclass ::xoXSD::Core::xsd:generic -slots {
+::xotcl::Class xsd:sequence 	  -superclass ::xoXSD::Core::xsd:generic -slots {
 	::xotcl::Attribute sequence -default false
 }
 
-::xotcl::Class xsd:choice 	-superclass ::xoXSD::Core::xsd:generic -slots {
+::xotcl::Class xsd:choice 	  -superclass ::xoXSD::Core::xsd:generic -slots {
 	::xotcl::Attribute slotfree 	 -default true
 	::xotcl::Attribute choiceparents -default ""
 }
