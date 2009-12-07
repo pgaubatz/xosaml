@@ -1,0 +1,363 @@
+package provide xoXSD::Generator::Parser 0.1
+
+package require tdom
+package require XOTcl
+package require xoXSD::Generator::Virtual
+
+namespace eval ::xoXSD::Generator::Parser {
+
+proc parse {document targetprefix {prefix ""}} {
+	set parser [::xoXSD::Generator::Parser::schema new $document]
+	$parser xoTargetPrefix $targetprefix
+	$parser xoNamespacePrefix $prefix
+	$parser realInit
+	return $parser
+}
+
+::xotcl::Class Container -slots {
+	::xotcl::Attribute node
+	::xotcl::Attribute parent
+	::xotcl::Attribute children
+	::xotcl::Attribute root
+	::xotcl::Attribute name -default ""
+	::xotcl::Attribute xoclass
+}
+	
+::xotcl::Class schema		-superclass Container -slots {
+	::xotcl::Attribute xoClasses
+	::xotcl::Attribute xoNamespacePrefix -default ""
+	::xotcl::Attribute xoTargetPrefix
+}
+	
+::xotcl::Class element		-superclass Container
+::xotcl::Class attribute	-superclass Container 
+::xotcl::Class complexType	-superclass Container 
+::xotcl::Class sequence		-superclass Container
+::xotcl::Class extension	-superclass Container
+::xotcl::Class complexContent	-superclass Container
+::xotcl::Class choice		-superclass Container
+::xotcl::Class enumeration	-superclass Container
+::xotcl::Class any		-superclass Container
+::xotcl::Class restriction	-superclass Container
+::xotcl::Class import		-superclass Container
+::xotcl::Class attributeGroup	-superclass Container 
+::xotcl::Class simpleType	-superclass Container
+::xotcl::Class simpleContent	-superclass Container
+::xotcl::Class anyAttribute	-superclass Container
+
+
+
+
+Container instproc init {node {parent ""} {root ""}} {
+	my node $node
+	my parent $parent
+	my root $root
+	if { $root == "" } {
+		my root [self]	
+	}
+	
+	#puts "INIT -> [$node nodeName] SELF=[self] PARENT=[my parent] ROOT=[my root]"
+	
+	foreach node [[my node] childNodes] {
+		set type [$node nodeName]
+		
+		if { $type == "annotation" } continue
+		if { $type == "documentation" } continue
+		if { $type == "#text" } continue
+		
+		eval ::xoXSD::Generator::Parser::$type new -childof [self] $node [self] [my root]
+	}
+	
+	my children [my info children]
+}
+	
+Container instproc getXMLName {xmlname} {
+	if { [string first : $xmlname] != -1 } {
+		set tmp [split $xmlname ":"]
+		return [lindex $tmp 1]
+	}
+	return $xmlname
+}
+
+Container instproc getXMLPrefix {xmlname} {
+	if { [string first : $xmlname] != -1 } {
+		set tmp [split $xmlname :]
+		return [lindex $tmp 0]
+	}
+	return ""
+}
+
+Container instproc XMLNametoXOTclClass {xmlname} {
+	set xoClasses [[my root] xoClasses]
+	set xoNamespacePrefix [[my root] xoNamespacePrefix]
+	set xoTargetPrefix [[my root] xoTargetPrefix]
+	
+	set name [my getXMLName $xmlname]
+	
+	if { [my getXMLPrefix $xmlname] != "" } {	
+		set prefix [my getXMLPrefix $xmlname]
+	} else {
+		set prefix "::xoXSD::DataTypes"
+		if { ![Object isobject "$prefix\::$name"] } {
+			set prefix "$xoNamespacePrefix\::$xoTargetPrefix"
+		} 			
+	}
+	
+	return "$prefix\::$name"
+}
+	
+Container instproc getNode {} {
+	return [my node]	
+}
+
+Container instproc getAllChildren {} {
+	set children [list]
+	foreach child [my info children] {
+		lappend children $child	
+	}
+	foreach child $children {
+		set children [concat $children [$child getAllChildren]] 
+	}
+	return $children
+}
+
+Container instproc realInit args {}
+
+Container instproc earlyInit args {}
+
+Container instproc setNameByPrefix {prefix} {
+	set xoClasses [[my root] xoClasses]
+	set i 0
+	while { [lsearch [lsort $xoClasses] "*\::$prefix$i"] != -1 } { incr i }
+	my name "$prefix$i"
+}
+
+Container instproc xoClassCreate {name type} {
+	if { $name == "" || $type == "" } {
+		error "name and/or type is empty."
+	}
+	set xoClasses [[my root] xoClasses]
+	my xoclass [::xoXSD::Generator::Virtual::xoClass $name $name $type]
+	[my root] addClass [my xoclass]
+}
+
+Container instproc parentAddSlot {name type {xmltype ""}} {
+	set slot [::xoXSD::Generator::Virtual::xoSlot new $name $type $xmltype]
+	[[my parent] xoclass] addSlot $slot
+}
+
+
+
+
+
+
+schema instproc init args {
+	my xoClasses [list]
+	next
+}
+	
+schema instproc realInit args {
+	set children [my getAllChildren]
+	foreach child $children {
+		$child earlyInit
+	}
+	foreach child $children {
+		$child realInit
+	}
+}
+	
+schema instproc addClass {c} {
+	my lappend xoClasses $c
+}	
+	
+schema instproc getClasses {{dummy false}} {
+	set o "namespace eval [my xoNamespacePrefix]\::[my xoTargetPrefix] \{\n"
+	foreach c [lsort [my xoClasses]] {
+		if { $dummy } {
+			append o "Class [$c name]\n"
+		} else {
+			append o [$c asXOTcl]
+		}	
+	}
+	return "$o\}\n"
+}
+	
+schema instproc getDummyClasses {} {
+	return [my getClasses true]
+}
+
+
+
+
+
+
+element instproc realInit args {
+	if { [[my node] hasAttribute name] } {
+		my name [[my node] getAttribute name]
+		set type [my getType [[my node] getAttribute type]]
+		my xoClassCreate [my name] $type
+		
+	} elseif { [[my node] hasAttribute ref] } {
+		set type [my getType [[my node] getAttribute ref]]
+		my name [namespace tail $type]
+		my parentAddSlot [my name] "XML:Element" $type
+		
+	} else {
+		error "DON'T KNOW WHAT TO DO..."	
+	}
+}
+
+element instproc getType {type} {
+	set oldtype $type
+	if { [my getXMLPrefix $type] != "" } {	
+		set xoNamespacePrefix [[my root] xoNamespacePrefix]
+		set prefix [my getXMLPrefix $type]
+		set type [my getXMLName $type]
+		return "$xoNamespacePrefix\::$prefix\::$type"
+	} else {
+		return "::xoXSD::DataTypes::$type"
+	}
+}
+
+
+
+
+attribute instproc earlyInit args {
+	if { [namespace tail [[my parent] class]] == "attributeGroup" } {
+		my realInit $args
+	}
+}
+
+attribute instproc realInit args {
+	set xmlname [[my node] getAttribute name]
+	set xmltype [[my node] getAttribute type]
+	
+	my name [my getXMLName $xmlname] 
+	set type [my XMLNametoXOTclClass $xmltype] 
+	
+	my parentAddSlot [my name] "XML:Attribute" $type
+}
+
+
+
+
+
+
+
+sequence instproc realInit args {
+	my setNameByPrefix "[[my parent] name]\::__sequence"
+	set type "::xoXSD::Core::xsd:sequence"
+	my xoClassCreate [my name] $type
+	my parentAddSlot [namespace tail [my name]] "XML:Child"
+}
+
+
+
+
+
+
+choice instproc realInit args {		
+	my setNameByPrefix "[[my parent] name]\::__choice"
+	set type "::xoXSD::Core::xsd:choice"
+	my xoClassCreate [my name] $type
+	my parentAddSlot [namespace tail [my name]] "XML:Child"
+}
+
+
+
+
+
+
+complexType instproc realInit args {
+	set type "::xoXSD::Core::xsd:complexType"		
+
+	if { [[my node] hasAttribute name] } {
+		set xmlname [[my node] getAttribute name]
+		my name [my getXMLName $xmlname]
+		
+	} else {
+		error "ANONYMOUS complexType..."
+	}
+
+	my xoClassCreate [my name] $type
+	
+	foreach child [my info children] {
+		set name [[$child node] nodeName]
+		#simpleContent is not implemented yet -> skip it
+		#if { $name == "simpleContent" } {
+		#	continue
+		#}
+		if { $name != "complexContent" && $name != "simpleContent" } {
+			continue
+		}
+		#search for <restriction> or <extension>:
+		foreach grandchild [$child info children] {
+			set n [[$grandchild node] nodeName]
+			if { $n == "extension" && $name == "complexContent"} {
+				#puts "FOUND EXTENSION..."
+				set base [[$grandchild node] getAttribute base]
+				set xmlbase [my getXMLName $base]
+				[my xoclass] type [my XMLNametoXOTclClass $xmlbase]
+				
+			} elseif { $n == "restriction" && $name == "complexContent" } {
+				#puts "FOUND RESTRICTION..."
+				my children [concat \
+					[my children] \
+					[$grandchild children] \
+				]
+				
+			} else {
+				puts "#HUH? -> $n"
+			}
+			
+			#adjust the "parent"-slot...
+			foreach grandgrandchild [$grandchild children] {
+				$grandgrandchild parent [self]
+			}
+		}
+	}
+}
+
+
+
+
+
+
+attributeGroup instproc earlyInit args {
+	if { [[my node] hasAttribute name] } {
+		set name [[my node] getAttribute name]
+		my name [my getXMLName $name]
+		my xoClassCreate [my name] "xoXSD::Core::xsd:attributeGroup"
+		
+	} else {
+		puts "#EARLY -> ignored [self] [[self] class]"
+	}
+}
+
+
+attributeGroup instproc realInit args {	
+	if { [[my node] hasAttribute ref] } {
+		set ref [[my node] getAttribute ref]
+		my name [my getXMLName $ref]
+		
+		set cls ""
+		foreach c [[my root] xoClasses] {
+			if { [$c name] == [my name] } {
+				set cls $c
+				break
+			}
+		}
+		if { $cls == "" } {
+			error "attributeGroup -> didn't find class."
+		}
+		
+		foreach slot [$cls getSlots] {
+			[[my parent] xoclass] addSlot $slot
+		}
+		
+	} else {
+		puts "#LATE -> ingored [self] [[self] class]"	
+	}
+}
+	
+}

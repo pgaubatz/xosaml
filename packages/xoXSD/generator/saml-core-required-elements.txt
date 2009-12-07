@@ -6,21 +6,21 @@ in order to support the SAML Core standard:
 
 Occurences Element
 ======================
-159	-> element
-58	-> attribute
-48	-> complexType
-32	-> sequence
-21	-> extension
-21	-> complexContent
-18	-> choice
-7	-> enumeration
-5	-> any
-4	-> restriction
-4	-> import
-3	-> attributeGroup
-2	-> simpleType
-2	-> simpleContent
-2	-> schema
-2	-> documentation
-2	-> anyAttribute
-2	-> annotation
+159	-> element			DONE
+58	-> attribute		DONE
+48	-> complexType		DONE	
+32	-> sequence			DONE	
+21	-> extension		50%		-> TODO: extensions for simpleContent
+21	-> complexContent	DONE	
+18	-> choice			DONE	
+7	-> enumeration		-	
+5	-> any				-
+4	-> restriction		50%		-> TODO: restrictions for simpleContent
+4	-> import			-
+3	-> attributeGroup	DONE
+2	-> simpleType		-
+2	-> simpleContent	-
+2	-> schema			DONE
+2	-> documentation	DONE 	-> can be ignored
+2	-> anyAttribute		-
+2	-> annotation		DONE 	-> can be ignored
