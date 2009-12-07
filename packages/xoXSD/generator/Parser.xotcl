@@ -32,7 +32,9 @@ proc parse {document targetprefix {prefix ""}} {
 ::xotcl::Class element		-superclass Container
 ::xotcl::Class attribute	-superclass Container 
 ::xotcl::Class complexType	-superclass Container 
-::xotcl::Class sequence		-superclass Container
+::xotcl::Class sequence		-superclass Container -slots {
+	::xotcl::Attribute counter -default 10
+}
 ::xotcl::Class extension	-superclass Container
 ::xotcl::Class complexContent	-superclass Container
 ::xotcl::Class choice		-superclass Container
@@ -134,7 +136,7 @@ Container instproc setNameByPrefix {prefix} {
 
 Container instproc xoClassCreate {name type} {
 	if { $name == "" || $type == "" } {
-		error "name and/or type is empty."
+		error "parentAddSlot: name and/or type is empty."
 	}
 	set xoClasses [[my root] xoClasses]
 	my xoclass [::xoXSD::Generator::Virtual::xoClass $name $name $type]
@@ -142,8 +144,16 @@ Container instproc xoClassCreate {name type} {
 }
 
 Container instproc parentAddSlot {name type {xmltype ""}} {
+	if { $name == "" || $type == "" } {
+		error "parentAddSlot: name and/or type is empty."
+	}
 	set slot [::xoXSD::Generator::Virtual::xoSlot new $name $type $xmltype]
-	[[my parent] xoclass] addSlot $slot
+	[my parent] addSlot $slot
+	return $slot
+}
+	
+Container instproc addSlot {slot} {
+	[my xoclass] addSlot $slot
 }
 
 
@@ -200,7 +210,13 @@ element instproc realInit args {
 	} elseif { [[my node] hasAttribute ref] } {
 		set type [my getType [[my node] getAttribute ref]]
 		my name [namespace tail $type]
-		my parentAddSlot [my name] "XML:Element" $type
+		set slot [my parentAddSlot [my name] "XML:Element" $type]
+		if { [[my node] hasAttribute minOccurs] } {
+			$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
+		}
+		if { [[my node] hasAttribute maxOccurs] } {
+			$slot addArg "-maxOccurs [[my node] getAttribute maxOccurs]"
+		}
 		
 	} else {
 		error "DON'T KNOW WHAT TO DO..."	
@@ -235,7 +251,10 @@ attribute instproc realInit args {
 	my name [my getXMLName $xmlname] 
 	set type [my XMLNametoXOTclClass $xmltype] 
 	
-	my parentAddSlot [my name] "XML:Attribute" $type
+	set slot [my parentAddSlot [my name] "XML:Attribute" $type]
+	if { [[my node] hasAttribute use] } {
+		$slot addArg "-use [[my node] getAttribute use]"
+	}
 }
 
 
@@ -251,7 +270,11 @@ sequence instproc realInit args {
 	my parentAddSlot [namespace tail [my name]] "XML:Child"
 }
 
-
+sequence instproc addSlot {slot} {
+	$slot addArg "-sequence [my counter]"
+	my counter [expr {[my counter] + 10}]
+	next
+}
 
 
 
