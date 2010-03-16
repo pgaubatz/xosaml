@@ -9,27 +9,32 @@ namespace eval ::xoXSD::Core {
 #               * Definition *               #
 ##############################################	
 	
-::xotcl::Class xsd:generic -slots {
-	::xotcl::Attribute rootClass	
-	::xotcl::Attribute elements
-	::xotcl::Attribute attributes
-}
+::xotcl::Class xsd:generic		-superclass ::xotcl::Class \
+	-slots {
+		::xotcl::Attribute rootClass	
+		::xotcl::Attribute elements
+		::xotcl::Attribute attributes
+	}
 
-::xotcl::Class xsd:element 	  -superclass ::xoXSD::Core::xsd:generic
+::xotcl::Class xsd:element		-superclass ::xoXSD::Core::xsd:generic 
 
-::xotcl::Class xsd:complexType 	  -superclass ::xoXSD::Core::xsd:generic
+::xotcl::Class xsd:complexType		-superclass ::xoXSD::Core::xsd:generic
 	
-::xotcl::Class xsd:attributeGroup -superclass ::xoXSD::Core::xsd:generic	
+::xotcl::Class xsd:attributeGroup	-superclass ::xoXSD::Core::xsd:generic	
 
-::xotcl::Class xsd:sequence 	  -superclass ::xoXSD::Core::xsd:generic -slots {
-	::xotcl::Attribute sequence -default false
-}
+::xotcl::Class xsd:sequence		-superclass ::xoXSD::Core::xsd:generic \
+	-slots {
+		::xotcl::Attribute sequence -default false
+	}
 
-::xotcl::Class xsd:choice 	  -superclass ::xoXSD::Core::xsd:generic -slots {
-	::xotcl::Attribute slotfree 	 -default true
-	::xotcl::Attribute choiceparents -default ""
-}
+::xotcl::Class xsd:choice		-superclass ::xoXSD::Core::xsd:generic \
+	-slots {
+		::xotcl::Attribute slotfree 	 -default true
+		::xotcl::Attribute choiceparents -default ""
+	}
 
+namespace export xsd:*
+	
 ##############################################
 #              * Constructors *              #
 ##############################################
@@ -394,6 +399,15 @@ xsd:generic instproc doSetSlot {slot value} {
 			return [$child doSetSlot $slot $value]		
 		}
 	} else {
+		#Check for a simpleType's enumeration restriction
+		set enum [[my getSlotClass $slot] enumvalues]
+		if {[llength $enum] > 0} {
+			if {[lsearch -exact $enum [$value getContent]] == -1} {
+				my error "\"$slot\" is not correctly formatted."
+				return false
+			}
+		}
+		
 		#puts "SETSLOT -> [my class] $slot"
 		return [my $slot $value]
 	}
