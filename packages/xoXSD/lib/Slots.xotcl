@@ -10,7 +10,8 @@ namespace export *
 	::xotcl::Attribute use 	     -default "optional"
 	
 	# System-specific attributes:
-	::xotcl::Attribute text      -default false
+	::xotcl::Attribute text       -default false
+	::xotcl::Attribute enumvalues -default ""
 }
 
 ::xotcl::Class XML:Element -superclass ::xotcl::Attribute -slots {
@@ -23,5 +24,11 @@ namespace export *
 
 ::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
 
+::xotcl::Class XML:Text -superclass ::xotcl::Attribute -slots {
+	
+	# System-specific attributes:
+	::xotcl::Attribute enumvalues -default ""
+}
+	
 }
 
