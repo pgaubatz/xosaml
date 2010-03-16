@@ -399,8 +399,13 @@ xsd:generic instproc doSetSlot {slot value} {
 			return [$child doSetSlot $slot $value]		
 		}
 	} else {
+		set c [my getSlotClass $slot]
+		
 		#Check for a simpleType's enumeration restriction
-		set enum [[my getSlotClass $slot] enumvalues]
+		set enum [list]
+		if { [$c exists enumvalues] } {
+			set enum [$c enumvalues]
+		}
 		if {[llength $enum] > 0} {
 			if {[lsearch -exact $enum [$value getContent]] == -1} {
 				my error "\"$slot\" is not correctly formatted."
