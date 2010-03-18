@@ -222,9 +222,18 @@ schema instproc addSimpleType {s} {
 
 
 element instproc realInit args {
-	if { [[my node] hasAttribute name] } {
+	if { [[my node] hasAttribute name] && [[my node] hasAttribute type]} {
 		my name [[my node] getAttribute name]
 		set type [my getType [[my node] getAttribute type]]
+		
+		#search for simpleTypes:
+		foreach simpleType [[my root] simpleTypes] {
+			#our attribute's type is a simpleType:
+			if { [namespace tail $type] == [$simpleType name] } {
+				#change element's type to simpleType's restriction base
+				set type [$simpleType base]
+			}
+		}
 		
 		#check if we've got complexElement:
 		if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
@@ -237,6 +246,11 @@ element instproc realInit args {
 			$slot addArg "-text true"
 			$c addSlot $slot
 		} 
+	
+	} elseif { [[my node] hasAttribute name] } {
+		#just set the name, everthing else is done within the 
+		#enclosed <complexContent> or <simpleContent>.
+		my name [[my node] getAttribute name]
 		
 	} elseif { [[my node] hasAttribute ref] } {
 		set type [my getType [[my node] getAttribute ref]]
@@ -355,13 +369,13 @@ complexType instproc realInit args {
 	set type "::xoXSD::Core::xsd:complexType"		
 
 	if { [[my node] hasAttribute name] } {
-		set xmlname [[my node] getAttribute name]
-		my name [my getXMLName $xmlname]
-		
+		set xmlname [[my node] getAttribute name]	
 	} else {
-		error "ANONYMOUS complexType..."
+		#we've got an anonymous <complexType>, enclosed by an <element>:
+		set xmlname [[[my parent] node] getAttribute name]
 	}
-
+	
+	my name [my getXMLName $xmlname]
 	my xoClassCreate [my name] $type
 	
 	foreach child [my info children] {
@@ -453,9 +467,6 @@ attributeGroup instproc earlyInit args {
 		set name [[my node] getAttribute name]
 		my name [my getXMLName $name]
 		my xoClassCreate [my name] "xoXSD::Core::xsd:attributeGroup"
-		
-	} else {
-		puts "#EARLY -> ignored [self] [[self] class]"
 	}
 }
 
@@ -480,8 +491,6 @@ attributeGroup instproc realInit args {
 			[[my parent] xoclass] addSlot $slot
 		}
 		
-	} else {
-		puts "#LATE -> ingored [self] [[self] class]"	
 	}
 }
 	
