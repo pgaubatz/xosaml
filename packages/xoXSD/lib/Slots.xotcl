@@ -12,6 +12,7 @@ namespace export *
 	# System-specific attributes:
 	::xotcl::Attribute text       -default false
 	::xotcl::Attribute enumvalues -default ""
+	::xotcl::Attribute any	      -default false
 }
 
 ::xotcl::Class XML:Element -superclass ::xotcl::Attribute -slots {
@@ -20,6 +21,7 @@ namespace export *
 	
 	# System-specific attributes:
 	::xotcl::Attribute sequence  -default 99999
+	::xotcl::Attribute any	     -default false
 }
 	
 ::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
