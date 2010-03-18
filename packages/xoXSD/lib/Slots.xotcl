@@ -21,14 +21,8 @@ namespace export *
 	# System-specific attributes:
 	::xotcl::Attribute sequence  -default 99999
 }
-
-::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
-
-::xotcl::Class XML:Text -superclass ::xotcl::Attribute -slots {
 	
-	# System-specific attributes:
-	::xotcl::Attribute enumvalues -default ""
-}
+::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
 	
 }
 

@@ -34,12 +34,13 @@ proc generateClasses {data} {
 	set doc [dom parse $data] 
 	set root [$doc documentElement]
 	set targetPrefix [getTargetPrefix $root]
+	set targetNamespace [$root getAttribute "targetNamespace"]
 	
 	if { [$root nodeName] != "schema" } {
 		error "ERROR: $filename is not an XML schema file."
 	}
 
-	return [::xoXSD::Generator::Parser::parse $root $targetPrefix $xoNamespacePrefix]
+	return [::xoXSD::Generator::Parser::parse $root $targetPrefix $targetNamespace $xoNamespacePrefix]
 }
 
 variable xoNamespacePrefix "::SAML"
@@ -53,7 +54,6 @@ package require xoXSD
 
 namespace import -force ::xotcl::*
 namespace import -force ::xoXSD::Slots::*
-	
 }
 
 set parsers [list]
@@ -62,6 +62,11 @@ foreach arg $argv {
 	lappend parsers [generateClasses [read $fd]]
 	close $fd 
 }
+
+foreach parser $parsers {
+	puts "namespace eval ::xoXSD addNamespace \"[$parser getNamespace]\""
+}
+puts ""
 
 foreach parser $parsers {
 	puts [$parser getDummyClasses]
