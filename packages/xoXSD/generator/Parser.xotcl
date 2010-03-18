@@ -3,6 +3,7 @@ package provide xoXSD::Generator::Parser 0.1
 package require tdom
 package require XOTcl
 package require xoXSD::Generator::Virtual
+package require xoXSD::DataTypes
 
 namespace eval ::xoXSD::Generator::Parser {
 
@@ -72,6 +73,7 @@ Container instproc init {node {parent ""} {root ""}} {
 		if { $type == "annotation" } continue
 		if { $type == "documentation" } continue
 		if { $type == "#text" } continue
+		if { $type == "#comment" } continue
 		
 		eval ::xoXSD::Generator::Parser::$type new -childof [self] $node [self] [my root]
 	}
@@ -108,7 +110,7 @@ Container instproc XMLNametoXOTclClass {xmlname} {
 		set prefix "::xoXSD::DataTypes"
 		if { ![Object isobject "$prefix\::$name"] } {
 			set prefix "$xoNamespacePrefix\::$xoTargetPrefix"
-		} 			
+		}
 	}
 	
 	return "$prefix\::$name"
