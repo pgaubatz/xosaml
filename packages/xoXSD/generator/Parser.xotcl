@@ -332,8 +332,27 @@ attribute instproc realInit args {
 
 
 
-	
-	
+
+
+
+anyAttribute instproc realInit args {
+	set slot [my parentAddSlot "__anyAttribute" "XML:Attribute"]
+	$slot addArg "-any true"
+}	
+
+
+
+
+
+
+any instproc realInit args {
+	set slot [my parentAddSlot "__any" "XML:Element"]
+	$slot addArg "-any true"
+}
+
+
+
+
 
 sequence instproc realInit args {
 	my setNameByPrefix "[[my parent] name]\::__sequence"
