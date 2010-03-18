@@ -6,10 +6,11 @@ package require xoXSD::Generator::Virtual
 
 namespace eval ::xoXSD::Generator::Parser {
 
-proc parse {document targetprefix {prefix ""}} {
+proc parse {document targetprefix targetnamespace {prefix ""}} {
 	set parser [::xoXSD::Generator::Parser::schema new $document]
 	$parser xoTargetPrefix $targetprefix
 	$parser xoNamespacePrefix $prefix
+	$parser xoTargetNamespace $targetnamespace
 	$parser realInit
 	return $parser
 }
@@ -27,6 +28,8 @@ proc parse {document targetprefix {prefix ""}} {
 	::xotcl::Attribute xoClasses
 	::xotcl::Attribute xoNamespacePrefix -default ""
 	::xotcl::Attribute xoTargetPrefix
+	::xotcl::Attribute xoTargetNamespace
+	::xotcl::Attribute simpleTypes
 }
 	
 ::xotcl::Class element		-superclass Container
@@ -43,7 +46,10 @@ proc parse {document targetprefix {prefix ""}} {
 ::xotcl::Class restriction	-superclass Container
 ::xotcl::Class import		-superclass Container
 ::xotcl::Class attributeGroup	-superclass Container 
-::xotcl::Class simpleType	-superclass Container
+::xotcl::Class simpleType	-superclass Container -slots {
+	::xotcl::Attribute base
+	::xotcl::Attribute enumvalues -default false
+}
 ::xotcl::Class simpleContent	-superclass Container
 ::xotcl::Class anyAttribute	-superclass Container
 
@@ -136,13 +142,14 @@ Container instproc setNameByPrefix {prefix} {
 
 Container instproc xoClassCreate {name type} {
 	if { $name == "" || $type == "" } {
-		error "parentAddSlot: name and/or type is empty."
+		error "xoClassCreate: name and/or type is empty."
 	}
 	set xoClasses [[my root] xoClasses]
 	my xoclass [::xoXSD::Generator::Virtual::xoClass $name $name $type]
 	[my root] addClass [my xoclass]
+	return [my xoclass]
 }
-
+	
 Container instproc parentAddSlot {name type {xmltype ""}} {
 	if { $name == "" || $type == "" } {
 		error "parentAddSlot: name and/or type is empty."
@@ -163,6 +170,7 @@ Container instproc addSlot {slot} {
 
 schema instproc init args {
 	my xoClasses [list]
+	my simpleTypes [list]
 	next
 }
 	
@@ -181,7 +189,9 @@ schema instproc addClass {c} {
 }	
 	
 schema instproc getClasses {{dummy false}} {
-	set o "namespace eval [my xoNamespacePrefix]\::[my xoTargetPrefix] \{\n"
+	set o "namespace eval [my getNamespace] \{\n\n"
+	append o "variable xmlNamespace \"[my xoTargetNamespace]\"\n"
+	append o "variable xmlPrefix \"[my xoTargetPrefix]\"\n\n"
 	foreach c [lsort [my xoClasses]] {
 		if { $dummy } {
 			append o "Class [$c name]\n"
@@ -192,9 +202,17 @@ schema instproc getClasses {{dummy false}} {
 	return "$o\}\n"
 }
 	
+schema instproc getNamespace {} {
+	return "[my xoNamespacePrefix]\::[my xoTargetPrefix]"
+}
+	
 schema instproc getDummyClasses {} {
 	return [my getClasses true]
 }
+	
+schema instproc addSimpleType {s} {
+	my lappend simpleTypes $s
+}	
 
 
 
@@ -205,7 +223,18 @@ element instproc realInit args {
 	if { [[my node] hasAttribute name] } {
 		my name [[my node] getAttribute name]
 		set type [my getType [[my node] getAttribute type]]
-		my xoClassCreate [my name] $type
+		
+		#check if we've got complexElement:
+		if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
+			my xoClassCreate [my name] $type
+		
+		} else {
+			#handle simple text-elements:
+			set c [my xoClassCreate [my name] "::xoXSD::Core::xsd:element"]
+			set slot [::xoXSD::Generator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+			$slot addArg "-text true"
+			$c addSlot $slot
+		} 
 		
 	} elseif { [[my node] hasAttribute ref] } {
 		set type [my getType [[my node] getAttribute ref]]
@@ -251,17 +280,44 @@ attribute instproc realInit args {
 	my name [my getXMLName $xmlname] 
 	set type [my XMLNametoXOTclClass $xmltype] 
 	
+	#search for simpleType's restrictions (e.g. enumerations)
+	set enumvalues ""
+	foreach simpleType [[my root] simpleTypes] {
+		#our attribute's type is a simpleType:
+		if { [namespace tail $type] == [$simpleType name] } {
+			#change attribute's type to simpleType's restriction base
+			set type [$simpleType base]
+			
+			#"extract" the enumeration's values
+			set enumvalues "-enumvalues \{ "
+			foreach value [$simpleType enumvalues] {
+				append enumvalues "\"$value\" "
+			}
+			append enumvalues "\}"
+			
+		}
+	}
+	
+	#finally create the slot
 	set slot [my parentAddSlot [my name] "XML:Attribute" $type]
+	
+	#search for "use" - attribute
 	if { [[my node] hasAttribute use] } {
 		$slot addArg "-use [[my node] getAttribute use]"
 	}
+	
+	#add the "-enumvalues" slot
+	if { $enumvalues != "" } {
+		$slot addArg $enumvalues
+	}
+	
+	
 }
 
 
 
-
-
-
+	
+	
 
 sequence instproc realInit args {
 	my setNameByPrefix "[[my parent] name]\::__sequence"
@@ -276,6 +332,8 @@ sequence instproc addSlot {slot} {
 	next
 }
 
+	
+	
 
 
 
@@ -306,16 +364,17 @@ complexType instproc realInit args {
 	
 	foreach child [my info children] {
 		set name [[$child node] nodeName]
-		#simpleContent is not implemented yet -> skip it
-		#if { $name == "simpleContent" } {
-		#	continue
-		#}
 		if { $name != "complexContent" && $name != "simpleContent" } {
+			#
+			# FIXME!!!
+			#
+			#puts "#Ignoring1 [my name]'s child: $name"
 			continue
 		}
 		#search for <restriction> or <extension>:
 		foreach grandchild [$child info children] {
 			set n [[$grandchild node] nodeName]
+			
 			if { $n == "extension" && $name == "complexContent"} {
 				#puts "FOUND EXTENSION..."
 				set base [[$grandchild node] getAttribute base]
@@ -329,8 +388,16 @@ complexType instproc realInit args {
 					[$grandchild children] \
 				]
 				
+			} elseif { $n == "extension" && $name == "simpleContent" } {
+				set base [[$grandchild node] getAttribute base]
+				set xmlbase [my getXMLName $base]
+				set type [my XMLNametoXOTclClass $xmlbase]
+				set slot [::xoXSD::Generator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+				$slot addArg "-text true"
+				[my xoclass] addSlot $slot
+				
 			} else {
-				puts "#HUH? -> $n"
+				puts "#HUH? -> $n --> $name"
 			}
 			
 			#adjust the "parent"-slot...
@@ -341,6 +408,39 @@ complexType instproc realInit args {
 	}
 }
 
+
+
+
+
+
+simpleType instproc earlyInit args {
+	if { [[my node] hasAttribute name] } {
+		set name [[my node] getAttribute name]
+		my name [my getXMLName $name]
+		foreach child [my info children] {
+			set childclass [namespace tail [$child class]]
+			if { $childclass == "restriction" } {
+				set xmltype [[$child node] getAttribute base]
+				my base [my XMLNametoXOTclClass $xmltype]
+				my enumvalues [list]
+				foreach grandchild [$child info children] {
+					set grandchildclass [namespace tail [$grandchild class]]
+					if { $grandchildclass == "enumeration" } {
+						my lappend enumvalues [[$grandchild node] getAttribute value]
+					} else {
+						puts "#IGNORING $name's grandchild: $grandchildclass"
+					}
+				}
+			} else {
+				puts "#IGNORING $name's child: $childclass"
+			}
+		}
+		[my root] addSimpleType [self]
+		
+	} else {
+		puts "#EARLY -> ignored [self] [[self] class]"
+	}
+}
 
 
 
