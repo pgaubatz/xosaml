@@ -22,7 +22,6 @@ req1 ID identifier_1
 req1 AssertionConsumerServiceIndex 1
 req1 Issuer iss1
 req1 NameIDPolicy pol1
-
 req1 print
 
 
