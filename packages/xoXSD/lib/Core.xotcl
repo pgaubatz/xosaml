@@ -49,8 +49,11 @@ xsd:generic instproc init { {rootClass ""} } {
 	}
 		
 	# create new instances of all classchildren
-	foreach	child [[my class] info classchildren] {
-		eval $child new -childof [self] [my rootClass]
+	foreach c [concat [my class] [[my class] info heritage]] {
+		if { [namespace qualifiers $c] == "::xoXSD::Core" } break
+		foreach	child [$c info classchildren] {
+			eval $child new -childof [self] [my rootClass]
+		}
 	}
 	
 	my elements [list]
@@ -117,7 +120,7 @@ xsd:choice instproc init args {
 	
 	# get "choice-parents"...
 	set parent [my info parent]
-	while { $parent != "::" } {
+	while { [Object isobject $parent] } {
 		set cls [namespace tail [$parent class]]
 		if { [string match "__choice*" $cls] } {
 			my lappend choiceparents $parent	
@@ -214,11 +217,12 @@ xsd:generic instproc getSlotClass {slot} {
 }
 
 xsd:generic instproc setSlot {slot value} {
-	if { [my doSetSlot $slot $value] == false } {
+	if { [my doSetSlot $slot $value] == true } {
+		return true
+	} else {
 		my error "there is no such Element/Attribute to be set: $slot"	
 		return false
 	}
-	return true
 }
 
 xsd:generic instproc initSlot {slot args} {	
@@ -243,7 +247,7 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 	foreach slot [my getSlots] {	
 		set isset ""
 		if { [my slotFilled $slot] } { set isset "(filled)" }
-		set slot [string range $slot [expr {[string length $c]+2}] end]
+		set slot [string range $slot 2 end]
 		set slot [string map {"::slot" ""} $slot]
 		set slot [string map {"::" " -> "} $slot]
 		set slot [string map {"__" ""} $slot]
@@ -395,9 +399,16 @@ xsd:generic instproc doGetSlot {slot} {
 xsd:generic instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		foreach child [my info children] {
-			return [$child doSetSlot $slot $value]		
+		if { [my info children] == "" } {
+			return -1
 		}
+		foreach child [my info children] {
+			set result [$child doSetSlot $slot $value]
+			if { $result != -1 } {
+				return $result
+			} 		
+		}
+		return -1
 	} else {
 		set c [my getSlotClass $slot]
 		
@@ -406,42 +417,57 @@ xsd:generic instproc doSetSlot {slot value} {
 		if { [$c exists enumvalues] } {
 			set enum [$c enumvalues]
 		}
-		if {[llength $enum] > 0} {
-			if {[lsearch -exact $enum [$value getContent]] == -1} {
+		if { [llength $enum] > 0 } {
+			if { [lsearch -exact $enum [$value getContent]] == -1 } {
 				my error "\"$slot\" is not correctly formatted."
 				return false
 			}
 		}
-		
-		#puts "SETSLOT -> [my class] $slot"
-		return [my $slot $value]
+	
+		#finally set slot
+		my $slot $value
+		return true
 	}
-	return false
 }
 
 xsd:choice instproc doSetSlot {slot value} {
 	if { [my slotfree] } {
-		if { [next] != false } {
+		if { [next] == true } {
 			my slotfree false
 			foreach parent [my choiceparents] {
 				$parent slotfree false	
 			}
-		}
+			return true
+		} 
+		return -1
 	} elseif { ![my slotfree] && [my slotExists $slot] } {
-		foreach child [my info children] {
-			return [$child doSetSlot $slot $value]
+		if { [my info children] == "" } {
+			return -1
 		}
+		foreach child [my info children] {
+			set result [$child doSetSlot $slot $value]
+			if { $result != -1} {
+				return $result
+			}
+		}
+		error "sholdnt reach here"
 	} else {
 		my error "is already set by another Element/Attribute."
-		return false 
+		return false
 	}
 }
 
 xsd:generic instproc doGetSlotClass {slot} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
+		if { [my info children] == "" } {
+			return -1
+		}
 		foreach child [my info children] {
-			return [$child doGetSlotClass $slot]		
+			set result [$child doGetSlotClass $slot]
+			if { $result != -1 } {
+				return $result
+			}
 		}
 	} else {
 		return [lsearch -inline -glob [my getSlots] "*::$slot"]
