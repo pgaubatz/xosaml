@@ -41,7 +41,7 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 ::xotcl::Class attribute	-superclass Container 
 ::xotcl::Class complexType	-superclass Container
 ::xotcl::Class sequence		-superclass Container -slots {
-	::xotcl::Attribute counter -default 10
+	::xotcl::Attribute isSorted -default false
 }
 ::xotcl::Class extension	-superclass Container
 ::xotcl::Class complexContent	-superclass Container
@@ -429,6 +429,9 @@ sequence instproc realInit args {
 }
 
 sequence instproc sortChildren {} {
+	if { [my isSorted] } {
+		return
+	}
 	set children [my info children]
 	set slots [[my xoclass] getSlots]
 	set i 0
@@ -446,6 +449,7 @@ sequence instproc sortChildren {} {
 			}
 		}
 	}
+	my isSorted true
 }
 
 
