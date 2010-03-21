@@ -177,16 +177,7 @@ xsd:generic instproc export { {addXmlNamespaces true} {name ""}} {
 	if { $addXmlNamespaces } {
 		set prefix [my getXmlPrefix]	
 		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
-		
-		foreach element [my elements] {
-			if { ![my slotFilled $element] } continue
-			
-			set element [namespace tail $element]
-			set ns [[my $element] getXmlNamespace]
-			set prefix [[my $element] getXmlPrefix]
-			
-			$root setAttribute "xmlns:$prefix" $ns
-		}	
+		my setXmlnsAttributes $root	
 	}
 	
 	# add the attributes:
@@ -320,6 +311,21 @@ xsd:generic instproc exportElement {doc root element} {
 	$root appendXML $content
 }
 
+xsd:generic instproc setXmlnsAttributes {root} {
+	foreach element [my elements] {
+		if { ![my slotFilled $element] } continue
+		
+		set element [namespace tail $element]
+		set ns [[my $element] getXmlNamespace]
+		set prefix [[my $element] getXmlPrefix]
+		
+		$root setAttribute "xmlns:$prefix" $ns
+	}	
+	foreach child [my info children] {
+		$child setXmlnsAttributes $root
+	}
+}
+	
 xsd:generic instproc getXmlElementExportName { {element ""} } {
 	if { $element == "" } { 
 		set element [my class] 
