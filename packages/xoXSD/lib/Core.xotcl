@@ -14,6 +14,7 @@ namespace eval ::xoXSD::Core {
 		::xotcl::Attribute rootClass	
 		::xotcl::Attribute elements
 		::xotcl::Attribute attributes
+		::xotcl::Attribute children
 	}
 
 ::xotcl::Class xsd:element		-superclass ::xoXSD::Core::xsd:generic 
@@ -53,16 +54,18 @@ xsd:generic instproc init { {rootClass ""} } {
 		if { [namespace qualifiers $c] == "::xoXSD::Core" } break
 		lappend heritage $c
 	}
+
+	my children [list]
+	my elements [list]
+	my attributes [list]
 	
 	# create new instances of all classchildren
 	foreach c [concat [my class] [lreverse $heritage]] {
 		foreach	child [$c info classchildren] {
-			eval $child new -childof [self] [my rootClass]
+			set ch [eval $child new -childof [self] [my rootClass]]
+			my lappend children $ch
 		}
 	}
-	
-	my elements [list]
-	my attributes [list]
 	
 	foreach slot [my getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
@@ -99,7 +102,7 @@ xsd:sequence instproc init args {
 		set slotclass [namespace tail [$slot class]]
 		
 		if { $slotclass == "XML:Child" } {
-			foreach child [my info children] {
+			foreach child [my children] {
 				set childclass [namespace tail [$child class]]
 				if { $childclass == $slotname } {
 					my lappend sequence $child	
@@ -111,7 +114,7 @@ xsd:sequence instproc init args {
 	}
 	
 	# add the missing childclasses (with no sequence)
-	foreach child [my info children] {
+	foreach child [my children] {
 		if { [lsearch [my sequence] $child] == -1 } {
 			#puts "Adding $child to the sequence..."
 			my lappend sequence $child
@@ -250,7 +253,7 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 		set slot [string map {"__" ""} $slot]
 		puts " *) $slot ($slotclass) $isset"
 	}	
-	foreach child [my info children] {
+	foreach child [my children] {
 		$child printSlots false	$c
 	}
 }
@@ -267,7 +270,7 @@ xsd:generic instproc exportAttributes {doc root} {
 	}
 	
 	# do the same with all children
-	foreach child [my info children] {
+	foreach child [my children] {
 		$child exportAttributes $doc $root	
 	}
 }
@@ -290,7 +293,7 @@ xsd:generic instproc exportElements {doc root} {
 	}
 	
 	# do the same with all children
-	foreach child [my info children] {
+	foreach child [my children] {
 		$child exportElements $doc $root	
 	}
 }
@@ -327,7 +330,7 @@ xsd:generic instproc setXmlnsAttributes {root} {
 		
 		$root setAttribute "xmlns:$prefix" $ns
 	}	
-	foreach child [my info children] {
+	foreach child [my children] {
 		$child setXmlnsAttributes $root
 	}
 }
@@ -398,7 +401,7 @@ xsd:generic instproc doGetSlot {slot} {
 	set slot [namespace tail $slot]
 	
 	if { ![my slotExists $slot] } {
-		foreach child [my info children] {
+		foreach child [my children] {
 			return [$child doGetSlot $slot]		
 		}
 	} else {
@@ -411,10 +414,10 @@ xsd:generic instproc doGetSlot {slot} {
 xsd:generic instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		if { [my info children] == "" } {
+		if { [my children] == "" } {
 			return -1
 		}
-		foreach child [my info children] {
+		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
 			if { $result != -1 } {
 				return $result
@@ -453,10 +456,10 @@ xsd:choice instproc doSetSlot {slot value} {
 		} 
 		return -1
 	} elseif { ![my slotfree] && [my slotExists $slot] } {
-		if { [my info children] == "" } {
+		if { [my children] == "" } {
 			return -1
 		}
-		foreach child [my info children] {
+		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
 			if { $result != -1} {
 				return $result
@@ -472,10 +475,10 @@ xsd:choice instproc doSetSlot {slot value} {
 xsd:generic instproc doGetSlotClass {slot} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		if { [my info children] == "" } {
+		if { [my children] == "" } {
 			return -1
 		}
-		foreach child [my info children] {
+		foreach child [my children] {
 			set result [$child doGetSlotClass $slot]
 			if { $result != -1 } {
 				return $result
