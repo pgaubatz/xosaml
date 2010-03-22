@@ -1,0 +1,70 @@
+package provide xoXSD::Validator 0.1
+
+package require XOTcl
+package require fileutil
+
+namespace eval ::xoXSD {
+	
+::xotcl::Class Validator -slots {
+	::xotcl::Attribute libdir
+	::xotcl::Attribute schemata
+	::xotcl::Attribute errors
+	::xotcl::Attribute result
+}
+	
+Validator instproc init {libdir} {
+	my schemata [list]
+	my libdir $libdir
+}
+	
+Validator instproc addSchema {xsdfile} {
+	my lappend schemata $xsdfile
+}
+
+Validator instproc validateFile {xmlfile} {
+	set cmd "/usr/bin/java -classpath "
+	foreach lib [list "resolver.jar" "serializer.jar" "xercesImpl.jar" "xjparse.jar" ] {
+		append cmd "[my libdir]/$lib:"
+	}
+	append cmd " com.nwalsh.parsers.xjparse"
+	foreach schema [my schemata] {
+		append cmd " -S $schema"
+	}
+	append cmd " $xmlfile"
+
+	if { [catch { eval exec $cmd } msg] } {
+		# parse the validator's output (line by line):
+		foreach line [split $::errorInfo "\n"] {
+			# look for a line like:
+			# Parse succeeded (1.789) with no errors and no warnings.
+			if { [string match "Parse succeeded (*" $line] } {
+				regexp {with (.+?) error.? and (.+?) warning.?} $line matches err warn
+				if { $err != "no" || $warn != "no" } {
+					my result "$err errors and $warn warnings"
+				} else {
+					return true
+				}
+			} elseif { [string match "Error:*" $line] } {
+				my lappend errors $line
+			} 
+		}
+	}
+}
+	
+Validator instproc validate {xml} {
+	set xmlfile [::fileutil::tempfile]
+	::fileutil::writeFile $xmlfile $xml
+	set result [my validateFile $xmlfile]
+	file delete $xmlfile
+	return $result
+}
+	
+Validator instproc getErrors {} {
+	return [my errors]
+}
+	
+Validator instproc getResult {} {
+	return [my result]
+}	
+		
+}
