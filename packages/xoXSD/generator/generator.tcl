@@ -44,9 +44,15 @@ proc generateClasses {data} {
 }
 
 variable xoNamespacePrefix "::SAML"
+set cmdline "$argv0 $argv"
 
 puts {#!/usr/bin/tclsh
 
+#
+# This document has been generated using the following commandline:
+#}
+puts "# $cmdline\n#"	
+puts {
 set auto_path [linsert $auto_path 0 /Users/patailama/xoSAML/packages/xoXSD/] 
  
 package require XOTcl

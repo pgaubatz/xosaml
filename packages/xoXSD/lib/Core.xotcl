@@ -237,12 +237,13 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 	}
 	foreach slot [my getSlots] {	
 		set isset ""
-		if { [my slotFilled $slot] } { set isset "(filled)" }
+		set slotclass [namespace tail [$slot class]]
+		if { [my slotFilled $slot] } { set isset "\[filled\]" }
 		set slot [string range $slot 2 end]
 		set slot [string map {"::slot" ""} $slot]
 		set slot [string map {"::" " -> "} $slot]
 		set slot [string map {"__" ""} $slot]
-		puts " *) $slot $isset"
+		puts " *) $slot ($slotclass) $isset"
 	}	
 	foreach child [my info children] {
 		$child printSlots false	$c
