@@ -14,3 +14,4 @@ package ifneeded xoXSD::Slots 0.1 [list source [file join $dir "lib" Slots.xotcl
 package ifneeded xoXSD::DataTypes 0.1 [list source [file join $dir "lib" DataTypes.xotcl]]
 package ifneeded xoXSD::Generator::Parser 0.1 [list source [file join $dir "generator" Parser.xotcl]]
 package ifneeded xoXSD::Generator::Virtual 0.1 [list source [file join $dir "generator" Virtual.xotcl]]
+package ifneeded xoXSD::Validator 0.1 [list source [file join $dir "validator" Validator.xotcl]]
