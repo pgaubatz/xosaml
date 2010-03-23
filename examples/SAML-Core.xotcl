@@ -396,7 +396,7 @@ Class AdviceType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
 	XML:Element AssertionURIRef -type ::SAML::saml::AssertionURIRef
 	XML:Element Assertion -type ::SAML::saml::Assertion
 	XML:Element EncryptedAssertion -type ::SAML::saml::EncryptedAssertion
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 	XML:Element AssertionIDRef -type ::SAML::saml::AssertionIDRef
 }
 Class AssertionType -superclass ::xoXSD::Core::xsd:complexType -slots {
@@ -431,7 +431,7 @@ Class AttributeType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute NameFormat -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute Name -type ::xoXSD::DataTypes::string -use required
 	XML:Attribute FriendlyName -type ::xoXSD::DataTypes::string -use optional
-	XML:Attribute __anyAttribute -any true
+	XML:Attribute __anyAttribute -any true -namespace "##other"
 	XML:Child __sequence0
 }
 Class AttributeType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
@@ -544,11 +544,11 @@ Class SubjectConfirmationDataType -superclass ::xoXSD::Core::xsd:complexType -sl
 	XML:Attribute InResponseTo -type ::xoXSD::DataTypes::NCName -use optional
 	XML:Attribute Address -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute NotBefore -type ::xoXSD::DataTypes::dateTime -use optional
-	XML:Attribute __anyAttribute -any true
+	XML:Attribute __anyAttribute -any true -namespace "##other"
 	XML:Attribute NotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
 }
 Class SubjectConfirmationDataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
 Class SubjectConfirmationType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Method -type ::xoXSD::DataTypes::anyURI -use required
@@ -673,7 +673,7 @@ Class ArtifactResponseType -superclass ::SAML::samlp::StatusResponseType -slots 
 	XML:Child __sequence0
 }
 Class ArtifactResponseType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -namespace "##any"
 }
 Class AssertionIDRequestType -superclass ::SAML::samlp::RequestAbstractType -slots {
 	XML:Child __sequence0
@@ -726,7 +726,7 @@ Class ExtensionsType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class ExtensionsType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -maxOccurs unbounded -namespace "##other"
 }
 Class IDPEntryType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Loc -type ::xoXSD::DataTypes::anyURI -use optional
@@ -833,7 +833,7 @@ Class StatusDetailType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class StatusDetailType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
 Class StatusResponseType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
 	XML:Element Status -type ::SAML::samlp::Status -sequence 4
@@ -916,7 +916,7 @@ Class CanonicalizationMethodType -superclass ::xoXSD::Core::xsd:complexType -slo
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 }
 Class CanonicalizationMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
 Class DSAKeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -932,14 +932,14 @@ Class DigestMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 }
 Class DigestMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class KeyInfoType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 	XML:Child __choice0
 }
 Class KeyInfoType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 	XML:Element X509Data -type ::SAML::ds::X509Data
 	XML:Element PGPData -type ::SAML::ds::PGPData
 	XML:Element SPKIData -type ::SAML::ds::SPKIData
@@ -953,7 +953,7 @@ Class KeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
 }
 Class KeyValueType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
 	XML:Element RSAKeyValue -type ::SAML::ds::RSAKeyValue
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 	XML:Element DSAKeyValue -type ::SAML::ds::DSAKeyValue
 }
 Class ManifestType -superclass ::xoXSD::Core::xsd:complexType -slots {
@@ -970,7 +970,7 @@ Class ObjectType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class ObjectType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##any"
 }
 Class PGPDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __choice0
@@ -980,10 +980,10 @@ Class PGPDataType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
 	XML:Child __sequence1
 }
 Class PGPDataType::__choice0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class PGPDataType::__choice0::__sequence1 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class RSAKeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -994,7 +994,7 @@ Class ReferenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
 }
 Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class RetrievalMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -1008,14 +1008,14 @@ Class SPKIDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class SPKIDataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -namespace "##other"
 }
 Class SignatureMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Child __sequence0
 }
 Class SignatureMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class SignaturePropertiesType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
@@ -1030,7 +1030,7 @@ Class SignaturePropertyType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __choice0
 }
 Class SignaturePropertyType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 }
 Class SignatureType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -1060,7 +1060,7 @@ Class TransformType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __choice0
 }
 Class TransformType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 }
 Class TransformsType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -1075,7 +1075,7 @@ Class X509DataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
 	XML:Child __choice0 -sequence 1
 }
 Class X509DataType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 }
 Class X509IssuerSerialType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -1194,7 +1194,7 @@ Class AgreementMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class AgreementMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class CipherDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __choice0
@@ -1232,7 +1232,7 @@ Class EncryptionMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
 }
 Class EncryptionMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class EncryptionPropertiesType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0
@@ -1244,11 +1244,11 @@ Class EncryptionPropertiesType::__sequence0 -superclass ::xoXSD::Core::xsd:seque
 Class EncryptionPropertyType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute Target -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
-	XML:Attribute __anyAttribute -any true
+	XML:Attribute __anyAttribute -any true -namespace "http://www.w3.org/XML/1998/namespace"
 	XML:Child __choice0
 }
 Class EncryptionPropertyType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -namespace "##other"
 }
 Class ReferenceList -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __choice0
@@ -1259,7 +1259,7 @@ Class ReferenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
 }
 Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
 Class TransformsType -superclass ::xoXSD::Core::xsd:complexType -slots {
 	XML:Child __sequence0

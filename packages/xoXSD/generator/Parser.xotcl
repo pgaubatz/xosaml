@@ -403,6 +403,9 @@ attribute instproc realInit args {
 anyAttribute instproc realInit args {
 	set slot [my parentAddSlot "__anyAttribute" "XML:Attribute"]
 	$slot addArg "-any true"
+	if { [[my node] hasAttribute namespace] } {
+		$slot addArg "-namespace \"[[my node] getAttribute namespace]\""
+	}
 }	
 
 
@@ -413,6 +416,15 @@ anyAttribute instproc realInit args {
 any instproc realInit args {
 	set slot [my parentAddSlot "__any" "XML:Element"]
 	$slot addArg "-any true"
+	if { [[my node] hasAttribute minOccurs] } {
+		$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
+	}
+	if { [[my node] hasAttribute maxOccurs] } {
+		$slot addArg "-maxOccurs [[my node] getAttribute maxOccurs]"
+	}
+	if { [[my node] hasAttribute namespace] } {
+		$slot addArg "-namespace \"[[my node] getAttribute namespace]\""
+	}
 }
 
 
