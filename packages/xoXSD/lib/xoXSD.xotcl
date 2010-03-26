@@ -76,6 +76,22 @@ BaseClass instproc check {} {
 BaseClass instproc export {} {
 	return [[my Object] export]
 }
+	
+BaseClass instproc addAny {slot} {
+	if { [$slot procsearch getObject] != "" } {
+		set slot [$slot getObject]
+	}
+	return [[my Object] addAny $slot]
+}
+
+BaseClass instproc addAnyAttribute {slotname type value} {
+	if { [Object isobject $value] } {
+		if { [$value procsearch getObject] != "" } {
+			set value [$value getObject]
+		}
+	}
+	return [[my Object] addAnyAttribute $slotname $type $value]
+}	
 
 BaseClass instproc print {} {
 	puts "Exporting [self]..."

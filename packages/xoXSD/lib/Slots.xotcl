@@ -24,6 +24,7 @@ namespace export *
 	# System-specific attributes:
 	::xotcl::Attribute sequence  -default 99999
 	::xotcl::Attribute any	     -default false
+	::xotcl::Attribute anyCounter -default 0
 }
 	
 ::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element

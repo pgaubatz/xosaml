@@ -2,6 +2,7 @@ package provide xoXSD::Core 0.1
 
 package require tdom
 package require XOTcl
+package require xoXSD::DataTypes
 
 namespace eval ::xoXSD::Core {
 	
@@ -71,9 +72,9 @@ xsd:generic instproc init { {rootClass ""} } {
 		set slotclass [namespace tail [$slot class]]
 		
 		if { $slotclass == "XML:Attribute" } {
-			my lappend attributes $slot	
+			my addAttribute $slot
 		} elseif { $slotclass == "XML:Element" } {
-			my lappend elements $slot
+			my addElement $slot
 		} 
 	}	
 
@@ -226,7 +227,7 @@ xsd:generic instproc setSlot {slot value} {
 
 xsd:generic instproc initSlot {slot args} {	
 	set slotclass [my getSlotClass $slot]
-	if { $slotclass == "" } {
+	if { $slotclass == false } {
 		my error "there is no such slot: $slot"
 		return	
 	}
@@ -246,16 +247,116 @@ xsd:generic instproc printSlots { {isRoot true} {c ""} } {
 	foreach slot [my getSlots] {	
 		set isset ""
 		set slotclass [namespace tail [$slot class]]
+		set slotname [namespace tail $slot]
+		if { $slotname == "__any" || $slotname == "__anyAttribute" } {
+			set slottype ""
+		} else {
+			set slottype "([$slot type])"
+		}
 		if { [my slotFilled $slot] } { set isset "\[filled\]" }
 		set slot [string range $slot 2 end]
 		set slot [string map {"::slot" ""} $slot]
 		set slot [string map {"::" " -> "} $slot]
 		set slot [string map {"__" ""} $slot]
-		puts " *) $slot ($slotclass) $isset"
+		puts " *) $slotclass\: $slot $slottype $isset"
 	}	
 	foreach child [my children] {
 		$child printSlots false	$c
 	}
+}
+	
+xsd:generic instproc addAny {slot} {
+	set slotname [namespace tail [$slot class]]
+	
+	# first check if the element actually has an <any> element:
+	set any [my getSlotClass __any]
+	if { $any == false } {
+		my error "there is no <any> element to be set."
+		return false
+	}
+	
+	# search for the class/instance that has the __any slot defined:
+	set cls [[$any info parent] info parent]
+	set inst ""
+	foreach inst [concat [self] [my getAllChildren]] {
+		set c [$inst class]
+		if { $c == $cls || [lsearch [$c info heritage] $cls] != -1 } { 
+			break
+		}
+	}
+	if { $inst == "" } { error "should not reach here. didn't find inst!" }
+	
+	# check if a slot named $slotname already exists:
+	if { [$inst slotExists $slotname] } {
+		my error "there's is already a slot named \"$slotname\"."
+		return false
+	}
+	
+	# check for maxOccurs restrictions:
+	set anyslot "$cls\::slot\::__any"
+	set anyCounter [$anyslot anyCounter]
+	set maxOccurs [$anyslot maxOccurs]
+	if { $maxOccurs != "unbounded" } {
+		if { $anyCounter >= $maxOccurs } {
+			my error "cannot be set because of a maxOccurs restriction."
+			return false
+		}
+	}
+	
+	# check for namespace restrictions:
+	set namespaces [split [$anyslot namespace] " "]
+	if { ![my checkAnyNamespaceRestrictions $namespaces $inst $slot] } {
+		my error "cannot be set because of namespace restrictions."
+		return false
+	}
+	
+	# dynamically create and add a new slot to the class
+	$cls slots "::xoXSD::Slots::XML:Element $slotname -type [$slot class]"
+	$inst addElement "$cls\::slot\::$slotname"
+	
+	# finally set the newly created slot
+	my setSlot $slotname $slot
+	
+	# update the anyCounter if necessary
+	if { $maxOccurs != "unbounded" } {
+		$anyslot anyCounter [incr anyCounter]
+	}
+}
+	
+xsd:generic instproc addAnyAttribute {slotname type value} {
+	# first check if the element actually has an <any> element:
+	set anyAttribute [my getSlotClass __anyAttribute]
+	if { $anyAttribute == false } {
+		my error "there is no <anyAttribute> attribute to be set."
+		return false
+	}
+	
+	# search for the class/instance that has the __anyAttribute slot defined:
+	set cls [[$anyAttribute info parent] info parent]
+	set inst ""
+	foreach inst [concat [self] [my getAllChildren]] {
+		set c [$inst class]
+		if { $c == $cls || [lsearch [$c info heritage] $cls] != -1 } { 
+			break
+		}
+	}
+	if { $inst == "" } { error "should not reach here. didn't find inst!" }
+	
+	# check for namespace restrictions:
+	set anyslot "$cls\::slot\::__anyAttribute"
+	set namespaces [split [$anyslot namespace] " "]
+	set content [$type new $value]
+	if { ![my checkAnyNamespaceRestrictions $namespaces $inst $content] } {
+		my error "cannot be set because of namespace restrictions."
+		return false
+	}
+	
+	# dynamically create and add a new slot to the class
+	$cls slots "::xoXSD::Slots::XML:Attribute $slotname -type $type"
+	$inst addAttribute "$cls\::slot\::$slotname"
+	
+	# finally set the newly created slot
+	my setSlot $slotname $content
 }
 
 ##############################################
@@ -393,8 +494,10 @@ xsd:generic instproc getLocalSlots {} {
 }
 
 xsd:generic instproc getSlotType {slot} {
-	# returns either XML:Attribute or XML:Element
-	return [namespace tail [[my getSlotClass $slot] class]]
+	# returns either XML:Attribute, XML:Element or false
+	set slotclass [my getSlotClass $slot]
+	if { $slotclass == false } { return false }
+	return [namespace tail [$slotclass class]]
 }
 
 xsd:generic instproc doGetSlot {slot} {
@@ -426,6 +529,12 @@ xsd:generic instproc doSetSlot {slot value} {
 		return -1
 	} else {
 		set c [my getSlotClass $slot]
+		
+		#Check if the given value-object matches the required type
+		if { [$c type] != [$value class] } {
+			my error "\"$slot\" has to be of type [$c type]"
+			return false
+		}
 		
 		#Check for a simpleType's enumeration restriction
 		set enum [list]
@@ -484,6 +593,8 @@ xsd:generic instproc doGetSlotClass {slot} {
 				return $result
 			}
 		}
+		return false
+		
 	} else {
 		return [lsearch -inline -glob [my getSlots] "*::$slot"]
 	}
@@ -502,5 +613,56 @@ xsd:generic instproc slotFilled {slot} {
 	return [my exists [namespace tail $slot]]
 }
 
+xsd:generic instproc getAllChildren {} {
+	set children [my children]
+	foreach child [my children] {
+		set children [concat $children [$child getAllChildren]]
+	}
+	return $children
+}
+	
+xsd:generic instproc addElement {element} {
+	my lappend elements $element
+}
+		
+xsd:sequence instproc addElement {element} {
+	next
+	my lappend sequence $element
+}	
+	
+xsd:generic instproc addAttribute {attribute} {
+	my lappend attributes $attribute
+}
+	
+xsd:generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {	
+	if { [lsearch $namespaces "##any"] != -1 } {
+		return true
+		
+	} elseif { [lsearch $namespaces "##other"] != -1 } {
+		if { [$value getXmlNamespace] != [$inst getXmlNamespace] } {
+			return true
+		} 
+		
+	} elseif { [lsearch $namespaces "##targetNamespace"] != -1 } {
+		if { [$value getXmlNamespace] == [$inst getXmlNamespace] } {
+			return true
+		} 
+		
+	} elseif { [lsearch $namespaces "##local"] != -1 } {
+		if { [$value getXmlNamespace] == "" } {
+			return true
+		} 
+		
+	} else {
+		foreach ns $namespaces {
+			if { $ns == [$value getXmlNamespace] } {
+				return true
+			}
+		}
+	}
+	
+	return false
+}
+	
 }
 

@@ -20,6 +20,10 @@ DataType instproc getContent {} {
 DataType instproc init { data } {
 	my data $data	
 }
+	
+DataType instproc getXmlNamespace args {
+	return "http://www.w3.org/2001/XMLSchema-datatypes"
+}
 
 # String Data Types
 ::xotcl::Class string 		  -superclass ::xoXSD::DataTypes::DataType
