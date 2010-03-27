@@ -1,0 +1,19 @@
+This list has been generated via:
+$ tools/list-xml-types.tcl xsd/saml-schema-assertion-2.0.xsd xsd/saml-schema-protocol-2.0.xsd xsd/xenc-schema.xsd xsd/xmldsig-core-schema.xsd > saml-core-required-datatypes.txt
+
+These (XSD)-DataTypes need to be implemented
+in order to support the SAML Core standard:
+
+Occurences DataType
+======================
+41	 -> anyURI
+30	 -> string
+15	 -> ID
+10	 -> dateTime
+10	 -> base64Binary
+3	 -> boolean
+3	 -> NCName
+2	 -> nonNegativeInteger
+2	 -> unsignedShort
+2	 -> anyType
+1	 -> integer
