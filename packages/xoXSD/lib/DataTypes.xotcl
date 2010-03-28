@@ -7,18 +7,33 @@ namespace eval ::xoXSD::DataTypes {
 	
 ::xotcl::Class DataType -superclass ::xoXSD::Core::xsd:generic -slots {
 	::xotcl::Attribute data
+	::xotcl::Attribute valid -default false
 }
 
 DataType instproc export {ignored name} {
-	return "<$name>[my data]</$name>"
+	return "<$name>[my getContent]</$name>"
 }
 
-DataType instproc getContent {} {	
+DataType instproc getContent {} {
 	return [my data]
 }
+	
+DataType instproc setContent {data} {
+	if { [my check $data] } {
+		my data $data
+		my valid true
+	} else {
+		my data ""
+		my valid false
+	}
+}
 
-DataType instproc init { data } {
-	my data $data	
+DataType instproc init { {data ""} } {
+	my setContent $data	
+}
+	
+DataType instproc check {data} {
+	return true
 }
 	
 DataType instproc getXmlNamespace args {
@@ -31,12 +46,12 @@ DataType instproc getXmlNamespace args {
 ::xotcl::Class token 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class ENTITIES 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class ENTITY 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class ID 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class IDREF 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class IDREFS 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class language 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class Name 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class NCName 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class ID 		  -superclass ::xoXSD::DataTypes::NCName	
 ::xotcl::Class NMTOKEN 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class NMTOKENS 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class QName 		  -superclass ::xoXSD::DataTypes::DataType
@@ -54,69 +69,107 @@ DataType instproc getXmlNamespace args {
 
 # Numeric Data Types
 ::xotcl::Class decimal 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class integer 		  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class integer 		  -superclass ::xoXSD::DataTypes::decimal
 ::xotcl::Class byte 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class int 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class negativeInteger 	  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class nonNegativeInteger -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class nonPositiveInteger -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class positiveInteger 	  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class short 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class unsignedLong 	  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class unsignedInt 	  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class unsignedShort 	  -superclass ::xoXSD::DataTypes::DataType
+::xotcl::Class int 		  -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class negativeInteger 	  -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class nonNegativeInteger -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class nonPositiveInteger -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class positiveInteger 	  -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class short 		  -superclass ::xoXSD::DataTypes::integer
+::xotcl::Class long 		  -superclass ::xoXSD::DataTypes::integer	
+::xotcl::Class double 		  -superclass ::xoXSD::DataTypes::decimal
+::xotcl::Class float 		  -superclass ::xoXSD::DataTypes::decimal
+::xotcl::Class unsignedLong 	  -superclass ::xoXSD::DataTypes::nonNegativeInteger
+::xotcl::Class unsignedInt 	  -superclass ::xoXSD::DataTypes::nonNegativeInteger
+::xotcl::Class unsignedShort 	  -superclass ::xoXSD::DataTypes::nonNegativeInteger
 ::xotcl::Class unsignedByte 	  -superclass ::xoXSD::DataTypes::DataType
-
+	
 # Miscellaneous Data Types
 ::xotcl::Class anyURI 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class base64Binary 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class boolean 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class double 		  -superclass ::xoXSD::DataTypes::DataType
-::xotcl::Class float 		  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class hexBinary 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class NOTATION 	  -superclass ::xoXSD::DataTypes::DataType
 ::xotcl::Class QName 		  -superclass ::xoXSD::DataTypes::DataType
-	
 ::xotcl::Class anyType 		  -superclass ::xoXSD::DataTypes::DataType
+
+string instproc check {data} {
+	return [regexp {^[\x9\xA\xD\x20-\xD7FF\xE000-\xFFFD\x10000-\x10FFFF]*$} $data]
+}
 	
-string instproc init { str } {
-	my data $str
+dateTime instproc setContent {data} {
+	if { $data == "now" } {
+		set data [clock seconds]
+	} 
+	next $data
 }
-
-ID instproc init { ID } {
-	my data $ID
-}
-
-NCName instproc init { NCN } {
-	my data $NCN
-}
-
-dateTime instproc init { { timestamp "now" } } {
-	if { $timestamp eq "now" } {
-		 set timestamp [clock seconds]
+	
+dateTime instproc check {data} {
+	if { $data == "now" || [::string is digit -strict $data] && $data >= 0 } {
+		return true
 	}
-	my data [clock format $timestamp \
-		 -format {%Y-%m-%dT%H:%M:%SZ} \
-		 -locale en_US \
-		 -timezone :UTC]
+	return false
 }
-
-anyURI instproc init { uri } {
-	my data $uri
-}
-
-boolean instproc init { bool } {
-	my data $bool
-}
-
-unsignedShort instproc init { short } {
-	if { $short < 0 } {
-		set short 0
+	
+dateTime instproc getContent {} {
+	if { [my data] == "" } {
+		return ""
 	}
-	if { $short > 65535 } {
-		set short 65535	
+	return [clock format [my data] -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
+}
+
+base64Binary instproc check {data} {
+	return [regexp {^((([A-Za-z0-9+/] ?){4})*(([A-Za-z0-9+/] ?){3}[A-Za-z0-9+/]|([A-Za-z0-9+/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+/] ?[AQgw] ?= ?=))?$} $data]	
+}
+	
+boolean instproc check {data} {
+	return [::string is boolean -strict $data]
+}
+
+boolean instproc getContent {} {
+	if { [my data] } {
+		return "true"
 	}
-	my data $short
+	return "false"
+}
+	
+decimal instproc check {data} {
+	return [regexp {^[+-]?(\d+(\.\d*)?|(\.\d+))$} $data]
+}
+	
+integer instproc check {data} {
+	set isDecimal [next]
+	set isInteger [regexp {^[+-]?\d+$} $data]
+	return [expr {$isDecimal && $isInteger}]
+}
+	
+nonNegativeInteger instproc check {data} {
+	set isInteger [next]
+	set isNonNegative [regexp {^[+]?\d+$} $data]
+	return [expr {$isInteger && $isNonNegative}]
+}
+	
+unsignedShort instproc check {data} {
+	set isNonNegativeInteger [next]
+	return [expr {$isNonNegativeInteger && $data <= 65535}]
+}
+
+anyURI instproc check {data} {
+	return [regexp {(?:[[:alpha:]]?)(?:\w){2,7}:(?://?)(?:[^[:space:]>"]*)|(^urn\:([[:alnum:]]|\-)*?\:(.*))} $data]
+}
+
+ID instproc check {data} {
+	set isNCName [next]
+	return [expr {$isNCName}]
+}
+	
+NCName instproc check {data} {
+	return [regexp {^([[:alnum:]]|\_)+$} $data]
+}
+	
+anyType instproc check {data} {
+	return true
 }
 
 }

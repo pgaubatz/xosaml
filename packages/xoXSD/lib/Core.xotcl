@@ -229,14 +229,20 @@ xsd:generic instproc initSlot {slot args} {
 	set slotclass [my getSlotClass $slot]
 	if { $slotclass == false } {
 		my error "there is no such slot: $slot"
-		return	
+		return false
 	}
 	set slottype [$slotclass type]
 	if { [namespace qualifiers $slottype] != "::xoXSD::DataTypes" } {
 		my error "\"$slot\" is no basic data type."
-		return
+		return false
 	}
-	my setSlot $slot [$slottype new $args]
+	set content [$slottype new $args]
+	if { [$content valid] } {
+		my setSlot $slot $content
+	} else {
+		my error "the content of \"$slot\" is not valid."
+		return false
+	}
 }
 
 xsd:generic instproc printSlots { {isRoot true} {c ""} } {
