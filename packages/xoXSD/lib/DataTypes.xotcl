@@ -100,6 +100,8 @@ string instproc check {} {
 dateTime instproc setContent {data} {
 	if { $data == "now" } {
 		set data [clock seconds]
+	} elseif { [regexp {^\d*?\-\d{2}\-\d{2}T\d{2}\:\d{2}\:\d{2}Z$} $data] } {
+		set data [clock scan $data -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
 	} 
 	next $data
 }
