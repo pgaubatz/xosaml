@@ -155,18 +155,39 @@ xsd:generic instproc check {} {
 	}
 	
 	foreach slot [my elements] {
-		set name [namespace tail $slot]
-		
-		if { [$slot minOccurs] > 0 && ![my slotFilled $slot] } {
-			set validity false
-			my error "needs object: $name (type: [$slot type])"
+		my checkMinOccurs $slot
+	}
+	
+	foreach child [my children] {
+		set result [$child check]
+		if { !$validity } continue
+		set validity $result
+	}
+	
+	return $validity
+}
+	
+xsd:choice instproc check {} {
+	if { [my slotfree] } {
+		return true
+	}
+	
+	set choice ""
+	foreach slot [my elements] {
+		if { [my slotFilled $slot] } {
+			set choice $slot
+			break
 		}
-		
-		#if { [$slot maxOccurs] != "unbounded" && [my slotFilled $slot] } {
-		#	set validity false
-		#	my error "needs object: $name (type: [$slot type])"
-		#}
-		
+	}	
+	if { $choice == "" } {
+		return true
+	}
+	set validity [my checkMinOccurs $choice]
+	
+	foreach child [my children] {
+		set result [$child check]
+		if { !$validity } continue
+		set validity $result
 	}
 	
 	return $validity
@@ -421,19 +442,20 @@ xsd:sequence instproc exportElements {doc root} {
 xsd:generic instproc exportElement {doc root element} {
 	if { ![my slotFilled $element] } return
 	
-	set name [my getXmlElementExportName $element]
-	set content [[my [namespace tail $element]] export false $name]
-	
-	$root appendXML $content
+	set name [my getXmlElementExportName $element] 
+	foreach element [my [namespace tail $element]] {
+		$root appendXML [$element export false $name]
+	}
 }
 
 xsd:generic instproc setXmlnsAttributes {root} {
 	foreach element [my elements] {
+		set element [namespace tail $element]
 		if { ![my slotFilled $element] } continue
 		
-		set element [namespace tail $element]
-		set ns [[my $element] getXmlNamespace]
-		set prefix [[my $element] getXmlPrefix]
+		set element [lindex [my $element] 0]
+		set ns [$element getXmlNamespace]
+		set prefix [$element getXmlPrefix]
 		
 		$root setAttribute "xmlns:$prefix" $ns
 	}	
@@ -553,14 +575,25 @@ xsd:generic instproc doSetSlot {slot value} {
 				return false
 			}
 		}
-	
+		
 		#finally set slot
-		my $slot $value
+		if { [$c multivalued] && [my slotFilled $slot] } {
+			set occurs [llength [my $slot]]
+			set maxOccurs [$c maxOccurs]
+			if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
+				my $slot add $value
+			} else {
+				my error "\"$slot\" cannot be set because of a maxOccurs restriction."
+				return false
+			}
+		} else {
+			my $slot $value
+		}
 		return true
 	}
 }
 
-xsd:choice instproc doSetSlot {slot value} {
+xsd:choice instproc doSetSlot {slot value {add false}} {
 	if { [my slotfree] } {
 		if { [next] == true } {
 			my slotfree false
@@ -668,6 +701,22 @@ xsd:generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {
 	}
 	
 	return false
+}
+
+xsd:generic instproc checkMinOccurs {slot} {
+	set name [namespace tail $slot]
+	set validity true
+	if { [$slot minOccurs] > 0 } {
+		if { ![my slotFilled $slot] } {
+			set validity false
+			my error "needs object: $name (type: [$slot type])"
+			
+		} elseif { [llength [my $name]] < [$slot minOccurs] } {
+			set validity false
+			my error "needs [$slot minOccurs] instances of $name (type: [$slot type])"
+		}	
+	}	
+	return $validity
 }
 	
 }
