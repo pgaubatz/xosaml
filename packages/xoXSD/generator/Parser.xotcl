@@ -320,7 +320,12 @@ element instproc realInit args {
 			$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
 		}
 		if { [[my node] hasAttribute maxOccurs] } {
-			$slot addArg "-maxOccurs [[my node] getAttribute maxOccurs]"
+			set maxOccurs [[my node] getAttribute maxOccurs]
+			set arg "-maxOccurs $maxOccurs"
+			if { $maxOccurs == "unbounded" || $maxOccurs > 1 } {
+				append arg " -multivalued true"
+			}
+			$slot addArg $arg
 		}
 		
 	} else {
@@ -455,6 +460,9 @@ sequence instproc sortChildren {} {
 			foreach slot $slots {
 				set name [namespace tail [$child name]]
 				if { [$slot name] != $name } {
+					continue
+				}
+				if { [string first "-sequence" [$slot asXOTcl]] != -1 } {
 					continue
 				}
 				$slot addArg "-sequence [incr i]"
