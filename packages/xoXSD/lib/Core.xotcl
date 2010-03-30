@@ -10,13 +10,12 @@ namespace eval ::xoXSD::Core {
 #               * Definition *               #
 ##############################################	
 	
-::xotcl::Class xsd:generic		-superclass ::xotcl::Class \
-	-slots {
-		::xotcl::Attribute rootClass	
-		::xotcl::Attribute elements
-		::xotcl::Attribute attributes
-		::xotcl::Attribute children
-	}
+::xotcl::Class xsd:generic		-superclass ::xotcl::Class -slots {
+	::xotcl::Attribute rootClass	
+	::xotcl::Attribute elements
+	::xotcl::Attribute attributes
+	::xotcl::Attribute children
+}
 
 ::xotcl::Class xsd:element		-superclass ::xoXSD::Core::xsd:generic 
 
@@ -24,16 +23,14 @@ namespace eval ::xoXSD::Core {
 	
 ::xotcl::Class xsd:attributeGroup	-superclass ::xoXSD::Core::xsd:generic	
 
-::xotcl::Class xsd:sequence		-superclass ::xoXSD::Core::xsd:generic \
-	-slots {
-		::xotcl::Attribute sequence -default false
-	}
+::xotcl::Class xsd:sequence		-superclass ::xoXSD::Core::xsd:generic -slots {
+	::xotcl::Attribute sequence -default false
+}
 
-::xotcl::Class xsd:choice		-superclass ::xoXSD::Core::xsd:generic \
-	-slots {
-		::xotcl::Attribute slotfree 	 -default true
-		::xotcl::Attribute choiceparents -default ""
-	}
+::xotcl::Class xsd:choice		-superclass ::xoXSD::Core::xsd:generic -slots {
+	::xotcl::Attribute slotfree 	 -default true
+	::xotcl::Attribute choiceparents -default ""
+}
 
 namespace export xsd:*
 	
@@ -42,8 +39,6 @@ namespace export xsd:*
 ##############################################
 
 xsd:generic instproc init { {rootClass ""} } {
-	#puts "GENERIC -> INIT -> [self] [my class]"
-	
 	if { $rootClass == "" } {
 		my rootClass [my class]
 	} else {
@@ -77,16 +72,11 @@ xsd:generic instproc init { {rootClass ""} } {
 			my addElement $slot
 		} 
 	}	
-
-	#puts "([my class]) -> ELEMENTS -> [my elements]"
-	#puts "([my class]) -> ATTRIBUTES -> [my attributes]"
-	#puts "([my class]) -> CHILDREN -> [my info children]"
-	#puts ""
 }
 
 xsd:sequence instproc init args {
-	next
-	#puts "SEQUENCE -> INIT -> [self] [my class]" 	
+	# xsd:generic->init
+	next 
 	
 	set slots [list]
 	foreach slot [my getLocalSlots] {
@@ -117,15 +107,14 @@ xsd:sequence instproc init args {
 	# add the missing childclasses (with no sequence)
 	foreach child [my children] {
 		if { [lsearch [my sequence] $child] == -1 } {
-			#puts "Adding $child to the sequence..."
 			my lappend sequence $child
 		}
 	}
 }
 
 xsd:choice instproc init args {
-	next
-	#puts "CHOICE -> INIT -> [self] [my class]" 	
+	# xsd:generic->init
+	next 	
 	
 	# get "choice-parents"...
 	set parent [my info parent]
@@ -144,33 +133,26 @@ xsd:choice instproc init args {
 
 xsd:generic instproc check {} {
 	set validity true
-	
 	foreach slot [my attributes] {
-		set name [namespace tail $slot]
-		
-		if { [$slot use] eq "required" && ![my slotFilled $slot] } {
+		if { [$slot use] == "required" && ![my slotFilled $slot] } {
 			set validity false
-			my error "needs object: $name (type: [$slot type])"
+			my error "needs object: [namespace tail $slot] (type: [$slot type])"
 		}
 	}
-	
 	foreach slot [my elements] {
-		my checkMinOccurs $slot
+		if { ![my checkMinOccurs $slot] } { set validity false }
 	}
-	
 	foreach child [my children] {
 		set result [$child check]
+		# the object is already invalid, we just want the error message:
 		if { !$validity } continue
 		set validity $result
 	}
-	
 	return $validity
 }
 	
 xsd:choice instproc check {} {
-	if { [my slotfree] } {
-		return true
-	}
+	if { [my slotfree] } { return true }
 	
 	set choice ""
 	foreach slot [my elements] {
@@ -179,17 +161,15 @@ xsd:choice instproc check {} {
 			break
 		}
 	}	
-	if { $choice == "" } {
-		return true
-	}
-	set validity [my checkMinOccurs $choice]
+	if { $choice == "" } { return true }
 	
+	set validity [my checkMinOccurs $choice]
 	foreach child [my children] {
 		set result [$child check]
+		# the object is already invalid, we just want the error message:
 		if { !$validity } continue
 		set validity $result
 	}
-	
 	return $validity
 }
 
@@ -428,12 +408,9 @@ xsd:generic instproc exportElements {doc root} {
 
 xsd:sequence instproc exportElements {doc root} {
 	foreach obj [my sequence] {
-		#puts " -> SEQUCENE -> $obj"
 		if { [string match "*::slot::*" $obj ] } {
-			#puts "EXPORT ELEMENT -> $obj"
 			my exportElement $doc $root $obj
 		} else {
-			#puts "EXPORT ELEMENT(S) -> $obj"
 			$obj exportElements $doc $root	
 		}
 	}
@@ -535,24 +512,21 @@ xsd:generic instproc doGetSlot {slot} {
 		foreach child [my children] {
 			return [$child doGetSlot $slot]		
 		}
+		# there is no such slot:
+		return false
+		
 	} else {
 		return [my $slot]
 	}
-	
-	return false
 }
 
 xsd:generic instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		if { [my children] == "" } {
-			return -1
-		}
+		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
-			if { $result != -1 } {
-				return $result
-			} 		
+			if { $result != -1 } { return $result } 		
 		}
 		return -1
 	} else {
@@ -593,7 +567,7 @@ xsd:generic instproc doSetSlot {slot value} {
 	}
 }
 
-xsd:choice instproc doSetSlot {slot value {add false}} {
+xsd:choice instproc doSetSlot {slot value} {
 	if { [my slotfree] } {
 		if { [next] == true } {
 			my slotfree false
@@ -601,19 +575,16 @@ xsd:choice instproc doSetSlot {slot value {add false}} {
 				$parent slotfree false	
 			}
 			return true
-		} 
-		return -1
-	} elseif { ![my slotfree] && [my slotExists $slot] } {
-		if { [my children] == "" } {
+		} else {
 			return -1
 		}
+	} elseif { ![my slotfree] && [my slotExists $slot] } {
+		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
-			if { $result != -1} {
-				return $result
-			}
+			if { $result != -1 } { return $result }
 		}
-		error "sholdnt reach here"
+		error "Shouldn't reach here!"
 	} else {
 		my error "is already set by another Element/Attribute."
 		return false
@@ -623,14 +594,10 @@ xsd:choice instproc doSetSlot {slot value {add false}} {
 xsd:generic instproc doGetSlotClass {slot} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		if { [my children] == "" } {
-			return -1
-		}
+		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doGetSlotClass $slot]
-			if { $result != -1 } {
-				return $result
-			}
+			if { $result != -1 } { return $result }
 		}
 		return false
 		
