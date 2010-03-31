@@ -1,9 +1,8 @@
 #!/usr/bin/tclsh
 
-set auto_path [linsert $auto_path 0 ../packages/xoXSD/]
+set auto_path [linsert $auto_path 0 ../packages/]
 package require xoXSD::Validator
-
-source ../examples/SAML-Core.xotcl
+package require xoSAML::Schema
 
 foreach test [glob tests/*.xotcl] {
 	source $test
@@ -11,10 +10,9 @@ foreach test [glob tests/*.xotcl] {
 
 ::xoXSD::Validator val "../tools/validator/lib"
 
-val addSchema "../xsd/xenc-schema.xsd"
-val addSchema "../xsd/xmldsig-core-schema.xsd"
-val addSchema "../xsd/saml-schema-assertion-2.0.xsd"
-val addSchema "../xsd/saml-schema-protocol-2.0.xsd"
+foreach schema [glob ../xsd/*.xsd] {
+	val addSchema $schema
+}
 
 set instances [::xoXSD::Generic info instances]
 set i 0
