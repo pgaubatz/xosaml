@@ -39,7 +39,6 @@ xoClass instproc asXOTcl {} {
 xoClass instproc addSlot {slot} {
 	foreach s [my getSlots] {
 		if { [$s name] == [$slot name] } {
-			puts "#ERROR: there is already a slot named [$slot name]."
 			return
 		}
 	}

@@ -8,8 +8,8 @@ namespace import -force ::xoXSD::Slots::*
 
 namespace eval ::xoXSD addNamespace "::xoSAML::saml"
 namespace eval ::xoXSD addNamespace "::xoSAML::samlp"
-namespace eval ::xoXSD addNamespace "::xoSAML::ds"
 namespace eval ::xoXSD addNamespace "::xoSAML::xenc"
+namespace eval ::xoXSD addNamespace "::xoSAML::ds"
 
 namespace eval ::xoSAML::saml {
 
@@ -104,7 +104,6 @@ Class SubjectConfirmation
 Class SubjectConfirmationData
 Class SubjectLocality
 }
-
 namespace eval ::xoSAML::samlp {
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -201,7 +200,60 @@ Class StatusMessage
 Class SubjectQuery
 Class Terminate
 }
+namespace eval ::xoSAML::xenc {
 
+variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
+variable xmlPrefix "xenc"
+
+#
+# ComplexTypes:
+#
+Class AgreementMethodType
+Class AgreementMethodType::__sequence0
+Class CipherDataType
+Class CipherDataType::__choice0
+Class CipherReferenceType
+Class CipherReferenceType::__choice0
+Class EncryptedType
+Class EncryptedDataType
+Class EncryptedKeyType
+Class EncryptedKeyType::__sequence0
+Class EncryptedType::__sequence0
+Class EncryptionMethodType
+Class EncryptionMethodType::__sequence0
+Class EncryptionPropertiesType
+Class EncryptionPropertiesType::__sequence0
+Class EncryptionPropertyType
+Class EncryptionPropertyType::__choice0
+Class ReferenceList
+Class ReferenceList::__choice0
+Class ReferenceType
+Class ReferenceType::__sequence0
+Class TransformsType
+Class TransformsType::__sequence0
+
+#
+# Elements:
+#
+Class AgreementMethod
+Class CarriedKeyName
+Class CipherData
+Class CipherReference
+Class CipherValue
+Class DataReference
+Class EncryptedData
+Class EncryptedKey
+Class EncryptionMethod
+Class EncryptionProperties
+Class EncryptionProperty
+Class KA-Nonce
+Class KeyReference
+Class KeySize
+Class OAEPparams
+Class OriginatorKeyInfo
+Class RecipientKeyInfo
+Class Transforms
+}
 namespace eval ::xoSAML::ds {
 
 variable xmlNamespace "http://www.w3.org/2000/09/xmldsig#"
@@ -309,62 +361,6 @@ Class X509SubjectName
 Class XPath
 Class Y
 }
-
-namespace eval ::xoSAML::xenc {
-
-variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
-variable xmlPrefix "xenc"
-
-#
-# ComplexTypes:
-#
-Class AgreementMethodType
-Class AgreementMethodType::__sequence0
-Class CipherDataType
-Class CipherDataType::__choice0
-Class CipherReferenceType
-Class CipherReferenceType::__choice0
-Class EncryptedType
-Class EncryptedDataType
-Class EncryptedKeyType
-Class EncryptedKeyType::__sequence0
-Class EncryptedType::__sequence0
-Class EncryptionMethodType
-Class EncryptionMethodType::__sequence0
-Class EncryptionPropertiesType
-Class EncryptionPropertiesType::__sequence0
-Class EncryptionPropertyType
-Class EncryptionPropertyType::__choice0
-Class ReferenceList
-Class ReferenceList::__choice0
-Class ReferenceType
-Class ReferenceType::__sequence0
-Class TransformsType
-Class TransformsType::__sequence0
-
-#
-# Elements:
-#
-Class AgreementMethod
-Class CarriedKeyName
-Class CipherData
-Class CipherReference
-Class CipherValue
-Class DataReference
-Class EncryptedData
-Class EncryptedKey
-Class EncryptionMethod
-Class EncryptionProperties
-Class EncryptionProperty
-Class KA-Nonce
-Class KeyReference
-Class KeySize
-Class OAEPparams
-Class OriginatorKeyInfo
-Class RecipientKeyInfo
-Class Transforms
-}
-
 namespace eval ::xoSAML::saml {
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -373,203 +369,203 @@ variable xmlPrefix "saml"
 #
 # ComplexTypes:
 #
-Class ActionType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ActionType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 	XML:Attribute Namespace -type ::xoXSD::DataTypes::anyURI -use required
 }
-Class AdviceType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class AdviceType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
 }
-Class AdviceType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class AdviceType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element AssertionIDRef -type ::xoSAML::saml::AssertionIDRef
 	XML:Element AssertionURIRef -type ::xoSAML::saml::AssertionURIRef
+	XML:Element __any -any true -namespace "##other"
 	XML:Element Assertion -type ::xoSAML::saml::Assertion
 	XML:Element EncryptedAssertion -type ::xoSAML::saml::EncryptedAssertion
-	XML:Element __any -any true -namespace "##other"
-	XML:Element AssertionIDRef -type ::xoSAML::saml::AssertionIDRef
 }
-Class AssertionType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute IssueInstant -type ::xoXSD::DataTypes::dateTime -use required
-	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
+Class AssertionType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute ID -type ::xoXSD::DataTypes::ID -use required
 	XML:Child __sequence0
+	XML:Attribute IssueInstant -type ::xoXSD::DataTypes::dateTime -use required
+	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
 }
-Class AssertionType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AssertionType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element Conditions -type ::xoSAML::saml::Conditions -minOccurs 0 -sequence 4
 	XML:Element Advice -type ::xoSAML::saml::Advice -minOccurs 0 -sequence 5
 	XML:Element Issuer -type ::xoSAML::saml::Issuer -sequence 1
 	XML:Child __choice0 -sequence 6
 	XML:Element Signature -type ::xoSAML::ds::Signature -minOccurs 0 -sequence 2
 	XML:Element Subject -type ::xoSAML::saml::Subject -minOccurs 0 -sequence 3
-	XML:Element Conditions -type ::xoSAML::saml::Conditions -minOccurs 0 -sequence 4
 }
-Class AssertionType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class AssertionType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element AuthnStatement -type ::xoSAML::saml::AuthnStatement
 	XML:Element AuthzDecisionStatement -type ::xoSAML::saml::AuthzDecisionStatement
 	XML:Element AttributeStatement -type ::xoSAML::saml::AttributeStatement
 	XML:Element Statement -type ::xoSAML::saml::Statement
-	XML:Element AuthnStatement -type ::xoSAML::saml::AuthnStatement
 }
-Class StatementAbstractType -superclass ::xoXSD::Core::xsd:complexType
+Class StatementAbstractType -superclass ::xoXSD::Core::ComplexType
 Class AttributeStatementType -superclass ::xoSAML::saml::StatementAbstractType -slots {
 	XML:Child __choice0
 }
-Class AttributeStatementType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element Attribute -type ::xoSAML::saml::Attribute
+Class AttributeStatementType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element EncryptedAttribute -type ::xoSAML::saml::EncryptedAttribute
+	XML:Element Attribute -type ::xoSAML::saml::Attribute
 }
-Class AttributeType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute NameFormat -type ::xoXSD::DataTypes::anyURI -use optional
+Class AttributeType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Name -type ::xoXSD::DataTypes::string -use required
+	XML:Attribute NameFormat -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute FriendlyName -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute __anyAttribute -any true -namespace "##other"
 	XML:Child __sequence0
 }
-Class AttributeType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AttributeType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element AttributeValue -type ::xoSAML::saml::AttributeValue -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class ConditionAbstractType -superclass ::xoXSD::Core::xsd:complexType
+Class ConditionAbstractType -superclass ::xoXSD::Core::ComplexType
 Class AudienceRestrictionType -superclass ::xoSAML::saml::ConditionAbstractType -slots {
 	XML:Child __sequence0
 }
-Class AudienceRestrictionType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AudienceRestrictionType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Audience -type ::xoSAML::saml::Audience -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class AuthnContextType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class AuthnContextType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class AuthnContextType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AuthnContextType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Child __choice0 -sequence 1
 	XML:Element AuthenticatingAuthority -type ::xoSAML::saml::AuthenticatingAuthority -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 2
 }
-Class AuthnContextType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Child __sequence0
+Class AuthnContextType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Child __choice0
+	XML:Child __sequence0
 }
-Class AuthnContextType::__sequence0::__choice0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class AuthnContextType::__sequence0::__choice0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element AuthnContextDecl -type ::xoSAML::saml::AuthnContextDecl
 	XML:Element AuthnContextDeclRef -type ::xoSAML::saml::AuthnContextDeclRef
 }
-Class AuthnContextType::__sequence0::__choice0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Child __choice0 -sequence 2
+Class AuthnContextType::__sequence0::__choice0::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element AuthnContextClassRef -type ::xoSAML::saml::AuthnContextClassRef -sequence 1
+	XML:Child __choice0 -sequence 2
 }
-Class AuthnContextType::__sequence0::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class AuthnContextType::__sequence0::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element AuthnContextDecl -type ::xoSAML::saml::AuthnContextDecl
 	XML:Element AuthnContextDeclRef -type ::xoSAML::saml::AuthnContextDeclRef
 }
 Class AuthnStatementType -superclass ::xoSAML::saml::StatementAbstractType -slots {
+	XML:Attribute AuthnInstant -type ::xoXSD::DataTypes::dateTime -use required
 	XML:Attribute SessionIndex -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute SessionNotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
 	XML:Child __sequence0
-	XML:Attribute AuthnInstant -type ::xoXSD::DataTypes::dateTime -use required
 }
-Class AuthnStatementType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element SubjectLocality -type ::xoSAML::saml::SubjectLocality -minOccurs 0 -sequence 1
+Class AuthnStatementType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element AuthnContext -type ::xoSAML::saml::AuthnContext -sequence 2
+	XML:Element SubjectLocality -type ::xoSAML::saml::SubjectLocality -minOccurs 0 -sequence 1
 }
 Class AuthzDecisionStatementType -superclass ::xoSAML::saml::StatementAbstractType -slots {
 	XML:Attribute Resource -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Attribute Decision -type ::xoXSD::DataTypes::string -use required -enumvalues { "Permit" "Deny" "Indeterminate" }
 	XML:Child __sequence0
 }
-Class AuthzDecisionStatementType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element Action -type ::xoSAML::saml::Action -maxOccurs unbounded -multivalued true -sequence 1
+Class AuthzDecisionStatementType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Evidence -type ::xoSAML::saml::Evidence -minOccurs 0 -sequence 2
+	XML:Element Action -type ::xoSAML::saml::Action -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class BaseIDAbstractType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute SPNameQualifier -type ::xoXSD::DataTypes::string -use optional
+Class BaseIDAbstractType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute NameQualifier -type ::xoXSD::DataTypes::string -use optional
+	XML:Attribute SPNameQualifier -type ::xoXSD::DataTypes::string -use optional
 }
-Class ConditionsType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ConditionsType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __choice0
 	XML:Attribute NotBefore -type ::xoXSD::DataTypes::dateTime -use optional
 	XML:Attribute NotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
-	XML:Child __choice0
 }
-Class ConditionsType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class ConditionsType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element ProxyRestriction -type ::xoSAML::saml::ProxyRestriction
 	XML:Element Condition -type ::xoSAML::saml::Condition
 	XML:Element AudienceRestriction -type ::xoSAML::saml::AudienceRestriction
 	XML:Element OneTimeUse -type ::xoSAML::saml::OneTimeUse
-	XML:Element ProxyRestriction -type ::xoSAML::saml::ProxyRestriction
 }
-Class EncryptedElementType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class EncryptedElementType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class EncryptedElementType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class EncryptedElementType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element EncryptedData -type ::xoSAML::xenc::EncryptedData -sequence 1
 	XML:Element EncryptedKey -type ::xoSAML::xenc::EncryptedKey -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 2
 }
-Class EvidenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class EvidenceType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
 }
-Class EvidenceType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class EvidenceType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element AssertionIDRef -type ::xoSAML::saml::AssertionIDRef
 	XML:Element AssertionURIRef -type ::xoSAML::saml::AssertionURIRef
 	XML:Element Assertion -type ::xoSAML::saml::Assertion
 	XML:Element EncryptedAssertion -type ::xoSAML::saml::EncryptedAssertion
-	XML:Element AssertionIDRef -type ::xoSAML::saml::AssertionIDRef
 }
-Class KeyInfoConfirmationDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class KeyInfoConfirmationDataType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class KeyInfoConfirmationDataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class KeyInfoConfirmationDataType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element KeyInfo -type ::xoSAML::ds::KeyInfo -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class NameIDType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class NameIDType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
-	XML:Attribute SPNameQualifier -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute NameQualifier -type ::xoXSD::DataTypes::string -use optional
+	XML:Attribute SPNameQualifier -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute Format -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute SPProvidedID -type ::xoXSD::DataTypes::string -use optional
 }
 Class OneTimeUseType -superclass ::xoSAML::saml::ConditionAbstractType
 Class ProxyRestrictionType -superclass ::xoSAML::saml::ConditionAbstractType -slots {
-	XML:Child __sequence0
 	XML:Attribute Count -type ::xoXSD::DataTypes::nonNegativeInteger -use optional
+	XML:Child __sequence0
 }
-Class ProxyRestrictionType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ProxyRestrictionType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Audience -type ::xoSAML::saml::Audience -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class SubjectConfirmationDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SubjectConfirmationDataType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute __anyAttribute -any true -namespace "##other"
+	XML:Attribute NotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
 	XML:Attribute Recipient -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Child __sequence0
 	XML:Attribute InResponseTo -type ::xoXSD::DataTypes::NCName -use optional
 	XML:Attribute Address -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute NotBefore -type ::xoXSD::DataTypes::dateTime -use optional
-	XML:Attribute __anyAttribute -any true -namespace "##other"
-	XML:Attribute NotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
 }
-Class SubjectConfirmationDataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SubjectConfirmationDataType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
-Class SubjectConfirmationType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SubjectConfirmationType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Method -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Child __sequence0
 }
-Class SubjectConfirmationType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SubjectConfirmationType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element SubjectConfirmationData -type ::xoSAML::saml::SubjectConfirmationData -minOccurs 0 -sequence 2
 	XML:Child __choice0 -sequence 1
 }
-Class SubjectConfirmationType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class SubjectConfirmationType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element BaseID -type ::xoSAML::saml::BaseID
 	XML:Element NameID -type ::xoSAML::saml::NameID
 	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
 }
-Class SubjectLocalityType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SubjectLocalityType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Address -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute DNSName -type ::xoXSD::DataTypes::string -use optional
 }
-Class SubjectType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SubjectType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
 }
-Class SubjectType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class SubjectType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Child __sequence0
 	XML:Element SubjectConfirmation -type ::xoSAML::saml::SubjectConfirmation -maxOccurs unbounded -multivalued true
 }
-Class SubjectType::__choice0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SubjectType::__choice0::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element SubjectConfirmation -type ::xoSAML::saml::SubjectConfirmation -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 2
 	XML:Child __choice0 -sequence 1
 }
-Class SubjectType::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class SubjectType::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element NameID -type ::xoSAML::saml::NameID
 	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
 	XML:Element BaseID -type ::xoSAML::saml::BaseID
-	XML:Element NameID -type ::xoSAML::saml::NameID
 }
 
 #
@@ -578,32 +574,32 @@ Class SubjectType::__choice0::__sequence0::__choice0 -superclass ::xoXSD::Core::
 Class Action -superclass ::xoSAML::saml::ActionType
 Class Advice -superclass ::xoSAML::saml::AdviceType
 Class Assertion -superclass ::xoSAML::saml::AssertionType
-Class AssertionIDRef -superclass ::xoXSD::Core::xsd:element -slots {
+Class AssertionIDRef -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::NCName -text true
 }
-Class AssertionURIRef -superclass ::xoXSD::Core::xsd:element -slots {
+Class AssertionURIRef -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class Attribute -superclass ::xoSAML::saml::AttributeType
 Class AttributeStatement -superclass ::xoSAML::saml::AttributeStatementType
-Class AttributeValue -superclass ::xoXSD::Core::xsd:element -slots {
+Class AttributeValue -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyType -text true
 }
-Class Audience -superclass ::xoXSD::Core::xsd:element -slots {
+Class Audience -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class AudienceRestriction -superclass ::xoSAML::saml::AudienceRestrictionType
-Class AuthenticatingAuthority -superclass ::xoXSD::Core::xsd:element -slots {
+Class AuthenticatingAuthority -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class AuthnContext -superclass ::xoSAML::saml::AuthnContextType
-Class AuthnContextClassRef -superclass ::xoXSD::Core::xsd:element -slots {
+Class AuthnContextClassRef -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
-Class AuthnContextDecl -superclass ::xoXSD::Core::xsd:element -slots {
+Class AuthnContextDecl -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyType -text true
 }
-Class AuthnContextDeclRef -superclass ::xoXSD::Core::xsd:element -slots {
+Class AuthnContextDeclRef -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class AuthnStatement -superclass ::xoSAML::saml::AuthnStatementType
@@ -625,7 +621,6 @@ Class SubjectConfirmation -superclass ::xoSAML::saml::SubjectConfirmationType
 Class SubjectConfirmationData -superclass ::xoSAML::saml::SubjectConfirmationDataType
 Class SubjectLocality -superclass ::xoSAML::saml::SubjectLocalityType
 }
-
 namespace eval ::xoSAML::samlp {
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -634,39 +629,39 @@ variable xmlPrefix "samlp"
 #
 # ComplexTypes:
 #
-Class RequestAbstractType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class RequestAbstractType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
 	XML:Attribute IssueInstant -type ::xoXSD::DataTypes::dateTime -use required
 	XML:Attribute Destination -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute Consent -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute ID -type ::xoXSD::DataTypes::ID -use required
 	XML:Child __sequence0
-	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
 }
 Class ArtifactResolveType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
 	XML:Child __sequence0
 }
-Class ArtifactResolveType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ArtifactResolveType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Artifact -type ::xoSAML::samlp::Artifact -sequence 1
 }
-Class StatusResponseType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class StatusResponseType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
 	XML:Attribute IssueInstant -type ::xoXSD::DataTypes::dateTime -use required
 	XML:Child __sequence0
 	XML:Attribute Destination -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute ID -type ::xoXSD::DataTypes::ID -use required
 	XML:Attribute Consent -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute InResponseTo -type ::xoXSD::DataTypes::NCName -use optional
-	XML:Attribute Version -type ::xoXSD::DataTypes::string -use required
 }
 Class ArtifactResponseType -superclass ::xoSAML::samlp::StatusResponseType -slots {
 	XML:Child __sequence0
 }
-Class ArtifactResponseType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ArtifactResponseType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -namespace "##any"
 }
 Class AssertionIDRequestType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
 	XML:Child __sequence0
 }
-Class AssertionIDRequestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AssertionIDRequestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element AssertionIDRef -type ::xoSAML::saml::AssertionIDRef -maxOccurs unbounded -multivalued true -sequence 1
 }
 Class SubjectQueryAbstractType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
@@ -675,177 +670,177 @@ Class SubjectQueryAbstractType -superclass ::xoSAML::samlp::RequestAbstractType 
 Class AttributeQueryType -superclass ::xoSAML::samlp::SubjectQueryAbstractType -slots {
 	XML:Child __sequence0
 }
-Class AttributeQueryType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AttributeQueryType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Attribute -type ::xoSAML::saml::Attribute -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 1
 }
 Class AuthnQueryType -superclass ::xoSAML::samlp::SubjectQueryAbstractType -slots {
-	XML:Attribute SessionIndex -type ::xoXSD::DataTypes::string -use optional
 	XML:Child __sequence0
+	XML:Attribute SessionIndex -type ::xoXSD::DataTypes::string -use optional
 }
-Class AuthnQueryType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AuthnQueryType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element RequestedAuthnContext -type ::xoSAML::samlp::RequestedAuthnContext -minOccurs 0 -sequence 1
 }
 Class AuthnRequestType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
+	XML:Attribute AssertionConsumerServiceURL -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Attribute ForceAuthn -type ::xoXSD::DataTypes::boolean -use optional
 	XML:Attribute AttributeConsumingServiceIndex -type ::xoXSD::DataTypes::unsignedShort -use optional
 	XML:Attribute IsPassive -type ::xoXSD::DataTypes::boolean -use optional
 	XML:Attribute ProviderName -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute ProtocolBinding -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Child __sequence0
 	XML:Attribute AssertionConsumerServiceIndex -type ::xoXSD::DataTypes::unsignedShort -use optional
-	XML:Attribute AssertionConsumerServiceURL -type ::xoXSD::DataTypes::anyURI -use optional
-	XML:Attribute ForceAuthn -type ::xoXSD::DataTypes::boolean -use optional
 }
-Class AuthnRequestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AuthnRequestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element NameIDPolicy -type ::xoSAML::samlp::NameIDPolicy -minOccurs 0 -sequence 2
 	XML:Element Conditions -type ::xoSAML::saml::Conditions -minOccurs 0 -sequence 3
 	XML:Element RequestedAuthnContext -type ::xoSAML::samlp::RequestedAuthnContext -minOccurs 0 -sequence 4
 	XML:Element Scoping -type ::xoSAML::samlp::Scoping -minOccurs 0 -sequence 5
 	XML:Element Subject -type ::xoSAML::saml::Subject -minOccurs 0 -sequence 1
-	XML:Element NameIDPolicy -type ::xoSAML::samlp::NameIDPolicy -minOccurs 0 -sequence 2
 }
 Class AuthzDecisionQueryType -superclass ::xoSAML::samlp::SubjectQueryAbstractType -slots {
-	XML:Attribute Resource -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Child __sequence0
+	XML:Attribute Resource -type ::xoXSD::DataTypes::anyURI -use required
 }
-Class AuthzDecisionQueryType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class AuthzDecisionQueryType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Action -type ::xoSAML::saml::Action -maxOccurs unbounded -multivalued true -sequence 1
 	XML:Element Evidence -type ::xoSAML::saml::Evidence -minOccurs 0 -sequence 2
 }
-Class ExtensionsType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ExtensionsType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class ExtensionsType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ExtensionsType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -maxOccurs unbounded -namespace "##other"
 }
-Class IDPEntryType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Loc -type ::xoXSD::DataTypes::anyURI -use optional
+Class IDPEntryType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Name -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute ProviderID -type ::xoXSD::DataTypes::anyURI -use required
+	XML:Attribute Loc -type ::xoXSD::DataTypes::anyURI -use optional
 }
-Class IDPListType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class IDPListType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class IDPListType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element GetComplete -type ::xoSAML::samlp::GetComplete -minOccurs 0 -sequence 2
+Class IDPListType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element IDPEntry -type ::xoSAML::samlp::IDPEntry -maxOccurs unbounded -multivalued true -sequence 1
+	XML:Element GetComplete -type ::xoSAML::samlp::GetComplete -minOccurs 0 -sequence 2
 }
 Class LogoutRequestType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
+	XML:Attribute Reason -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute NotOnOrAfter -type ::xoXSD::DataTypes::dateTime -use optional
 	XML:Child __sequence0
-	XML:Attribute Reason -type ::xoXSD::DataTypes::string -use optional
 }
-Class LogoutRequestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class LogoutRequestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element SessionIndex -type ::xoSAML::samlp::SessionIndex -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 2
 	XML:Child __choice0 -sequence 1
 }
-Class LogoutRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class LogoutRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element BaseID -type ::xoSAML::saml::BaseID
 	XML:Element NameID -type ::xoSAML::saml::NameID
 	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
-	XML:Element BaseID -type ::xoSAML::saml::BaseID
 }
 Class ManageNameIDRequestType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
 	XML:Child __sequence0
 }
-Class ManageNameIDRequestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ManageNameIDRequestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Child __choice0 -sequence 2
 	XML:Child __choice1 -sequence 1
 }
-Class ManageNameIDRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class ManageNameIDRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element Terminate -type ::xoSAML::samlp::Terminate
 	XML:Element NewID -type ::xoSAML::samlp::NewID
 	XML:Element NewEncryptedID -type ::xoSAML::samlp::NewEncryptedID
-	XML:Element Terminate -type ::xoSAML::samlp::Terminate
 }
-Class ManageNameIDRequestType::__sequence0::__choice1 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element NameID -type ::xoSAML::saml::NameID
+Class ManageNameIDRequestType::__sequence0::__choice1 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
+	XML:Element NameID -type ::xoSAML::saml::NameID
 }
 Class NameIDMappingRequestType -superclass ::xoSAML::samlp::RequestAbstractType -slots {
 	XML:Child __sequence0
 }
-Class NameIDMappingRequestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class NameIDMappingRequestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element NameIDPolicy -type ::xoSAML::samlp::NameIDPolicy -sequence 2
 	XML:Child __choice0 -sequence 1
 }
-Class NameIDMappingRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element NameID -type ::xoSAML::saml::NameID
-	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
+Class NameIDMappingRequestType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element BaseID -type ::xoSAML::saml::BaseID
+	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
+	XML:Element NameID -type ::xoSAML::saml::NameID
 }
 Class NameIDMappingResponseType -superclass ::xoSAML::samlp::StatusResponseType -slots {
 	XML:Child __choice0
 }
-Class NameIDMappingResponseType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
+Class NameIDMappingResponseType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element NameID -type ::xoSAML::saml::NameID
+	XML:Element EncryptedID -type ::xoSAML::saml::EncryptedID
 }
-Class NameIDPolicyType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class NameIDPolicyType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Format -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Attribute SPNameQualifier -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute AllowCreate -type ::xoXSD::DataTypes::boolean -use optional
 }
-Class RequestAbstractType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class RequestAbstractType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element Issuer -type ::xoSAML::saml::Issuer -minOccurs 0 -sequence 1
 	XML:Element Signature -type ::xoSAML::ds::Signature -minOccurs 0 -sequence 2
 	XML:Element Extensions -type ::xoSAML::samlp::Extensions -minOccurs 0 -sequence 3
-	XML:Element Issuer -type ::xoSAML::saml::Issuer -minOccurs 0 -sequence 1
 }
-Class RequestedAuthnContextType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Comparison -type ::xoXSD::DataTypes::string -use optional -enumvalues { "better" "exact" "minimum" "maximum" }
+Class RequestedAuthnContextType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
+	XML:Attribute Comparison -type ::xoXSD::DataTypes::string -use optional -enumvalues { "maximum" "better" "exact" "minimum" }
 }
-Class RequestedAuthnContextType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class RequestedAuthnContextType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element AuthnContextClassRef -type ::xoSAML::saml::AuthnContextClassRef -maxOccurs unbounded -multivalued true
 	XML:Element AuthnContextDeclRef -type ::xoSAML::saml::AuthnContextDeclRef -maxOccurs unbounded -multivalued true
 }
 Class ResponseType -superclass ::xoSAML::samlp::StatusResponseType -slots {
 	XML:Child __choice0
 }
-Class ResponseType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element EncryptedAssertion -type ::xoSAML::saml::EncryptedAssertion
+Class ResponseType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element Assertion -type ::xoSAML::saml::Assertion
+	XML:Element EncryptedAssertion -type ::xoSAML::saml::EncryptedAssertion
 }
-Class ScopingType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ScopingType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __sequence0
 	XML:Attribute ProxyCount -type ::xoXSD::DataTypes::nonNegativeInteger -use optional
-	XML:Child __sequence0
 }
-Class ScopingType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element IDPList -type ::xoSAML::samlp::IDPList -minOccurs 0 -sequence 1
+Class ScopingType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element RequesterID -type ::xoSAML::samlp::RequesterID -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 2
+	XML:Element IDPList -type ::xoSAML::samlp::IDPList -minOccurs 0 -sequence 1
 }
-Class StatusCodeType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __sequence0
+Class StatusCodeType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Value -type ::xoXSD::DataTypes::anyURI -use required
+	XML:Child __sequence0
 }
-Class StatusCodeType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class StatusCodeType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element StatusCode -type ::xoSAML::samlp::StatusCode -minOccurs 0 -sequence 1
 }
-Class StatusDetailType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class StatusDetailType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class StatusDetailType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class StatusDetailType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
-Class StatusResponseType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class StatusResponseType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element Extensions -type ::xoSAML::samlp::Extensions -minOccurs 0 -sequence 3
 	XML:Element Status -type ::xoSAML::samlp::Status -sequence 4
 	XML:Element Issuer -type ::xoSAML::saml::Issuer -minOccurs 0 -sequence 1
 	XML:Element Signature -type ::xoSAML::ds::Signature -minOccurs 0 -sequence 2
-	XML:Element Extensions -type ::xoSAML::samlp::Extensions -minOccurs 0 -sequence 3
 }
-Class StatusType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class StatusType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class StatusType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class StatusType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element StatusCode -type ::xoSAML::samlp::StatusCode -sequence 1
 	XML:Element StatusMessage -type ::xoSAML::samlp::StatusMessage -minOccurs 0 -sequence 2
 	XML:Element StatusDetail -type ::xoSAML::samlp::StatusDetail -minOccurs 0 -sequence 3
 }
-Class SubjectQueryAbstractType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SubjectQueryAbstractType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Subject -type ::xoSAML::saml::Subject -sequence 1
 }
-Class TerminateType -superclass ::xoXSD::Core::xsd:complexType
+Class TerminateType -superclass ::xoXSD::Core::ComplexType
 
 #
 # Elements:
 #
-Class Artifact -superclass ::xoXSD::Core::xsd:element -slots {
+Class Artifact -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class ArtifactResolve -superclass ::xoSAML::samlp::ArtifactResolveType
@@ -856,7 +851,7 @@ Class AuthnQuery -superclass ::xoSAML::samlp::AuthnQueryType
 Class AuthnRequest -superclass ::xoSAML::samlp::AuthnRequestType
 Class AuthzDecisionQuery -superclass ::xoSAML::samlp::AuthzDecisionQueryType
 Class Extensions -superclass ::xoSAML::samlp::ExtensionsType
-Class GetComplete -superclass ::xoXSD::Core::xsd:element -slots {
+Class GetComplete -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class IDPEntry -superclass ::xoSAML::samlp::IDPEntryType
@@ -869,28 +864,150 @@ Class NameIDMappingRequest -superclass ::xoSAML::samlp::NameIDMappingRequestType
 Class NameIDMappingResponse -superclass ::xoSAML::samlp::NameIDMappingResponseType
 Class NameIDPolicy -superclass ::xoSAML::samlp::NameIDPolicyType
 Class NewEncryptedID -superclass ::xoSAML::saml::EncryptedElementType
-Class NewID -superclass ::xoXSD::Core::xsd:element -slots {
+Class NewID -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class RequestedAuthnContext -superclass ::xoSAML::samlp::RequestedAuthnContextType
-Class RequesterID -superclass ::xoXSD::Core::xsd:element -slots {
+Class RequesterID -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::anyURI -text true
 }
 Class Response -superclass ::xoSAML::samlp::ResponseType
 Class Scoping -superclass ::xoSAML::samlp::ScopingType
-Class SessionIndex -superclass ::xoXSD::Core::xsd:element -slots {
+Class SessionIndex -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class Status -superclass ::xoSAML::samlp::StatusType
 Class StatusCode -superclass ::xoSAML::samlp::StatusCodeType
 Class StatusDetail -superclass ::xoSAML::samlp::StatusDetailType
-Class StatusMessage -superclass ::xoXSD::Core::xsd:element -slots {
+Class StatusMessage -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class SubjectQuery -superclass ::xoSAML::samlp::SubjectQueryAbstractType
 Class Terminate -superclass ::xoSAML::samlp::TerminateType
 }
+namespace eval ::xoSAML::xenc {
 
+variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
+variable xmlPrefix "xenc"
+
+#
+# ComplexTypes:
+#
+Class AgreementMethodType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __sequence0
+	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
+}
+Class AgreementMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
+}
+Class CipherDataType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __choice0
+}
+Class CipherDataType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element CipherReference -type ::xoSAML::xenc::CipherReference
+}
+Class CipherReferenceType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
+	XML:Child __choice0
+}
+Class CipherReferenceType::__choice0 -superclass ::xoXSD::Core::Choice
+Class EncryptedType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Attribute MimeType -type ::xoXSD::DataTypes::string -use optional
+	XML:Attribute Encoding -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Child __sequence0
+}
+Class EncryptedDataType -superclass ::xoSAML::xenc::EncryptedType
+Class EncryptedKeyType -superclass ::xoSAML::xenc::EncryptedType -slots {
+	XML:Attribute Recipient -type ::xoXSD::DataTypes::string -use optional
+	XML:Child __sequence0
+}
+Class EncryptedKeyType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element ReferenceList -type ::xoSAML::xenc::ReferenceList -minOccurs 0 -sequence 1
+}
+Class EncryptedType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element KeyInfo -type ::xoSAML::ds::KeyInfo -minOccurs 0 -sequence 1
+	XML:Element CipherData -type ::xoSAML::xenc::CipherData -sequence 2
+	XML:Element EncryptionProperties -type ::xoSAML::xenc::EncryptionProperties -minOccurs 0 -sequence 3
+}
+Class EncryptionMethodType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
+	XML:Child __sequence0
+}
+Class EncryptionMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
+}
+Class EncryptionPropertiesType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+	XML:Child __sequence0
+}
+Class EncryptionPropertiesType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element EncryptionProperty -type ::xoSAML::xenc::EncryptionProperty -maxOccurs unbounded -multivalued true -sequence 1
+}
+Class EncryptionPropertyType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Target -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+	XML:Attribute __anyAttribute -any true -namespace "http://www.w3.org/XML/1998/namespace"
+	XML:Child __choice0
+}
+Class EncryptionPropertyType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element __any -any true -namespace "##other"
+}
+Class ReferenceList -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __choice0
+}
+Class ReferenceList::__choice0 -superclass ::xoXSD::Core::Choice
+Class ReferenceType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Child __sequence0
+}
+Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element DigestValue -type ::xoSAML::ds::DigestValue -sequence 3
+	XML:Element Transforms -type ::xoSAML::ds::Transforms -minOccurs 0 -sequence 1
+	XML:Element DigestMethod -type ::xoSAML::ds::DigestMethod -sequence 2
+}
+Class TransformsType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __sequence0
+}
+Class TransformsType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element Transform -type ::xoSAML::ds::Transform -maxOccurs unbounded -multivalued true -sequence 1
+}
+
+#
+# Elements:
+#
+Class AgreementMethod -superclass ::xoSAML::xenc::AgreementMethodType
+Class CarriedKeyName -superclass ::xoXSD::Core::Element -slots {
+	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
+}
+Class CipherData -superclass ::xoSAML::xenc::CipherDataType
+Class CipherReference -superclass ::xoSAML::xenc::CipherReferenceType
+Class CipherValue -superclass ::xoXSD::Core::Element -slots {
+	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
+}
+Class DataReference -superclass ::xoSAML::xenc::ReferenceType
+Class EncryptedData -superclass ::xoSAML::xenc::EncryptedDataType
+Class EncryptedKey -superclass ::xoSAML::xenc::EncryptedKeyType
+Class EncryptionMethod -superclass ::xoSAML::xenc::EncryptionMethodType
+Class EncryptionProperties -superclass ::xoSAML::xenc::EncryptionPropertiesType
+Class EncryptionProperty -superclass ::xoSAML::xenc::EncryptionPropertyType
+Class KA-Nonce -superclass ::xoXSD::Core::Element -slots {
+	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
+}
+Class KeyReference -superclass ::xoSAML::xenc::ReferenceType
+Class KeySize -superclass ::xoXSD::Core::Element -slots {
+	XML:Attribute __text -type ::xoXSD::DataTypes::integer -text true
+}
+Class OAEPparams -superclass ::xoXSD::Core::Element -slots {
+	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
+}
+Class OriginatorKeyInfo -superclass ::xoSAML::ds::KeyInfoType
+Class RecipientKeyInfo -superclass ::xoSAML::ds::KeyInfoType
+Class Transforms -superclass ::xoSAML::ds::TransformsType
+}
 namespace eval ::xoSAML::ds {
 
 variable xmlNamespace "http://www.w3.org/2000/09/xmldsig#"
@@ -899,176 +1016,180 @@ variable xmlPrefix "ds"
 #
 # ComplexTypes:
 #
-Class CanonicalizationMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class CanonicalizationMethodType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 }
-Class CanonicalizationMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class CanonicalizationMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##any"
 }
-Class DSAKeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class DSAKeyValueType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class DSAKeyValueType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class DSAKeyValueType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Child __sequence0 -sequence 1
 	XML:Child __sequence1 -sequence 2
 }
-Class DSAKeyValueType::__sequence0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence
-Class DSAKeyValueType::__sequence0::__sequence1 -superclass ::xoXSD::Core::xsd:sequence
-Class DigestMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class DSAKeyValueType::__sequence0::__sequence0 -superclass ::xoXSD::Core::Sequence
+Class DSAKeyValueType::__sequence0::__sequence1 -superclass ::xoXSD::Core::Sequence
+Class DigestMethodType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 }
-Class DigestMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class DigestMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
-Class KeyInfoType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+Class KeyInfoType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 }
-Class KeyInfoType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class KeyInfoType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element SPKIData -type ::xoSAML::ds::SPKIData
+	XML:Element KeyValue -type ::xoSAML::ds::KeyValue
+	XML:Element MgmtData -type ::xoSAML::ds::MgmtData
+	XML:Element RetrievalMethod -type ::xoSAML::ds::RetrievalMethod
+	XML:Element KeyName -type ::xoSAML::ds::KeyName
 	XML:Element __any -any true -namespace "##other"
 	XML:Element X509Data -type ::xoSAML::ds::X509Data
 	XML:Element PGPData -type ::xoSAML::ds::PGPData
-	XML:Element SPKIData -type ::xoSAML::ds::SPKIData
-	XML:Element KeyName -type ::xoSAML::ds::KeyName
-	XML:Element MgmtData -type ::xoSAML::ds::MgmtData
-	XML:Element RetrievalMethod -type ::xoSAML::ds::RetrievalMethod
-	XML:Element KeyValue -type ::xoSAML::ds::KeyValue
 }
-Class KeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class KeyValueType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
 }
-Class KeyValueType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class KeyValueType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
+	XML:Element DSAKeyValue -type ::xoSAML::ds::DSAKeyValue
 	XML:Element RSAKeyValue -type ::xoSAML::ds::RSAKeyValue
 	XML:Element __any -any true -namespace "##other"
-	XML:Element DSAKeyValue -type ::xoSAML::ds::DSAKeyValue
 }
-Class ManifestType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ManifestType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 	XML:Child __sequence0
 }
-Class ManifestType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ManifestType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Reference -type ::xoSAML::ds::Reference -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class ObjectType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class ObjectType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 	XML:Attribute MimeType -type ::xoXSD::DataTypes::string -use optional
 	XML:Attribute Encoding -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Child __sequence0
 }
-Class ObjectType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class ObjectType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -namespace "##any"
 }
-Class PGPDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class PGPDataType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __choice0
 }
-Class PGPDataType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class PGPDataType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Child __sequence0
 	XML:Child __sequence1
 }
-Class PGPDataType::__choice0::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class PGPDataType::__choice0::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
-Class PGPDataType::__choice0::__sequence1 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class PGPDataType::__choice0::__sequence1 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
-Class RSAKeyValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class RSAKeyValueType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class RSAKeyValueType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence
-Class ReferenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class RSAKeyValueType::__sequence0 -superclass ::xoXSD::Core::Sequence
+Class ReferenceType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use optional
+	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Child __sequence0
-	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
 }
-Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
+Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element DigestValue -type ::xoSAML::ds::DigestValue -sequence 3
+	XML:Element Transforms -type ::xoSAML::ds::Transforms -minOccurs 0 -sequence 1
+	XML:Element DigestMethod -type ::xoSAML::ds::DigestMethod -sequence 2
 }
-Class RetrievalMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class RetrievalMethodType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
 	XML:Child __sequence0
 	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI
-	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
 }
-Class RetrievalMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class RetrievalMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Transforms -type ::xoSAML::ds::Transforms -minOccurs 0 -sequence 1
 }
-Class SPKIDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SPKIDataType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class SPKIDataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SPKIDataType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -namespace "##other"
 }
-Class SignatureMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SignatureMethodType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Child __sequence0
 }
-Class SignatureMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SignatureMethodType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
 }
-Class SignaturePropertiesType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
+Class SignaturePropertiesType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
+	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 }
-Class SignaturePropertiesType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SignaturePropertiesType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element SignatureProperty -type ::xoSAML::ds::SignatureProperty -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class SignaturePropertyType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SignaturePropertyType -superclass ::xoXSD::Core::ComplexType -slots {
+	XML:Child __choice0
 	XML:Attribute Target -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
-	XML:Child __choice0
 }
-Class SignaturePropertyType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class SignaturePropertyType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element __any -any true -namespace "##other"
 }
-Class SignatureType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SignatureType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 }
-Class SignatureType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SignatureType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
+	XML:Element KeyInfo -type ::xoSAML::ds::KeyInfo -minOccurs 0 -sequence 3
 	XML:Element Object -type ::xoSAML::ds::Object -minOccurs 0 -maxOccurs unbounded -multivalued true -sequence 4
 	XML:Element SignedInfo -type ::xoSAML::ds::SignedInfo -sequence 1
 	XML:Element SignatureValue -type ::xoSAML::ds::SignatureValue -sequence 2
-	XML:Element KeyInfo -type ::xoSAML::ds::KeyInfo -minOccurs 0 -sequence 3
 }
-Class SignatureValueType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SignatureValueType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 }
-Class SignedInfoType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class SignedInfoType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
 	XML:Child __sequence0
 }
-Class SignedInfoType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class SignedInfoType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Reference -type ::xoSAML::ds::Reference -maxOccurs unbounded -multivalued true -sequence 3
 	XML:Element CanonicalizationMethod -type ::xoSAML::ds::CanonicalizationMethod -sequence 1
 	XML:Element SignatureMethod -type ::xoSAML::ds::SignatureMethod -sequence 2
 }
-Class TransformType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class TransformType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
 	XML:Child __choice0
 }
-Class TransformType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class TransformType::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element __any -any true -namespace "##other"
 }
-Class TransformsType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class TransformsType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class TransformsType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class TransformsType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Element Transform -type ::xoSAML::ds::Transform -maxOccurs unbounded -multivalued true -sequence 1
 }
-Class X509DataType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class X509DataType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class X509DataType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
+Class X509DataType::__sequence0 -superclass ::xoXSD::Core::Sequence -slots {
 	XML:Child __choice0 -sequence 1
 }
-Class X509DataType::__sequence0::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
+Class X509DataType::__sequence0::__choice0 -superclass ::xoXSD::Core::Choice -slots {
 	XML:Element __any -any true -namespace "##other"
 }
-Class X509IssuerSerialType -superclass ::xoXSD::Core::xsd:complexType -slots {
+Class X509IssuerSerialType -superclass ::xoXSD::Core::ComplexType -slots {
 	XML:Child __sequence0
 }
-Class X509IssuerSerialType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence
+Class X509IssuerSerialType::__sequence0 -superclass ::xoXSD::Core::Sequence
 
 #
 # Elements:
@@ -1076,61 +1197,61 @@ Class X509IssuerSerialType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence
 Class CanonicalizationMethod -superclass ::xoSAML::ds::CanonicalizationMethodType
 Class DSAKeyValue -superclass ::xoSAML::ds::DSAKeyValueType
 Class DigestMethod -superclass ::xoSAML::ds::DigestMethodType
-Class DigestValue -superclass ::xoXSD::Core::xsd:element -slots {
+Class DigestValue -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class Exponent -superclass ::xoXSD::Core::xsd:element -slots {
+Class Exponent -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class G -superclass ::xoXSD::Core::xsd:element -slots {
+Class G -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class HMACOutputLength -superclass ::xoXSD::Core::xsd:element -slots {
+Class HMACOutputLength -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::integer -text true
 }
-Class J -superclass ::xoXSD::Core::xsd:element -slots {
+Class J -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class KeyInfo -superclass ::xoSAML::ds::KeyInfoType
-Class KeyName -superclass ::xoXSD::Core::xsd:element -slots {
+Class KeyName -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class KeyValue -superclass ::xoSAML::ds::KeyValueType
 Class Manifest -superclass ::xoSAML::ds::ManifestType
-Class MgmtData -superclass ::xoXSD::Core::xsd:element -slots {
+Class MgmtData -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
-Class Modulus -superclass ::xoXSD::Core::xsd:element -slots {
+Class Modulus -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class Object -superclass ::xoSAML::ds::ObjectType
-Class P -superclass ::xoXSD::Core::xsd:element -slots {
+Class P -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class PGPData -superclass ::xoSAML::ds::PGPDataType
-Class PGPKeyID -superclass ::xoXSD::Core::xsd:element -slots {
+Class PGPKeyID -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class PGPKeyPacket -superclass ::xoXSD::Core::xsd:element -slots {
+Class PGPKeyPacket -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class PGPKeyPacket -superclass ::xoXSD::Core::xsd:element -slots {
+Class PGPKeyPacket -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class PgenCounter -superclass ::xoXSD::Core::xsd:element -slots {
+Class PgenCounter -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class Q -superclass ::xoXSD::Core::xsd:element -slots {
+Class Q -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class RSAKeyValue -superclass ::xoSAML::ds::RSAKeyValueType
 Class Reference -superclass ::xoSAML::ds::ReferenceType
 Class RetrievalMethod -superclass ::xoSAML::ds::RetrievalMethodType
 Class SPKIData -superclass ::xoSAML::ds::SPKIDataType
-Class SPKISexp -superclass ::xoXSD::Core::xsd:element -slots {
+Class SPKISexp -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class Seed -superclass ::xoXSD::Core::xsd:element -slots {
+Class Seed -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class Signature -superclass ::xoSAML::ds::SignatureType
@@ -1140,152 +1261,31 @@ Class SignatureProperty -superclass ::xoSAML::ds::SignaturePropertyType
 Class SignatureValue -superclass ::xoSAML::ds::SignatureValueType
 Class SignedInfo -superclass ::xoSAML::ds::SignedInfoType
 Class Transform -superclass ::xoSAML::ds::TransformType
-Class Transforms -superclass ::xoSAML::xenc::TransformsType
-Class X509CRL -superclass ::xoXSD::Core::xsd:element -slots {
+Class Transforms -superclass ::xoSAML::ds::TransformsType
+Class X509CRL -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class X509Certificate -superclass ::xoXSD::Core::xsd:element -slots {
+Class X509Certificate -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 Class X509Data -superclass ::xoSAML::ds::X509DataType
-Class X509IssuerName -superclass ::xoXSD::Core::xsd:element -slots {
+Class X509IssuerName -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
 Class X509IssuerSerial -superclass ::xoSAML::ds::X509IssuerSerialType
-Class X509SKI -superclass ::xoXSD::Core::xsd:element -slots {
+Class X509SKI -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
-Class X509SerialNumber -superclass ::xoXSD::Core::xsd:element -slots {
+Class X509SerialNumber -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::integer -text true
 }
-Class X509SubjectName -superclass ::xoXSD::Core::xsd:element -slots {
+Class X509SubjectName -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
-Class XPath -superclass ::xoXSD::Core::xsd:element -slots {
+Class XPath -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
 }
-Class Y -superclass ::xoXSD::Core::xsd:element -slots {
+Class Y -superclass ::xoXSD::Core::Element -slots {
 	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
 }
 }
-
-namespace eval ::xoSAML::xenc {
-
-variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
-variable xmlPrefix "xenc"
-
-#
-# ComplexTypes:
-#
-Class AgreementMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
-	XML:Child __sequence0
-}
-Class AgreementMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
-}
-Class CipherDataType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __choice0
-}
-Class CipherDataType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element CipherReference -type ::xoSAML::xenc::CipherReference
-}
-Class CipherReferenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
-	XML:Child __choice0
-}
-Class CipherReferenceType::__choice0 -superclass ::xoXSD::Core::xsd:choice
-Class EncryptedType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute MimeType -type ::xoXSD::DataTypes::string -use optional
-	XML:Attribute Encoding -type ::xoXSD::DataTypes::anyURI -use optional
-	XML:Child __sequence0
-	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
-	XML:Attribute Type -type ::xoXSD::DataTypes::anyURI -use optional
-}
-Class EncryptedDataType -superclass ::xoSAML::xenc::EncryptedType
-Class EncryptedKeyType -superclass ::xoSAML::xenc::EncryptedType -slots {
-	XML:Attribute Recipient -type ::xoXSD::DataTypes::string -use optional
-	XML:Child __sequence0
-}
-Class EncryptedKeyType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element ReferenceList -type ::xoSAML::xenc::ReferenceList -minOccurs 0 -sequence 1
-}
-Class EncryptedType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element CipherData -type ::xoSAML::xenc::CipherData -sequence 2
-	XML:Element EncryptionProperties -type ::xoSAML::xenc::EncryptionProperties -minOccurs 0 -sequence 3
-	XML:Element KeyInfo -type ::xoSAML::ds::KeyInfo -minOccurs 0 -sequence 1
-}
-Class EncryptionMethodType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Algorithm -type ::xoXSD::DataTypes::anyURI -use required
-	XML:Child __sequence0
-}
-Class EncryptionMethodType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
-}
-Class EncryptionPropertiesType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __sequence0
-	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
-}
-Class EncryptionPropertiesType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element EncryptionProperty -type ::xoSAML::xenc::EncryptionProperty -maxOccurs unbounded -multivalued true -sequence 1
-}
-Class EncryptionPropertyType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Attribute Target -type ::xoXSD::DataTypes::anyURI -use optional
-	XML:Attribute Id -type ::xoXSD::DataTypes::ID -use optional
-	XML:Attribute __anyAttribute -any true -namespace "http://www.w3.org/XML/1998/namespace"
-	XML:Child __choice0
-}
-Class EncryptionPropertyType::__choice0 -superclass ::xoXSD::Core::xsd:choice -slots {
-	XML:Element __any -any true -namespace "##other"
-}
-Class ReferenceList -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __choice0
-}
-Class ReferenceList::__choice0 -superclass ::xoXSD::Core::xsd:choice
-Class ReferenceType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __sequence0
-	XML:Attribute URI -type ::xoXSD::DataTypes::anyURI -use required
-}
-Class ReferenceType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element __any -any true -minOccurs 0 -maxOccurs unbounded -namespace "##other"
-}
-Class TransformsType -superclass ::xoXSD::Core::xsd:complexType -slots {
-	XML:Child __sequence0
-}
-Class TransformsType::__sequence0 -superclass ::xoXSD::Core::xsd:sequence -slots {
-	XML:Element Transform -type ::xoSAML::ds::Transform -maxOccurs unbounded -multivalued true -sequence 1
-}
-
-#
-# Elements:
-#
-Class AgreementMethod -superclass ::xoSAML::xenc::AgreementMethodType
-Class CarriedKeyName -superclass ::xoXSD::Core::xsd:element -slots {
-	XML:Attribute __text -type ::xoXSD::DataTypes::string -text true
-}
-Class CipherData -superclass ::xoSAML::xenc::CipherDataType
-Class CipherReference -superclass ::xoSAML::xenc::CipherReferenceType
-Class CipherValue -superclass ::xoXSD::Core::xsd:element -slots {
-	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
-}
-Class DataReference -superclass ::xoSAML::xenc::ReferenceType
-Class EncryptedData -superclass ::xoSAML::xenc::EncryptedDataType
-Class EncryptedKey -superclass ::xoSAML::xenc::EncryptedKeyType
-Class EncryptionMethod -superclass ::xoSAML::xenc::EncryptionMethodType
-Class EncryptionProperties -superclass ::xoSAML::xenc::EncryptionPropertiesType
-Class EncryptionProperty -superclass ::xoSAML::xenc::EncryptionPropertyType
-Class KA-Nonce -superclass ::xoXSD::Core::xsd:element -slots {
-	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
-}
-Class KeyReference -superclass ::xoSAML::xenc::ReferenceType
-Class KeySize -superclass ::xoXSD::Core::xsd:element -slots {
-	XML:Attribute __text -type ::xoXSD::DataTypes::integer -text true
-}
-Class OAEPparams -superclass ::xoXSD::Core::xsd:element -slots {
-	XML:Attribute __text -type ::xoXSD::DataTypes::base64Binary -text true
-}
-Class OriginatorKeyInfo -superclass ::xoSAML::ds::KeyInfoType
-Class RecipientKeyInfo -superclass ::xoSAML::ds::KeyInfoType
-Class Transforms -superclass ::xoSAML::xenc::TransformsType
-}
-
