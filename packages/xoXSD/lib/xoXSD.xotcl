@@ -17,11 +17,15 @@ namespace eval ::xoXSD {
 
 ::xotcl::Class Generic -superclass ::xoXSD::BaseClass
 
-variable searchPath
+variable searchPath [list]
 
-proc addNamespace {ns} {
+proc addNamespace {ns {position end}} {
 	global searchPath
-	lappend searchPath $ns
+	if { $position == "end" } {
+		lappend searchPath $ns
+	} else {
+		set searchPath [linsert $searchPath $position $ns]
+	}
 }
 
 addNamespace "::xoXSD::Core"
@@ -43,9 +47,13 @@ proc unknown args {
 	
 	if { $found && [lindex $args 1] != ""} {
 		set cmdname [lindex $args 1]
-		set args [lrange $args 2 [llength $args]]
-		set cmd "::xoXSD::Generic $cmdname $path $args"
-		
+		set args [lrange $args 2 end]
+		if { [lsearch [$path info heritage] "::xoXSD::BaseClass"] == -1 } {
+			set cmd "::xoXSD::Generic $cmdname $path $args"
+		} else {
+			set cmd "$path $cmdname $args"
+		}	
+	
 		uplevel #0 $cmd
 		
 	} else {
@@ -133,15 +141,13 @@ BaseClass instproc unknown args {
 }
 
 Generic instproc init args {
-	my instvar Type Namespace
-	
 	set classpath [lindex $args 0]
-	set Namespace [namespace qualifiers $classpath]
-	set Type [namespace tail $classpath]	
+	my Namespace [namespace qualifiers $classpath]
+	my Type [namespace tail $classpath]	
 
 	next
 	
-	set args [lrange $args 1 [llength $args]]
+	set args [lrange $args 1 end]
 
 	if { [lindex $args 0] != "" } {
 		foreach slot [[my Object] attributes] {
