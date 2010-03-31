@@ -1,0 +1,112 @@
+package provide xoSAML 0.1
+
+package require XOTcl
+package require xoXSD
+package require xoSAML::Schema
+
+namespace eval ::xoXSD addNamespace "::xoSAML" 0
+
+namespace eval ::xoSAML {
+	
+namespace export *
+
+::xotcl::Class NameIdentifier	-superclass ::xoXSD::BaseClass
+::xotcl::Class Subject		-superclass ::xoXSD::BaseClass
+::xotcl::Class Response		-superclass ::xoXSD::BaseClass
+::xotcl::Class Request		-superclass ::xoXSD::BaseClass
+::xotcl::Class Status		-superclass ::xoXSD::BaseClass
+::xotcl::Class Assertion	-superclass ::xoXSD::BaseClass
+::xotcl::Class Condition	-superclass ::xoXSD::BaseClass
+::xotcl::Class Request		-superclass ::xoXSD::BaseClass
+
+Request instproc init { {type ""} } {
+	my Namespace "::xoSAML::samlp"
+	if { $type == "" } {
+		my Type "AuthnRequest"
+	} else {
+		my Type $type
+	}
+
+	next
+	
+	#set reasonable defaults...
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Response instproc init args {
+	my Namespace "::xoSAML::samlp"
+	my Type "Response"
+	
+	next
+	
+	#set reasonable defaults
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Status instproc init {code} {	
+	my Namespace "::xoSAML::samlp"
+	my Type "Status"
+	
+	next
+	
+	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
+	set codes [list \
+		"Success" \
+		"Requester" \
+		"Responder" \
+		"VersionMismatch" \
+		"AuthnFailed" \
+		"InvalidAttrNameOrValue" \
+		"InvalidNameIDPolicy" \
+		"NoAuthnContext" \
+		"NoAvailableIDP" \
+		"NoPassive" \
+		"NoSupportedIDP" \
+		"PartialLogout" \
+		"ProxyCountExceeded" \
+		"RequestDenied" \
+		"RequestUnsupported" \
+		"RequestVersionDeprecated" \
+		"RequestVersionTooHigh" \
+		"RequestVersionTooLow" \
+		"ResourceNotRecognized" \
+		"TooManyResponses" \
+		"UnknownAttrProfile" \
+		"UnknownPrincipal" \
+		"UnsupportedBinding" \
+	]
+	
+	set found [lsearch -inline -nocase $codes $code]
+	
+	if { $found == "" } {
+		puts "ERROR: \"$code\" doesn't seem to be a valid StatusCode."
+		return
+	}
+	
+	StatusCode status
+	status Value "$prefix$found"
+	
+	my StatusCode status
+}
+
+Assertion instproc init args {	
+	my Namespace "::xoSAML::saml"
+	my Type "Assertion"
+	
+	next
+	
+	#set reasonable defaults
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Subject instproc init args {
+	my Namespace "::xoSAML::saml"
+	my Type "Subject"
+	
+	next
+}
+
+}
