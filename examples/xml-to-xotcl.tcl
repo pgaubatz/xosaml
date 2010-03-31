@@ -1,8 +1,7 @@
 #!/usr/bin/tclsh
 
-set auto_path [linsert $auto_path 0 ../packages/xoXSD/]
-source SAML-Core.xotcl
-
+set auto_path [linsert $auto_path 0 ../packages/]
+package require xoSAML
 package require tdom
 
 set data {
