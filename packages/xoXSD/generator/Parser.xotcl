@@ -302,7 +302,7 @@ element instproc realInit args {
 			#handle simple text-elements:
 			set slot [::xoXSD::Generator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
 			$slot addArg "-text true"
-			my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] "::xoXSD::Core::xsd:element"]
+			my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] "::xoXSD::Core::Element"]
 			[my xoclass] addSlot $slot
 			[my root] addElement [my xoclass]
 		} 
@@ -438,7 +438,7 @@ any instproc realInit args {
 
 sequence instproc realInit args {
 	my setNameByPrefix "[[my parent] name]\::__sequence"
-	set type "::xoXSD::Core::xsd:sequence"
+	set type "::xoXSD::Core::Sequence"
 	my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
@@ -480,7 +480,7 @@ sequence instproc sortChildren {} {
 
 choice instproc realInit args {		
 	my setNameByPrefix "[[my parent] name]\::__choice"
-	set type "::xoXSD::Core::xsd:choice"
+	set type "::xoXSD::Core::Choice"
 	my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	my parentAddSlot [namespace tail [my name]] "XML:Child"
@@ -492,7 +492,7 @@ choice instproc realInit args {
 
 
 complexType instproc realInit args {
-	set type "::xoXSD::Core::xsd:complexType"		
+	set type "::xoXSD::Core::ComplexType"		
 
 	if { [[my node] hasAttribute name] } {
 		set xmlname [[my node] getAttribute name]	
