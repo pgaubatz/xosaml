@@ -2,7 +2,7 @@
 
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML
-package require tdom
+package require xoXSD::CodeGenerator
 
 set data {
 <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" InResponseTo="indentifier_1" ID="identifier_2" Version="2.0" Destination="https://sp.example.com/SAML2/SSO/POST" IssueInstant="2010-03-29T10:23:44Z">
@@ -32,71 +32,11 @@ set data {
 </samlp:Response>
 }
 
-proc stripPrefix {name} {
-	set pos [string first ":" $name]
-	if { $pos == -1 } { return $name }
-	return [string range $name [expr {$pos + 1}] end]
-}
-
-proc stripInitString {name} {
-	set pos [string first "\"" $name]
-	if { $pos == -1 } { return $name }
-	return [string range $name 0 [expr {$pos - 2}]]
-}
-
-proc handleNode {node} {
-	set nodeName [$node nodeName]
-	if { $nodeName == "#comment" || $nodeName == "#cdata" } {
-		return
-	}
-	
-	set name [stripPrefix [$node nodeName]]
-	set objname [Object autoname obj]
-	set obj [list]
-	
-	set init "$name $objname"
-	foreach child [$node childNodes] {
-		if { [$child nodeName] == "#text" } {
-			append init " \"[$child nodeValue]\""
-			$child delete
-			break
-		}
-	}
-	
-	lappend obj $init
-	
-	foreach attribute [$node attributes "xmlns:*"] {
-		$node removeAttribute "xmlns:[lindex $attribute 0]"
-	}
-	
-	foreach attribute [$node attributes] {
-		lappend obj "$objname $attribute \"[$node getAttribute $attribute]\""
-	}
-	
-	foreach child [$node childNodes] {
-		set childobj [stripInitString [lindex [handleNode $child] 0]]
-		lappend obj "$objname $childobj"
-	}
-	
-	global objects
-	lappend objects $obj
-	return $obj
-}
-
-set doc [dom parse $data] 
-set root [$doc documentElement]
-set objects [list]
-handleNode $root
-
 puts {#!/usr/bin/tclsh
 	
-set auto_path [linsert $auto_path 0 ../packages/xoXSD/]
-source SAML-Core.xotcl	
+set auto_path [linsert $auto_path 0 ../packages/]
+package require xoSAML::Schema
 }
 
-foreach object $objects {
-	foreach line $object {
-		puts $line
-	}
-	puts ""
-}
+::xoXSD::CodeGenerator gen
+puts [gen parse $data]

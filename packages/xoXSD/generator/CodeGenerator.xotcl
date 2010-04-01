@@ -1,0 +1,84 @@
+package provide xoXSD::CodeGenerator 0.1
+
+package require tdom
+package require XOTcl
+
+namespace import -force ::xotcl::*
+
+namespace eval ::xoXSD {
+
+::xotcl::Class CodeGenerator -slots {
+	::xotcl::Attribute objects
+}
+	
+CodeGenerator instproc parse {data} {
+	if { $data == "" } return
+	
+	my objects [list]
+	
+	set doc [dom parse $data] 
+	set root [$doc documentElement]
+	
+	my handleNode $root
+	
+	set o ""
+	foreach object [my objects] {
+		foreach line $object {
+			append o "$line\n"
+		}
+		append o "\n"
+	}
+	return $o
+}
+	
+CodeGenerator instproc stripPrefix {name} {
+	set pos [string first ":" $name]
+	if { $pos == -1 } { return $name }
+	return [string range $name [expr {$pos + 1}] end]
+}
+
+CodeGenerator instproc stripInitString {name} {
+	set pos [string first "\"" $name]
+	if { $pos == -1 } { return $name }
+	return [string range $name 0 [expr {$pos - 2}]]
+}
+
+CodeGenerator instproc handleNode {node} {
+	set nodeName [$node nodeName]
+	if { $nodeName == "#comment" || $nodeName == "#cdata" } {
+		return
+	}
+	
+	set name [my stripPrefix [$node nodeName]]
+	set objname [Object autoname obj]
+	set obj [list]
+	
+	set init "$name $objname"
+	foreach child [$node childNodes] {
+		if { [$child nodeName] == "#text" } {
+			append init " \"[$child nodeValue]\""
+			$child delete
+			break
+		}
+	}
+	
+	lappend obj $init
+	
+	foreach attribute [$node attributes "xmlns:*"] {
+		$node removeAttribute "xmlns:[lindex $attribute 0]"
+	}
+	
+	foreach attribute [$node attributes] {
+		lappend obj "$objname $attribute \"[$node getAttribute $attribute]\""
+	}
+	
+	foreach child [$node childNodes] {
+		set childobj [my stripInitString [lindex [my handleNode $child] 0]]
+		lappend obj "$objname $childobj"
+	}
+	
+	my lappend objects $obj
+	return $obj
+}
+	
+}
