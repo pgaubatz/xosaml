@@ -4,9 +4,9 @@ set auto_path [linsert $auto_path 0 ..]
 
 package require XOTcl
 package require fileutil
-package require xoXSD::Generator
+package require xoXSD::SchemaGenerator
 
-::xoXSD::Generator gen
+::xoXSD::SchemaGenerator gen
 gen setNamespace "::xoSAML"
 
 foreach schema [glob ../../xsd/*.xsd] {

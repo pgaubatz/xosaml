@@ -1,14 +1,14 @@
-package provide xoXSD::Generator::Parser 0.1
+package provide xoXSD::SchemaGenerator::Parser 0.1
 
 package require tdom
 package require XOTcl
-package require xoXSD::Generator::Virtual
+package require xoXSD::SchemaGenerator::Virtual
 package require xoXSD::DataTypes
 
-namespace eval ::xoXSD::Generator::Parser {
+namespace eval ::xoXSD::SchemaGenerator::Parser {
 
 proc parse {document targetprefix targetnamespace {prefix ""}} {
-	set parser [::xoXSD::Generator::Parser::schema new $document]
+	set parser [::xoXSD::SchemaGenerator::Parser::schema new $document]
 	$parser xoTargetPrefix $targetprefix
 	$parser xoNamespacePrefix $prefix
 	$parser xoTargetNamespace $targetnamespace
@@ -81,7 +81,7 @@ Container instproc init {node {parent ""} {root ""}} {
 		if { $type == "#text" } continue
 		if { $type == "#comment" } continue
 		
-		eval ::xoXSD::Generator::Parser::$type new -childof [self] $node [self] [my root]
+		eval ::xoXSD::SchemaGenerator::Parser::$type new -childof [self] $node [self] [my root]
 	}
 	
 	my children [my info children]
@@ -147,7 +147,7 @@ Container instproc parentAddSlot {name type {xmltype ""}} {
 	if { $name == "" || $type == "" } {
 		error "parentAddSlot: name and/or type is empty."
 	}
-	set slot [::xoXSD::Generator::Virtual::xoSlot new $name $type $xmltype]
+	set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new $name $type $xmltype]
 	[my parent] addSlot $slot
 	return $slot
 }
@@ -295,14 +295,14 @@ element instproc realInit args {
 		
 		#check if we've got complexElement:
 		if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
-			my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
+			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 			[my root] addElement [my xoclass]
 		
 		} else {
 			#handle simple text-elements:
-			set slot [::xoXSD::Generator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+			set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
 			$slot addArg "-text true"
-			my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] "::xoXSD::Core::Element"]
+			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] "::xoXSD::Core::Element"]
 			[my xoclass] addSlot $slot
 			[my root] addElement [my xoclass]
 		} 
@@ -381,7 +381,7 @@ attribute instproc realInit args {
 	
 	#finally create the slot
 	if { [namespace tail [[my parent] class]] == "attributeGroup" } {
-		set slot [::xoXSD::Generator::Virtual::xoSlot new [my name] "XML:Attribute" $type]
+		set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new [my name] "XML:Attribute" $type]
 		[my parent] addAttribute $slot
 	} else {
 		set slot [my parentAddSlot [my name] "XML:Attribute" $type]
@@ -439,7 +439,7 @@ any instproc realInit args {
 sequence instproc realInit args {
 	my setNameByPrefix "[[my parent] name]\::__sequence"
 	set type "::xoXSD::Core::Sequence"
-	my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
 	my parentAddSlot [namespace tail [my name]] "XML:Child"
@@ -481,7 +481,7 @@ sequence instproc sortChildren {} {
 choice instproc realInit args {		
 	my setNameByPrefix "[[my parent] name]\::__choice"
 	set type "::xoXSD::Core::Choice"
-	my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	my parentAddSlot [namespace tail [my name]] "XML:Child"
 }
@@ -502,7 +502,7 @@ complexType instproc realInit args {
 	}
 	
 	my name [my getXMLName $xmlname]
-	my xoclass [::xoXSD::Generator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	
 	foreach child [my info children] {
@@ -535,7 +535,7 @@ complexType instproc realInit args {
 				set base [[$grandchild node] getAttribute base]
 				set xmlbase [my getXMLName $base]
 				set type [my XMLNametoXOTclClass $xmlbase]
-				set slot [::xoXSD::Generator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+				set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
 				$slot addArg "-text true"
 				[my xoclass] addSlot $slot
 				
