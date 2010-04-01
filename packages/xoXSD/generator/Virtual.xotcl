@@ -1,9 +1,9 @@
-package provide xoXSD::Generator::Virtual 0.1
+package provide xoXSD::SchemaGenerator::Virtual 0.1
 
 package require tdom
 package require XOTcl
 
-namespace eval ::xoXSD::Generator::Virtual {
+namespace eval ::xoXSD::SchemaGenerator::Virtual {
 
 #####################################################
 #			xoClass			    #

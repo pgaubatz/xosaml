@@ -1,27 +1,27 @@
-package provide xoXSD::Generator 0.1
+package provide xoXSD::SchemaGenerator 0.1
 
 package require tdom
 package require XOTcl
-package require xoXSD::Generator::Parser
+package require xoXSD::SchemaGenerator::Parser
 
 namespace import -force ::xotcl::*
 
 namespace eval ::xoXSD {
 	
-::xotcl::Class Generator -slots {
+::xotcl::Class SchemaGenerator -slots {
 	::xotcl::Attribute xoNamespacePrefix
 	::xotcl::Attribute parsers
 }
 
-Generator instproc init {} {
+SchemaGenerator instproc init {} {
 	my parsers [list]
 }
 	
-Generator instproc setNamespace {ns} {
+SchemaGenerator instproc setNamespace {ns} {
 	my xoNamespacePrefix $ns
 }
 
-Generator instproc getTargetPrefix {document} {
+SchemaGenerator instproc getTargetPrefix {document} {
 	set xoNamespaces() ""
 	set xoTargetNamespace [$document getAttribute "targetNamespace"]
 	
@@ -36,7 +36,7 @@ Generator instproc getTargetPrefix {document} {
 	return $xoNamespaces($xoTargetNamespace)
 }
 
-Generator instproc addSchema {data} {
+SchemaGenerator instproc addSchema {data} {
 	if { [my xoNamespacePrefix] == "" } {
 		puts "ERROR: A namespace has to be defined before! (via \"setNamespace\")"
 		return
@@ -51,10 +51,10 @@ Generator instproc addSchema {data} {
 		error "ERROR: $filename is not an XML schema file."
 	}
 
-	my lappend parsers [::xoXSD::Generator::Parser::parse $root $targetPrefix $targetNamespace [my xoNamespacePrefix]]
+	my lappend parsers [::xoXSD::SchemaGenerator::Parser::parse $root $targetPrefix $targetNamespace [my xoNamespacePrefix]]
 }
 	
-Generator instproc generate {} {
+SchemaGenerator instproc generate {} {
 	set o ""
 	append o "package require XOTcl\n"
 	append o "package require xoXSD\n\n"
