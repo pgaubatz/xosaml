@@ -56,7 +56,9 @@ CodeGenerator instproc handleNode {node} {
 	set init "$name $objname"
 	foreach child [$node childNodes] {
 		if { [$child nodeName] == "#text" } {
-			append init " \"[$child nodeValue]\""
+			set text [string trim [$child nodeValue]]
+			set text [string map {"\n" "\\n" "\r" "\\r"} $text]
+			append init " \"$text\""
 			$child delete
 			break
 		}
@@ -64,6 +66,9 @@ CodeGenerator instproc handleNode {node} {
 	
 	lappend obj $init
 	
+	if { [$node hasAttribute "xmlns"] } {
+		$node removeAttribute "xmlns"
+	}
 	foreach attribute [$node attributes "xmlns:*"] {
 		$node removeAttribute "xmlns:[lindex $attribute 0]"
 	}
