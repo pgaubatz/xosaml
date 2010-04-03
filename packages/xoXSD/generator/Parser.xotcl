@@ -88,7 +88,8 @@ Container instproc init {node {parent ""} {root ""}} {
 }
 	
 Container instproc getXMLName {xmlname} {
-	if { [string first : $xmlname] != -1 } {
+	if { [string first "::" $xmlname] != -1 } return	
+	if { [string first ":" $xmlname] != -1 } {
 		set tmp [split $xmlname ":"]
 		return [lindex $tmp 1]
 	}
@@ -96,29 +97,32 @@ Container instproc getXMLName {xmlname} {
 }
 
 Container instproc getXMLPrefix {xmlname} {
-	if { [string first : $xmlname] != -1 } {
+	if { [string first "::" $xmlname] != -1 } return 
+	if { [string first ":" $xmlname] != -1 } {
 		set tmp [split $xmlname :]
 		return [lindex $tmp 0]
 	}
 	return ""
 }
-
-Container instproc XMLNametoXOTclClass {xmlname} {
+	
+Container instproc getXOTclNamespace {name} {
 	set xoNamespacePrefix [[my root] xoNamespacePrefix]
 	set xoTargetPrefix [[my root] xoTargetPrefix]
 	
-	set name [my getXMLName $xmlname]
-	
-	if { [my getXMLPrefix $xmlname] != "" } {	
-		set prefix [my getXMLPrefix $xmlname]
+	if { [my getXMLPrefix $name] != "" } {	
+		return [my getXMLPrefix $name]
 	} else {
 		set prefix "::xoXSD::DataTypes"
 		if { ![Object isobject "$prefix\::$name"] } {
 			set prefix "$xoNamespacePrefix\::$xoTargetPrefix"
 		}
-	}
+		return $prefix
+	}	
+}
 	
-	return "$prefix\::$name"
+Container instproc XMLNametoXOTclClass {xmlname} {
+	set name [my getXMLName $xmlname]
+	return "[my getXOTclNamespace $name]\::$name"
 }
 
 Container instproc getAllChildren {} {
@@ -447,6 +451,7 @@ sequence instproc realInit args {
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
 	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
 
@@ -489,6 +494,7 @@ choice instproc realInit args {
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
 
