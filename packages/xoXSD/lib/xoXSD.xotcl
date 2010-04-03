@@ -7,6 +7,12 @@ package require xoXSD::Core
 
 namespace unknown [list ::xoXSD::unknown]
 
+namespace import -force ::xotcl::my
+namespace import -force ::xotcl::next
+namespace import -force ::xotcl::self
+namespace import -force ::xotcl::Object
+namespace import -force ::xotcl::Class
+
 namespace eval ::xoXSD {
 	
 ::xotcl::Class BaseClass -slots {

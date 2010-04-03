@@ -156,7 +156,21 @@ Container instproc addSlot {slot} {
 	[my xoclass] addSlot $slot
 }
 
+Container instproc addMinMaxOccurs {slot} {
+	if { [[my node] hasAttribute minOccurs] } {
+		$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
+	}
+	if { [[my node] hasAttribute maxOccurs] } {
+		set maxOccurs [[my node] getAttribute maxOccurs]
+		set arg "-maxOccurs $maxOccurs"
+		if { $maxOccurs == "unbounded" || $maxOccurs > 1 } {
+			append arg " -multivalued true"
+		}
+		$slot addArg $arg
+	}
+}
 
+	
 
 
 
@@ -316,17 +330,7 @@ element instproc realInit args {
 		set type [my getType [[my node] getAttribute ref]]
 		my name [namespace tail $type]
 		set slot [my parentAddSlot [my name] "XML:Element" $type]
-		if { [[my node] hasAttribute minOccurs] } {
-			$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
-		}
-		if { [[my node] hasAttribute maxOccurs] } {
-			set maxOccurs [[my node] getAttribute maxOccurs]
-			set arg "-maxOccurs $maxOccurs"
-			if { $maxOccurs == "unbounded" || $maxOccurs > 1 } {
-				append arg " -multivalued true"
-			}
-			$slot addArg $arg
-		}
+		my addMinMaxOccurs $slot
 		
 	} else {
 		error "DON'T KNOW WHAT TO DO..."	
@@ -442,7 +446,8 @@ sequence instproc realInit args {
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
-	my parentAddSlot [namespace tail [my name]] "XML:Child"
+	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	my addMinMaxOccurs $slot
 }
 
 sequence instproc sortChildren {} {
@@ -483,7 +488,8 @@ choice instproc realInit args {
 	set type "::xoXSD::Core::Choice"
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
 	[my root] addComplexType [my xoclass]
-	my parentAddSlot [namespace tail [my name]] "XML:Child"
+	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	my addMinMaxOccurs $slot
 }
 
 
