@@ -14,18 +14,21 @@ namespace eval ::xoXSD::Core {
 	::xotcl::Attribute rootClass	
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
+	::xotcl::Attribute childslots
 	::xotcl::Attribute children
 }
+	
+::xotcl::Class GenericChild	-superclass ::xoXSD::Core::Generic
 
 ::xotcl::Class Element		-superclass ::xoXSD::Core::Generic 
 
 ::xotcl::Class ComplexType	-superclass ::xoXSD::Core::Generic
 
-::xotcl::Class Sequence		-superclass ::xoXSD::Core::Generic -slots {
+::xotcl::Class Sequence		-superclass ::xoXSD::Core::GenericChild -slots {
 	::xotcl::Attribute sequence -default false
 }
 
-::xotcl::Class Choice		-superclass ::xoXSD::Core::Generic -slots {
+::xotcl::Class Choice		-superclass ::xoXSD::Core::GenericChild -slots {
 	::xotcl::Attribute slotfree 	 -default true
 	::xotcl::Attribute choiceparents -default ""
 }
@@ -50,6 +53,7 @@ Generic instproc init { {rootClass ""} } {
 	}
 
 	my children [list]
+	my childslots [list]
 	my elements [list]
 	my attributes [list]
 	
@@ -57,6 +61,7 @@ Generic instproc init { {rootClass ""} } {
 	foreach c [concat [my class] [lreverse $heritage]] {
 		foreach	child [$c info classchildren] {
 			set ch [eval $child new -childof [self] [my rootClass]]
+			my [namespace tail [$ch class]] $ch
 			my lappend children $ch
 		}
 	}
@@ -68,7 +73,9 @@ Generic instproc init { {rootClass ""} } {
 			my addAttribute $slot
 		} elseif { $slotclass == "XML:Element" } {
 			my addElement $slot
-		} 
+		} elseif { $slotclass == "XML:Child" } {
+			my lappend childslots $slot
+		}
 	}	
 }
 
@@ -124,6 +131,7 @@ Choice instproc init args {
 		set parent [$parent info parent]
 	}
 }
+
 
 ##############################################
 # * Various "publicly" available functions * #
@@ -206,8 +214,8 @@ Generic instproc getSlot {slot} {
 	return $slot
 }
 
-Generic instproc getSlotClass {slot} {
-	set slotclass [my doGetSlotClass $slot]
+Generic instproc getSlotClass {slot {withChildSlots false}} {
+	set slotclass [my doGetSlotClass $slot $withChildSlots]
 	if { $slot == false } {
 		my error "there is no such slot: $slot"	
 		return false
@@ -468,7 +476,10 @@ Generic instproc getXmlPrefix {} {
 	return [my getRootNamespaceVariable xmlPrefix]
 }
 
-Generic instproc getSlots {} {
+Generic instproc getSlots {{withChildSlots false}} {
+	if { $withChildSlots } {
+		return [concat [my elements] [my attributes] [my childslots]]
+	} 
 	return [concat [my elements] [my attributes]]
 }
 
@@ -497,7 +508,7 @@ Generic instproc getLocalSlots {} {
 }
 
 Generic instproc getSlotType {slot} {
-	# returns either XML:Attribute, XML:Element or false
+	# returns either XML:Attribute, XML:Element, XML:Child or false
 	set slotclass [my getSlotClass $slot]
 	if { $slotclass == false } { return false }
 	return [namespace tail [$slotclass class]]
@@ -577,6 +588,11 @@ Choice instproc doSetSlot {slot value} {
 			return -1
 		}
 	} elseif { ![my slotfree] && [my slotExists $slot] } {
+		set ret [my tryCreateChild $slot $value]
+		if { $ret != -1 } {
+			return $ret
+		}
+			
 		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
@@ -588,10 +604,41 @@ Choice instproc doSetSlot {slot value} {
 		return false
 	}
 }
+	
+Sequence instproc doSetSlot {slot value} {
+	set ret [next]
+	if { $ret != -1 } {
+		return $ret
+	}
+	return [my tryCreateChild $slot $value]
+}	
+	
+GenericChild instproc tryCreateChild {slot value} {
+	set name [namespace tail [my class]]
+	set parent [my info parent]
+	set c [$parent getSlotClass $name true]
+	
+	if { ![$c multivalued] } {
+		return -1
+	} 
+	
+	set occurs [llength [$parent $name]]
+	set maxOccurs [$c maxOccurs]
+	if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
+		set ch [eval [my class] new -childof $parent [my rootClass]]
+		
+		$parent $name add $ch
+		$parent addChild $ch
+		
+		return [$ch doSetSlot $slot $value]
+	} 
 
-Generic instproc doGetSlotClass {slot} {
+	return -1
+}
+
+Generic instproc doGetSlotClass {slot {withChildSlots false}} {
 	set slot [namespace tail $slot]
-	if { ![my slotExists $slot] } {
+	if { ![my slotExists $slot $withChildSlots] } {
 		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doGetSlotClass $slot]
@@ -600,7 +647,7 @@ Generic instproc doGetSlotClass {slot} {
 		return false
 		
 	} else {
-		return [lsearch -inline -glob [my getSlots] "*::$slot"]
+		return [lsearch -inline -glob [my getSlots $withChildSlots] "*::$slot"]
 	}
 }
 
@@ -608,8 +655,8 @@ Generic instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-Generic instproc slotExists {slot} {
-	set existance [lsearch [my getSlots] "*::slot::[namespace tail $slot]"]
+Generic instproc slotExists {slot {withChildSlots false}} {
+	set existance [lsearch [my getSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
 	return [expr { $existance != -1 } ]
 }
 
@@ -636,6 +683,15 @@ Sequence instproc addElement {element} {
 	
 Generic instproc addAttribute {attribute} {
 	my lappend attributes $attribute
+}
+
+Generic instproc addChild {child} {
+	my lappend children $child
+}
+
+Sequence instproc addChild {child} {
+	next
+	my lappend sequence $child
 }
 	
 Generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {	
