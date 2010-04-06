@@ -35,6 +35,8 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributeGroups
 	::xotcl::Attribute sequences
+	::xotcl::Attribute sequenceCounter -default 0
+	::xotcl::Attribute choiceCounter -default 0
 }
 	
 ::xotcl::Class element		-superclass Container
@@ -139,13 +141,6 @@ Container instproc getAllChildren {} {
 Container instproc realInit args {}
 
 Container instproc earlyInit args {}
-
-Container instproc setNameByPrefix {prefix} {
-	set complexTypes [[my root] complexTypes]
-	set i 0
-	while { [lsearch [lsort $complexTypes] "*\::$prefix$i"] != -1 } { incr i }
-	my name "$prefix$i"
-}
 	
 Container instproc parentAddSlot {name type {xmltype ""}} {
 	if { $name == "" || $type == "" } {
@@ -313,16 +308,21 @@ element instproc realInit args {
 		
 		#check if we've got complexElement:
 		if { [namespace qualifiers $type] != "::xoXSD::DataTypes" } {
-			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
+			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 			[my root] addElement [my xoclass]
-		
+			
 		} else {
 			#handle simple text-elements:
 			set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
 			$slot addArg "-text true"
-			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] "::xoXSD::Core::Element"]
+			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] "::xoXSD::Core::Element"]
 			[my xoclass] addSlot $slot
 			[my root] addElement [my xoclass]
+			if { [my parent] != [my root] } {
+				set type "[my getXOTclNamespace [my name]]\::[my name]"
+				set slot [my parentAddSlot [my name] "XML:Element" $type]
+			}
+			my addMinMaxOccurs $slot
 		} 
 	
 	} elseif { [[my node] hasAttribute name] } {
@@ -445,13 +445,15 @@ any instproc realInit args {
 
 
 sequence instproc realInit args {
-	my setNameByPrefix "[[my parent] name]\::__sequence"
+	set i [[my root] sequenceCounter]
+	my name "[[my parent] name]\::__sequence$i"
+	[my root] sequenceCounter [incr i]
 	set type "::xoXSD::Core::Sequence"
-	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
 	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
-	$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
+	#$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
 
@@ -483,20 +485,22 @@ sequence instproc sortChildren {} {
 }
 
 
-	
-	
 
 
 
-choice instproc realInit args {		
-	my setNameByPrefix "[[my parent] name]\::__choice"
+
+choice instproc realInit args {
+	set i [[my root] choiceCounter]
+	my name "[[my parent] name]\::__choice$i"
+	[my root] choiceCounter [incr i]
 	set type "::xoXSD::Core::Choice"
-	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
-	$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
+	#$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
+
 
 
 
@@ -514,7 +518,7 @@ complexType instproc realInit args {
 	}
 	
 	my name [my getXMLName $xmlname]
-	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass [my name] [my name] $type]
+	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	
 	foreach child [my info children] {
