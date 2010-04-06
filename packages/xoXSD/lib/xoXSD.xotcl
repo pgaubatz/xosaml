@@ -42,9 +42,13 @@ proc unknown args {
 	
 	set found false
 	set class [lindex $args 0]
+	set class [string map {":" "::"} $class]
 	
 	foreach path $searchPath {
-		append path "::[namespace tail $class]"
+		if { [namespace qualifiers $class] != "" } {
+			set path [namespace qualifiers $path]
+		}
+		append path "::$class"
 		if { [Object isobject $path] } {	
 			set found true
 			break
