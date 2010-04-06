@@ -9,12 +9,16 @@ namespace eval ::xoXSD {
 
 ::xotcl::Class CodeGenerator -slots {
 	::xotcl::Attribute objects
+	::xotcl::Attribute nsmap -default ""
 }
-	
-CodeGenerator instproc parse {data} {
+
+CodeGenerator instproc parse {data {nsmap ""}} {
 	if { $data == "" } return
 	
 	my objects [list]
+	if { $nsmap != "" } {
+		my nsmap $nsmap
+	}
 	
 	set doc [dom parse $data] 
 	set root [$doc documentElement]
@@ -29,6 +33,34 @@ CodeGenerator instproc parse {data} {
 		append o "\n"
 	}
 	return $o
+}
+
+CodeGenerator instproc getPrefix {node} {
+	set name [$node nodeName]
+	set pos [string last ":" $name]
+	if { $pos != -1 } { 
+		return [string range $name 0 [expr {$pos - 0}]]
+	}
+	
+	if { [my nsmap] == "" } {
+		return ""
+	}
+	set nsuri [$node namespaceURI]
+	foreach ns [my nsmap] {
+		if { [$node namespaceURI] == [lindex $ns 1] } {
+			return "[lindex $ns 0]\:"
+		}
+	}
+	return ""
+}
+	
+CodeGenerator instproc getName {node} {
+	set name [my stripPrefix [$node nodeName]]
+	set prefix [my getPrefix $node]
+	if { $prefix == "" } {
+		puts "#WARNING: Could not determine a XML namespace prefix for \"$name\" (namespace: [$node namespaceURI])"
+	}
+	return "$prefix$name"
 }
 	
 CodeGenerator instproc stripPrefix {name} {
@@ -49,7 +81,7 @@ CodeGenerator instproc handleNode {node} {
 		return
 	}
 	
-	set name [my stripPrefix [$node nodeName]]
+	set name [my getName $node]
 	set objname [Object autoname obj]
 	set obj [list]
 	
@@ -78,7 +110,7 @@ CodeGenerator instproc handleNode {node} {
 	}
 	
 	foreach child [$node childNodes] {
-		set childobj [my stripInitString [lindex [my handleNode $child] 0]]
+		set childobj [my stripPrefix [my stripInitString [lindex [my handleNode $child] 0]]]
 		lappend obj "$objname $childobj"
 	}
 	
