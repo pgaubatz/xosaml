@@ -313,14 +313,14 @@ element instproc realInit args {
 			
 		} else {
 			#handle simple text-elements:
-			set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+			set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XMLAttribute" $type]
 			$slot addArg "-text true"
 			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] "::xoXSD::Core::Element"]
 			[my xoclass] addSlot $slot
 			[my root] addElement [my xoclass]
 			if { [my parent] != [my root] } {
 				set type "[my getXOTclNamespace [my name]]\::[my name]"
-				set slot [my parentAddSlot [my name] "XML:Element" $type]
+				set slot [my parentAddSlot [my name] "XMLElement" $type]
 			}
 			my addMinMaxOccurs $slot
 		} 
@@ -333,7 +333,7 @@ element instproc realInit args {
 	} elseif { [[my node] hasAttribute ref] } {
 		set type [my getType [[my node] getAttribute ref]]
 		my name [namespace tail $type]
-		set slot [my parentAddSlot [my name] "XML:Element" $type]
+		set slot [my parentAddSlot [my name] "XMLElement" $type]
 		my addMinMaxOccurs $slot
 		
 	} else {
@@ -389,10 +389,10 @@ attribute instproc realInit args {
 	
 	#finally create the slot
 	if { [namespace tail [[my parent] class]] == "attributeGroup" } {
-		set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new [my name] "XML:Attribute" $type]
+		set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new [my name] "XMLAttribute" $type]
 		[my parent] addAttribute $slot
 	} else {
-		set slot [my parentAddSlot [my name] "XML:Attribute" $type]
+		set slot [my parentAddSlot [my name] "XMLAttribute" $type]
 	}
 	
 	#search for "use" - attribute
@@ -414,7 +414,7 @@ attribute instproc realInit args {
 
 
 anyAttribute instproc realInit args {
-	set slot [my parentAddSlot "__anyAttribute" "XML:Attribute"]
+	set slot [my parentAddSlot "__anyAttribute" "XMLAttribute"]
 	$slot addArg "-any true"
 	if { [[my node] hasAttribute namespace] } {
 		$slot addArg "-namespace \"[[my node] getAttribute namespace]\""
@@ -427,7 +427,7 @@ anyAttribute instproc realInit args {
 
 
 any instproc realInit args {
-	set slot [my parentAddSlot "__any" "XML:Element"]
+	set slot [my parentAddSlot "__any" "XMLElement"]
 	$slot addArg "-any true"
 	if { [[my node] hasAttribute minOccurs] } {
 		$slot addArg "-minOccurs [[my node] getAttribute minOccurs]"
@@ -452,7 +452,7 @@ sequence instproc realInit args {
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
-	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	set slot [my parentAddSlot [namespace tail [my name]] "XMLChild"]
 	#$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
@@ -496,7 +496,7 @@ choice instproc realInit args {
 	set type "::xoXSD::Core::Choice"
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
-	set slot [my parentAddSlot [namespace tail [my name]] "XML:Child"]
+	set slot [my parentAddSlot [namespace tail [my name]] "XMLChild"]
 	#$slot addArg "-type [my getXOTclNamespace [my name]]\::[my name]"
 	my addMinMaxOccurs $slot
 }
@@ -551,7 +551,7 @@ complexType instproc realInit args {
 				set base [[$grandchild node] getAttribute base]
 				set xmlbase [my getXMLName $base]
 				set type [my XMLNametoXOTclClass $xmlbase]
-				set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XML:Attribute" $type]
+				set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XMLAttribute" $type]
 				$slot addArg "-text true"
 				[my xoclass] addSlot $slot
 				

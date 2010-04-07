@@ -6,7 +6,7 @@ namespace eval ::xoXSD::Slots {
 
 namespace export *
 	
-::xotcl::Class XML:Attribute -superclass ::xotcl::Attribute -slots {
+::xotcl::Class XMLAttribute -superclass ::xotcl::Attribute -slots {
 	::xotcl::Attribute use 	     -default "optional"
 	::xotcl::Attribute namespace -default false
 	
@@ -16,7 +16,7 @@ namespace export *
 	::xotcl::Attribute any	      -default false
 }
 
-::xotcl::Class XML:Element -superclass ::xotcl::Attribute -slots {
+::xotcl::Class XMLElement -superclass ::xotcl::Attribute -slots {
 	::xotcl::Attribute minOccurs -default 1
 	::xotcl::Attribute maxOccurs -default 1
 	::xotcl::Attribute namespace -default false
@@ -27,7 +27,7 @@ namespace export *
 	::xotcl::Attribute anyCounter -default 0
 }
 	
-::xotcl::Class XML:Child -superclass ::xoXSD::Slots::XML:Element
+::xotcl::Class XMLChild -superclass ::xoXSD::Slots::XMLElement
 	
 }
 
