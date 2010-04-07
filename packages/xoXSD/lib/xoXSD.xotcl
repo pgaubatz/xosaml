@@ -136,7 +136,7 @@ BaseClass instproc unknown args {
 	}
 	
 	#set slot...
-	if { [$obj getSlotType $first] == "XML:Attribute" } {
+	if { [$obj getSlotType $first] == "XMLAttribute" } {
 		return [$obj initSlot $first $rest]	
 	} else {
 		return [$obj setSlot $first [$rest getObject]]

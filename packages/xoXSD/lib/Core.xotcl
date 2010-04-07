@@ -69,11 +69,11 @@ Generic instproc init { {rootClass ""} } {
 	foreach slot [my getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
 		
-		if { $slotclass == "XML:Attribute" } {
+		if { $slotclass == "XMLAttribute" } {
 			my addAttribute $slot
-		} elseif { $slotclass == "XML:Element" } {
+		} elseif { $slotclass == "XMLElement" } {
 			my addElement $slot
-		} elseif { $slotclass == "XML:Child" } {
+		} elseif { $slotclass == "XMLChild" } {
 			my lappend childslots $slot
 		}
 	}	
@@ -85,7 +85,7 @@ Sequence instproc init args {
 	
 	set slots [list]
 	foreach slot [my getLocalSlots] {
-		if { [namespace tail [$slot class]] == "XML:Attribute" } {
+		if { [namespace tail [$slot class]] == "XMLAttribute" } {
 			continue
 		}
 		lappend slots [list $slot [$slot sequence]]
@@ -97,7 +97,7 @@ Sequence instproc init args {
 		set slotname [namespace tail $slot]
 		set slotclass [namespace tail [$slot class]]
 		
-		if { $slotclass == "XML:Child" } {
+		if { $slotclass == "XMLChild" } {
 			foreach child [my children] {
 				set childclass [namespace tail [$child class]]
 				if { $childclass == $slotname } {
@@ -324,7 +324,7 @@ Generic instproc addAny {slot} {
 	}
 	
 	# dynamically create and add a new slot to the class
-	$cls slots "::xoXSD::Slots::XML:Element $slotname -type [$slot class]"
+	$cls slots "::xoXSD::Slots::XMLElement $slotname -type [$slot class]"
 	$inst addElement "$cls\::slot\::$slotname"
 	
 	# finally set the newly created slot
@@ -365,7 +365,7 @@ Generic instproc addAnyAttribute {slotname type value} {
 	}
 	
 	# dynamically create and add a new slot to the class
-	$cls slots "::xoXSD::Slots::XML:Attribute $slotname -type $type"
+	$cls slots "::xoXSD::Slots::XMLAttribute $slotname -type $type"
 	$inst addAttribute "$cls\::slot\::$slotname"
 	
 	# finally set the newly created slot
@@ -507,7 +507,7 @@ Generic instproc getLocalSlots {} {
 }
 
 Generic instproc getSlotType {slot} {
-	# returns either XML:Attribute, XML:Element, XML:Child or false
+	# returns either XMLAttribute, XMLElement, XMLChild or false
 	set slotclass [my getSlotClass $slot]
 	if { $slotclass == false } { return false }
 	return [namespace tail [$slotclass class]]
