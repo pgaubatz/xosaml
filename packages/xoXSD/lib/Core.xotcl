@@ -639,10 +639,9 @@ GenericChild instproc tryCreateChild {slot value} {
 Generic instproc doGetSlotClass {slot {withChildSlots false}} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot $withChildSlots] } {
-		if { [my children] == "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doGetSlotClass $slot]
-			if { $result != -1 } { return $result }
+			if { $result != false } { return $result }
 		}
 		return false
 		
