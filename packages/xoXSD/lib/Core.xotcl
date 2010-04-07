@@ -137,28 +137,31 @@ Choice instproc init args {
 # * Various "publicly" available functions * #
 ##############################################
 
-Generic instproc check {} {
-	set validity true
+Generic instproc check {} {	
 	foreach slot [my attributes] {
 		if { [$slot use] == "required" && ![my slotFilled $slot] } {
-			set validity false
 			my error "needs object: [namespace tail $slot] (type: [$slot type])"
+			return false
 		}
 	}
 	foreach slot [my elements] {
-		if { ![my checkMinOccurs $slot] } { set validity false }
+		if { ![my checkMinOccurs $slot] } { 
+			return false 
+		}
 	}
-	foreach child [my children] {
-		set result [$child check]
-		# the object is already invalid, we just want the error message:
-		if { !$validity } continue
-		set validity $result
+	foreach child [my getAllChildren] {
+		if { ![$child check] } {
+			return false
+		}
 	}
-	return $validity
+	
+	return true
 }
 	
 Choice instproc check {} {
-	if { [my slotfree] } { return true }
+	if { [my slotfree] } { 
+		return true 
+	}
 	
 	set choice ""
 	foreach slot [my elements] {
@@ -167,16 +170,13 @@ Choice instproc check {} {
 			break
 		}
 	}	
-	if { $choice == "" } { return true }
-	
-	set validity [my checkMinOccurs $choice]
-	foreach child [my children] {
-		set result [$child check]
-		# the object is already invalid, we just want the error message:
-		if { !$validity } continue
-		set validity $result
+	if { $choice == "" } { 
+		return true 
 	}
-	return $validity
+	if { ![my checkMinOccurs $choice] } {
+		return false
+	}
+	return [[my getSlot $choice] check]
 }
 
 Generic instproc export { {addXmlNamespaces true} {name ""}} {
@@ -424,7 +424,6 @@ Sequence instproc exportElements {doc root} {
 
 Generic instproc exportElement {doc root element} {
 	if { ![my slotFilled $element] } return
-	
 	set name [my getXmlElementExportName $element] 
 	foreach element [my [namespace tail $element]] {
 		$root appendXML [$element export false $name]

@@ -136,18 +136,11 @@ BaseClass instproc unknown args {
 	}
 	
 	#set slot...
-	set success false
 	if { [$obj getSlotType $first] == "XML:Attribute" } {
-		set success [$obj initSlot $first $rest]	
+		return [$obj initSlot $first $rest]	
 	} else {
-		set success [$obj setSlot $first [$rest getObject]]
-	} 
-	
-	if { !$success } {
-		puts "ERROR: [$obj class] doesn't contain a slot named: $first"	
+		return [$obj setSlot $first [$rest getObject]]
 	}
-	
-	return $success
 }
 
 Generic instproc init args {
