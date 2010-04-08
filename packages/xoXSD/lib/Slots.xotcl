@@ -41,6 +41,22 @@ XMLAttribute instproc getInfo {} {
 	return $o
 }
 
+XMLAttribute instproc getType {} {
+	if { [namespace tail [self]] == "__anyAttribute" } {
+		return "<<Any>>"
+	} 
+	return [[self] type]
+}
+
+XMLAttribute instproc getName {n} {
+	if { [namespace tail $n] == "__anyAttribute" } {
+		return "<<Any>>"
+	} 
+	if { [namespace tail $n] == "__text" } {
+		return "<<Text>>"
+	} 
+	return [namespace tail $n]
+}
 
 XMLElement instproc getInfo {} {
 	set o [list]
@@ -71,9 +87,23 @@ XMLElement instproc isNested {} {
 	
 XMLElement instproc getHierarchy {} {
 	set h [namespace qualifiers [namespace qualifiers [self]]]
-	set h [string map {"::__choice" " -> XSD:Choice ("} $h]
-	set h [string map {"::__sequence" " -> XSD:Sequence ("} $h]
-	return "$h)"
+	set h [string map {"::__choice" " <<Choice ("} $h]
+	set h [string map {"::__sequence" " <<Sequence ("} $h]
+	return "$h)>>"
+}
+
+XMLElement instproc getType {} {
+	if { [namespace tail [self]] == "__any" } {
+		return "<<Any>>"
+	} 	
+	return [[self] type]
+}
+
+XMLElement instproc getName {n} {
+	if { [namespace tail $n] == "__any" } {
+		return "<<Any>>"
+	}
+	return [namespace tail $n]
 }
 
 }
