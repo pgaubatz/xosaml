@@ -18,6 +18,7 @@ namespace export *
 ::xotcl::Class Assertion	-superclass ::xoXSD::BaseClass
 ::xotcl::Class Condition	-superclass ::xoXSD::BaseClass
 ::xotcl::Class Request		-superclass ::xoXSD::BaseClass
+::xotcl::Class Attribute	-superclass ::xoXSD::BaseClass	
 
 Request instproc init { {type ""} } {
 	my Namespace "::xoSAML::samlp"
@@ -107,6 +108,22 @@ Subject instproc init args {
 	my Type "Subject"
 	
 	next
+}
+
+Attribute instproc init {{attrName ""} {attrValue ""}} {
+	my Namespace "::xoSAML::saml"
+	my Type "Attribute"
+	
+	next
+	
+	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+	if { $attrName != "" } {
+		my Name $attrName
+	}
+	if { $attrValue != "" } {
+		saml:AttributeValue value $attrValue
+		my AttributeValue value
+	}
 }
 
 }
