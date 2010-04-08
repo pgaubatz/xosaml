@@ -251,31 +251,30 @@ Generic instproc initSlot {slot args} {
 		return false
 	}
 }
-
-Generic instproc printSlots { {isRoot true} {c ""} } {
-	if { $isRoot } {
-		set c [my class]
-		puts "\n[self] ([namespace tail $c]) has the following slots:"
+	
+Generic instproc printSlots {} {
+	# first get a list of all elements and attributes:
+	set elements   [my elements]
+	set attributes [my attributes]
+	foreach child [my getAllChildren] {
+		set elements   [concat $elements   [$child elements  ]]
+		set attributes [concat $attributes [$child attributes]]
 	}
-	foreach slot [my getSlots] {	
-		set isset ""
-		set slotclass [namespace tail [$slot class]]
-		set slotname [namespace tail $slot]
-		if { $slotname == "__any" || $slotname == "__anyAttribute" } {
-			set slottype ""
-		} else {
-			set slottype "([$slot type])"
-		}
-		if { [my slotFilled $slot] } { set isset "\[filled\]" }
-		set slot [string range $slot 2 end]
-		set slot [string map {"::slot" ""} $slot]
-		set slot [string map {"::" " -> "} $slot]
-		set slot [string map {"__" ""} $slot]
-		puts " *) $slotclass\: $slot $slottype $isset"
-	}	
-	foreach child [my children] {
-		$child printSlots false	$c
+	
+	set classname [namespace tail [my class]]
+	set headers [list "Name" "Type" "Additional Information"]
+	
+	set content [list]
+	foreach e $elements {
+		lappend content [list [namespace tail $e] [$e type] [$e getInfo]]
 	}
+	puts [my makeTable "Elements of \"$classname\"" $headers $content]
+	
+	set content [list]
+	foreach a $attributes {
+		lappend content [list [namespace tail $a] [$a type] [$a getInfo]]
+	}
+	puts [my makeTable "Attributes of \"$classname\"" $headers $content]
 }
 	
 Generic instproc addAny {slot} {
@@ -736,6 +735,57 @@ Generic instproc checkMinOccurs {slot} {
 		}	
 	}	
 	return $validity
+}
+
+Generic instproc makeTable {tableheader headers content} {
+	set width [list]
+	foreach header $headers {
+		lappend width [string length $header]
+	}
+	foreach line $content {
+		for {set i 0} {$i < [llength $line]} {incr i} {
+			set colMax 0
+			foreach colLine [split [lindex $line $i] "\n"] {
+				set colMax [expr max($colMax, [string length $colLine])]	
+			}
+			lset width $i [expr max($colMax, [lindex $width $i])]
+		}
+	}
+	
+	set sep "+"
+	set lw 0
+	foreach w $width {
+		incr lw $w
+		append sep "-[string repeat - $w]-+"
+	}
+	set o "+[string repeat - [expr $lw + 3 * [llength $headers] - 1]]+\n"
+	append o "| [format "%-*s | " [expr $lw + 2 * [llength $headers]] $tableheader]\n"
+	
+	append o "$sep\n[my makeTableRow $width $headers]$sep\n"
+	foreach line $content {
+		set colLinesMax 1
+		foreach colLines $line {
+			set colLinesMax [expr max($colLinesMax, [llength $colLines])]
+		}
+		set content [list]
+		for {set i 0} {$i < $colLinesMax} {incr i} {
+			set content [list]
+			for {set j 0} {$j < [llength $line]} {incr j} {
+				lappend content [lindex [lindex $line $j] $i]
+			}
+			append o [my makeTableRow $width $content]
+		}
+		append o "$sep\n"
+	}
+	return $o
+}
+
+Generic instproc makeTableRow {width content} {
+	set line "| "
+	for {set i 0} {$i < [llength $content]} {incr i} {
+		append line [format "%-*s | " [lindex $width $i] [lindex $content $i]]
+	}
+	return "$line\n"
 }
 	
 }
