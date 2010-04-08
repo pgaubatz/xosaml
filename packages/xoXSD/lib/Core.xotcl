@@ -264,17 +264,20 @@ Generic instproc printSlots {} {
 	set classname [namespace tail [my class]]
 	set headers [list "Name" "Type" "Additional Information"]
 	
-	set content [list]
-	foreach e $elements {
-		lappend content [list [namespace tail $e] [$e type] [$e getInfo]]
+	if { [llength $elements] > 0 } {
+		set content [list]
+		foreach e $elements {
+			lappend content [list [$e getName $e] [$e getType] [$e getInfo]]
+		}
+		puts [my makeTable "Elements of \"$classname\"" $headers $content]
 	}
-	puts [my makeTable "Elements of \"$classname\"" $headers $content]
-	
-	set content [list]
-	foreach a $attributes {
-		lappend content [list [namespace tail $a] [$a type] [$a getInfo]]
+	if { [llength $attributes] > 0 } {
+		set content [list]
+		foreach a $attributes {
+			lappend content [list [$a getName $a] [$a getType] [$a getInfo]]
+		}
+		puts [my makeTable "Attributes of \"$classname\"" $headers $content]
 	}
-	puts [my makeTable "Attributes of \"$classname\"" $headers $content]
 }
 	
 Generic instproc addAny {slot} {
@@ -745,7 +748,7 @@ Generic instproc makeTable {tableheader headers content} {
 	foreach line $content {
 		for {set i 0} {$i < [llength $line]} {incr i} {
 			set colMax 0
-			foreach colLine [split [lindex $line $i] "\n"] {
+			foreach colLine [lindex $line $i] {
 				set colMax [expr max($colMax, [string length $colLine])]	
 			}
 			lset width $i [expr max($colMax, [lindex $width $i])]
