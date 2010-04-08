@@ -15,7 +15,7 @@ namespace export *
 	::xotcl::Attribute enumvalues -default ""
 	::xotcl::Attribute any	      -default false
 }
-
+	
 ::xotcl::Class XMLElement -superclass ::xotcl::Attribute -slots {
 	::xotcl::Attribute minOccurs -default 1
 	::xotcl::Attribute maxOccurs -default 1
@@ -26,8 +26,54 @@ namespace export *
 	::xotcl::Attribute any	     -default false
 	::xotcl::Attribute anyCounter -default 0
 }
-	
+
 ::xotcl::Class XMLChild -superclass ::xoXSD::Slots::XMLElement
-	
+
+
+XMLAttribute instproc getInfo {} {
+	set o [list]
+	if { [[self] use] != "optional" } {
+		lappend o "Use: [[self] use]"
+	}
+	if { [[self] namespace] != false } {
+		lappend o "Namespace: [[self] namespace]"
+	}
+	return $o
 }
 
+
+XMLElement instproc getInfo {} {
+	set o [list]
+	if { [[self] minOccurs] != 1 } {
+		lappend o "MinOccurs: [[self] minOccurs]"
+	}
+	if { [[self] maxOccurs] != 1 } {
+		lappend o "MaxOccurs: [[self] maxOccurs]"
+	}
+	if { [[self] namespace] != false } {
+		lappend o "Namespace: [[self] namespace]"
+	}
+	if { [my isNested] } {
+		lappend o "Parent: [my getHierarchy]"
+	}
+	return $o
+}
+
+XMLElement instproc isNested {} {
+	if { [string first "__choice" [self]] != -1} {
+		return true
+	}
+	if { [string first "__sequence" [self]] != -1 } {
+		return true
+	}
+	return false
+}
+	
+XMLElement instproc getHierarchy {} {
+	set h [namespace qualifiers [namespace qualifiers [self]]]
+	set h [string map {"::__choice" " -> XSD:Choice ("} $h]
+	set h [string map {"::__sequence" " -> XSD:Sequence ("} $h]
+	return "$h)"
+}
+
+}
