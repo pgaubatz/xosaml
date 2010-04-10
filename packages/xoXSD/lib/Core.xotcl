@@ -223,6 +223,14 @@ Generic instproc getSlotClass {slot {withChildSlots false}} {
 	return $slotclass
 }
 
+Generic instproc getContent {} {
+	set content [my getSlot __text]
+	if { $content == false } {
+		return ""
+	}
+	return [$content getContent]
+}
+
 Generic instproc setSlot {slot value} {
 	if { [my doSetSlot $slot $value] == true } {
 		return true
@@ -791,6 +799,26 @@ Generic instproc makeTableRow {width content} {
 	}
 	return "$line\n"
 }
+
+Generic instproc getObject {} {
+	return [self]
+}
+
+Generic instproc unknown {cmd args} {
+	set args [join $args]
 	
+	#read slot
+	if { $args == "" } {
+		return [my getSlot $cmd]	
+	}
+	
+	#set slot...
+	if { [my getSlotType $cmd] == "XMLAttribute" } {
+		return [my initSlot $cmd $args]	
+	} else {
+		return [my setSlot $cmd [$args getObject]]
+	}
+}
+
 }
 
