@@ -206,12 +206,12 @@ Generic instproc export { {addXmlNamespaces true} {name ""}} {
 }
 
 Generic instproc getSlot {slot} {
-	set slot [my doGetSlot $slot]
-	if { $slot == false } {
+	set s [my doGetSlot $slot]
+	if { $s == false } {
 		my error "there is no such Element/Attribute to be get: $slot"	
 		return false
 	} 
-	return $slot
+	return $s
 }
 
 Generic instproc getSlotClass {slot {withChildSlots false}} {
@@ -520,7 +520,8 @@ Generic instproc doGetSlot {slot} {
 	
 	if { ![my slotExists $slot] } {
 		foreach child [my children] {
-			return [$child doGetSlot $slot]		
+			set ret [$child doGetSlot $slot]
+			if { $ret != false } { return $ret }
 		}
 		# there is no such slot:
 		return false
