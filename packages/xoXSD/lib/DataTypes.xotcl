@@ -23,7 +23,7 @@ DataType instproc getContent {} {
 }
 	
 DataType instproc setContent {data} {
-	my data $data
+	my data [join $data]
 	my valid [my check]
 }
 
@@ -157,7 +157,7 @@ unsignedShort instproc check {} {
 }
 
 anyURI instproc check {} {
-	return [regexp {(?:[[:alpha:]]?)(?:\w){2,7}:(?://?)(?:[^[:space:]>"]*)|(^urn\:([[:alnum:]]|\-)*?\:(.*))} [my data]]
+	return [regexp {(?:[[:alpha:]]?)(?:\w){2,7}:(?://?)(?:[^[:space:]>"]*)|(^\#(.*))|(^urn\:([[:alnum:]]|\-)*?\:(.*))} [my data]]
 }
 
 ID instproc check {} {
