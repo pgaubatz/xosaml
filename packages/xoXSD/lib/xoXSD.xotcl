@@ -124,23 +124,9 @@ BaseClass instproc printSlots {} {
 	[my Object] printSlots	
 }
 
-BaseClass instproc unknown args {	
-	set first [lindex [split $args] 0]
-	set from [expr {[string length $first] + 1}]
-	set rest [split [string range $args $from end] " "]
-	set obj [my Object]
-	
-	#read slot
-	if { $rest == "" } {		
-		return [[$obj getSlot $first] export]	
-	}
-	
-	#set slot...
-	if { [$obj getSlotType $first] == "XMLAttribute" } {
-		return [$obj initSlot $first [join $rest]]	
-	} else {
-		return [$obj setSlot $first [$rest getObject]]
-	}
+BaseClass instproc unknown {cmd args} {
+	# simply forward everything to the ::xoXSD::Core::*-Object:
+	return [[my Object] unknown $cmd [join $args]]
 }
 
 Generic instproc init args {
