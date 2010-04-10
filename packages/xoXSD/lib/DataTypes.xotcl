@@ -166,7 +166,7 @@ ID instproc check {} {
 }
 	
 NCName instproc check {} {
-	return [regexp {^([[:alnum:]]|\_)+$} [my data]]
+	return [regexp {^[^./|:*@]+$} [my data]]
 }
 	
 anyType instproc check {} {
