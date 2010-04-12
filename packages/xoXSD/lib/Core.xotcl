@@ -210,6 +210,15 @@ Generic instproc print {} {
 	puts [my export]
 }
 
+Generic instproc printContent {} {
+	set content [my getContent]
+	if { $content == false } {
+		my error "doesn't have any textual content!"
+		return
+	}
+	puts "The textual content of [self] ([my class]) is:\n$content"
+}
+
 Generic instproc getSlot {slot} {
 	set s [my doGetSlot $slot]
 	if { $s == false } {
