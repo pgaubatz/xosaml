@@ -205,6 +205,11 @@ Generic instproc export { {addXmlNamespaces true} {name ""}} {
 	return [$root asXML]
 }
 
+Generic instproc print args {
+	puts "Exporting [self] ([my class]) ..."
+	puts [my export]
+}
+
 Generic instproc getSlot {slot} {
 	set s [my doGetSlot $slot]
 	if { $s == false } {
@@ -260,7 +265,7 @@ Generic instproc initSlot {slot args} {
 	}
 }
 	
-Generic instproc printSlots {} {
+Generic instproc printSlots args {
 	# first get a list of all elements and attributes:
 	set elements   [my elements]
 	set attributes [my attributes]
@@ -289,6 +294,9 @@ Generic instproc printSlots {} {
 }
 	
 Generic instproc addAny {slot} {
+	if { [$slot procsearch getObject] != "" } {
+		set slot [$slot getObject]
+	}
 	set slotname [namespace tail [$slot class]]
 	
 	# first check if the element actually has an <any> element:
@@ -347,6 +355,12 @@ Generic instproc addAny {slot} {
 }
 	
 Generic instproc addAnyAttribute {slotname type value} {
+	if { [Object isobject $value] } {
+		if { [$value procsearch getObject] != "" } {
+			set value [$value getObject]
+		}
+	}
+	
 	# first check if the element actually has an <any> element:
 	set anyAttribute [my getSlotClass __anyAttribute]
 	if { $anyAttribute == false } {
