@@ -1,6 +1,7 @@
 package provide xoSAML::Http::Client 0.1
 
 package require XOTcl
+package require http
 
 namespace eval ::xoSAML::Http {
 	
