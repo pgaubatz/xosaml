@@ -9,6 +9,7 @@ namespace eval ::xoXSD {
 
 ::xotcl::Class CodeGenerator -slots {
 	::xotcl::Attribute objects
+	::xotcl::Attribute objectnames
 	::xotcl::Attribute nsmap -default ""
 }
 
@@ -16,6 +17,7 @@ CodeGenerator instproc parse {data {nsmap ""}} {
 	if { $data == "" } return
 	
 	my objects [list]
+	my objectnames [list]
 	if { $nsmap != "" } {
 		my nsmap $nsmap
 	}
@@ -33,6 +35,16 @@ CodeGenerator instproc parse {data {nsmap ""}} {
 		append o "\n"
 	}
 	return $o
+}
+
+CodeGenerator instproc parseAndEval {data {nsmap ""}} {
+	set o [my parse $data $nsmap]
+	if { $o == "" } {
+		return false
+	}
+	eval $o
+	# return a list of generated objects
+	return [lreverse [my objectnames]]
 }
 
 CodeGenerator instproc getPrefix {node} {
@@ -82,7 +94,7 @@ CodeGenerator instproc handleNode {node} {
 	}
 	
 	set name [my getName $node]
-	set objname [Object autoname obj]
+	set objname [Object autoname xoxsdobj]
 	set obj [list]
 	
 	set init "$name $objname"
@@ -116,6 +128,7 @@ CodeGenerator instproc handleNode {node} {
 	}
 	
 	my lappend objects $obj
+	my lappend objectnames $objname
 	return $obj
 }
 	
