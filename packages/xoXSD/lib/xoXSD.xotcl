@@ -37,41 +37,41 @@ proc addNamespace {ns {position end}} {
 addNamespace "::xoXSD::Core"
 addNamespace "::xoXSD::DataTypes"
 
-proc unknown args { 
+proc unknown {cmd args} { 
 	global searchPath
 	
 	set found false
-	set class [lindex $args 0]
-	set class [string map {":" "::"} $class]
+	set cmd [string map {":" "::"} $cmd]
 	
 	foreach path $searchPath {
-		if { [namespace qualifiers $class] != "" } {
+		if { [namespace qualifiers $cmd] != "" } {
 			set path [namespace qualifiers $path]
 		}
-		append path "::$class"
-		if { [Object isobject $path] } {	
+		append path "::$cmd"
+		if { [Object isobject $path] } {
 			set found true
 			break
 		}
 	}
-	
-	if { $found && [lindex $args 1] != ""} {
-		set cmdname [lindex $args 1]
-		set args [lrange $args 2 end]
+
+	if { $found && [lindex $args 0] != ""} {
+		set cmdname [lindex $args 0]
+		set cmdargs [lrange $args 1 end]
 		if { [lsearch [$path info heritage] "::xoXSD::BaseClass"] == -1 } {
-			set cmd "::xoXSD::Generic $cmdname $path $args"
+			set run "::xoXSD::Generic $cmdname $path $cmdargs"
 		} else {
-			set cmd "$path $cmdname $args"
+			set run "$path $cmdname $cmdargs"
 		}	
-	
-		uplevel #0 $cmd
+		
+		uplevel #0 $run
 		
 	} else {
 		#fallback: invoke the standard unknown-handler...
-		::unknown $args
+		::unknown $cmd $args
 	}
 }	
 
+	
 
 BaseClass instproc init args {
 	if { [my Type] != "" } {
@@ -82,52 +82,30 @@ BaseClass instproc init args {
 	}
 }
 
-BaseClass instproc check {} {
-	puts "Checking [self]..."
-	if { [[my Object] check] } {
-		puts "OK - [self] seems to be valid.\n"	
-	} else {
-		puts "FAILURE - [self] has unmet dependencies. Check for errors above!\n"
-	}
-}
-
-BaseClass instproc export {} {
-	return [[my Object] export]
-}
-	
-BaseClass instproc addAny {slot} {
-	if { [$slot procsearch getObject] != "" } {
-		set slot [$slot getObject]
-	}
-	return [[my Object] addAny $slot]
-}
-
-BaseClass instproc addAnyAttribute {slotname type value} {
-	if { [Object isobject $value] } {
-		if { [$value procsearch getObject] != "" } {
-			set value [$value getObject]
-		}
-	}
-	return [[my Object] addAnyAttribute $slotname $type $value]
-}	
-
-BaseClass instproc print {} {
-	puts "Exporting [self]..."
-	puts [[my Object] export]
-}
-
 BaseClass instproc getObject {} {
 	return [my Object]	
 }
 
-BaseClass instproc printSlots {} {
-	[my Object] printSlots	
-}
-
 BaseClass instproc unknown {cmd args} {
-	# simply forward everything to the ::xoXSD::Core::*-Object:
+	if { $cmd == "export" || \
+	     $cmd == "check"  || \
+	     $cmd == "print"  || \
+	     $cmd == "printSlots" } {
+		return [[my Object] $cmd $args]
+	}
+	# simply forward everything else to the ::xoXSD::Core::*-Object:
 	return [[my Object] unknown $cmd [join $args]]
 }
+
+BaseClass instproc addAny {slot} {
+	return [[my Object] addAny $slot]
+}
+
+BaseClass instproc addAnyAttribute {slotname type value} {
+	return [[my Object] addAnyAttribute $slotname $type $value]
+}	
+
+
 
 Generic instproc init args {
 	set classpath [lindex $args 0]
