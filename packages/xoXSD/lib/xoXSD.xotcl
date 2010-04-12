@@ -91,7 +91,7 @@ BaseClass instproc unknown {cmd args} {
 	     $cmd == "check"  || \
 	     $cmd == "print"  || \
 	     $cmd == "printSlots" } {
-		return [[my Object] $cmd $args]
+		return [[my Object] $cmd]
 	}
 	# simply forward everything else to the ::xoXSD::Core::*-Object:
 	return [[my Object] unknown $cmd [join $args]]
