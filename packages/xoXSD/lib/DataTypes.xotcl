@@ -10,8 +10,8 @@ namespace eval ::xoXSD::DataTypes {
 	::xotcl::Attribute valid -default false
 }
 
-DataType instproc export {ignored name} {
-	return "<$name>[my getContent]</$name>"
+DataType instproc init { {data ""} } {
+	my setContent $data	
 }
 
 DataType instproc getContent {} {
@@ -26,15 +26,19 @@ DataType instproc setContent {data} {
 	my data [join $data]
 	my valid [my check]
 }
-
-DataType instproc init { {data ""} } {
-	my setContent $data	
-}
 	
 DataType instproc check {} {
 	return true
 }
+
+DataType instproc export {} {
+	return [my getContent]
+}
 	
+DataType instproc print {} {
+	puts [my getContent]
+}
+
 DataType instproc getXmlNamespace args {
 	return "http://www.w3.org/2001/XMLSchema-datatypes"
 }
