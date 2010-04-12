@@ -179,7 +179,7 @@ Choice instproc check {} {
 	return [[my getSlot $choice] check]
 }
 
-Generic instproc export { {addXmlNamespaces true} {name ""}} {
+Generic instproc export { {addXmlNamespaces true} {name ""} } {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
@@ -205,7 +205,7 @@ Generic instproc export { {addXmlNamespaces true} {name ""}} {
 	return [$root asXML]
 }
 
-Generic instproc print args {
+Generic instproc print {} {
 	puts "Exporting [self] ([my class]) ..."
 	puts [my export]
 }
@@ -265,7 +265,7 @@ Generic instproc initSlot {slot args} {
 	}
 }
 	
-Generic instproc printSlots args {
+Generic instproc printSlots {} {
 	# first get a list of all elements and attributes:
 	set elements   [my elements]
 	set attributes [my attributes]
