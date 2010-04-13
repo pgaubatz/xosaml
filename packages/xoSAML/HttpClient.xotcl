@@ -2,6 +2,7 @@ package provide xoSAML::Http::Client 0.1
 
 package require XOTcl
 package require http
+package require tdom
 
 namespace eval ::xoSAML::Http {
 	
@@ -61,6 +62,10 @@ Client instproc getQuery {} {
 		append query " $q"
 	}
 	return [eval ::http::formatQuery $query]
+}
+
+Client instproc getDocumentElement {} {
+	return [[dom parse [my getData]] documentElement]
 }
 
 Client instproc readCookies {} {
