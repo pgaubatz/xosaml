@@ -1,0 +1,116 @@
+diff -uraN simplesamlphp-1.5.1/config/authsources.php simplesaml/config/authsources.php
+--- simplesamlphp-1.5.1/config/authsources.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesaml/config/authsources.php	2010-04-13 13:35:41.000000000 +0200
+@@ -49,7 +49,7 @@
+ 	),
+ 	*/
+ 
+-	/*
++	
+ 	'example-userpass' => array(
+ 		'exampleauth:UserPass',
+ 		'student:studentpass' => array(
+@@ -61,7 +61,7 @@
+ 			'eduPersonAffiliation' => array('member', 'employee'),
+ 		),
+ 	),
+-	*/
++	
+ 
+ 	/*
+ 	'yubikey' => array(
+diff -uraN simplesamlphp-1.5.1/config/config.php simplesaml/config/config.php
+--- simplesamlphp-1.5.1/config/config.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesaml/config/config.php	2010-04-09 16:42:00.000000000 +0200
+@@ -11,7 +11,7 @@
+ 	 * Setup the following parameters to match the directory of your installation.
+ 	 * See the user manual for more details.
+ 	 */
+-	'baseurlpath'           => 'simplesaml/',
++	'baseurlpath'           => '~patailama/simplesaml/',
+ 	'certdir'               => 'cert/',
+ 	'loggingdir'            => 'log/',
+ 	'datadir'               => 'data/',
+@@ -43,7 +43,7 @@
+ 	 * This password will give access to the installation page of simpleSAMLphp with
+ 	 * metadata listing and diagnostics pages.
+ 	 */
+-	'auth.adminpassword'		=> '123',
++	'auth.adminpassword'		=> 'admin',
+ 	'admin.protectindexpage'	=> false,
+ 	'admin.protectmetadata'		=> false,
+ 
+@@ -63,7 +63,7 @@
+ 	 * also as the technical contact in generated metadata.
+ 	 */
+ 	'technicalcontact_name'     => 'Administrator',
+-	'technicalcontact_email'    => 'na@example.org',
++	'technicalcontact_email'    => 'patrick@gaubatz.at',
+ 
+ 	/*
+ 	 * The timezone of the server. This option should be set to the timezone you want
+@@ -89,8 +89,8 @@
+ 	 * Options: [syslog,file,errorlog]
+ 	 * 
+ 	 */
+-	'logging.level'         => LOG_NOTICE,
+-	'logging.handler'       => 'syslog',
++	'logging.level'         => LOG_DEBUG,
++	'logging.handler'       => 'file',
+ 
+ 	/*
+ 	 * Choose which facility should be used when logging with syslog.
+@@ -124,10 +124,10 @@
+ 	 * one of the functionalities below, but in some cases you could run multiple functionalities.
+ 	 * In example when you are setting up a federation bridge.
+ 	 */
+-	'enable.saml20-idp'		=> false,
++	'enable.saml20-idp'		=> true,
+ 	'enable.shib13-idp'		=> false,
+ 	'enable.wsfed-sp'		=> false,
+-	'enable.authmemcookie' => false,
++	'enable.authmemcookie' 		=> false,
+ 
+ 	/* 
+ 	 * This value is the duration of the session in seconds. Make sure that the time duration of
+diff -uraN simplesamlphp-1.5.1/metadata/saml20-idp-remote.php simplesaml/metadata/saml20-idp-remote.php
+--- simplesamlphp-1.5.1/metadata/saml20-idp-remote.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesaml/metadata/saml20-idp-remote.php	2010-04-13 13:38:17.000000000 +0200
+@@ -96,3 +96,14 @@
+ 	'SingleLogoutService'  => 'https://testidp.wayf.dk/saml2/idp/SingleLogoutService.php',
+ 	'certFingerprint'      => '04b3b08bce004c27458b3e85b125273e67ef062b'
+ );
++ 
++$metadata['http://localhost/~patailama/simplesaml/saml2/idp/metadata.php'] = array (
++	'name' => array(
++		'en' => 'My IdP'
++	),
++	'SingleSignOnService' => 'http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php',
++	'SingleLogoutService' => 'http://localhost/~patailama/simplesaml/saml2/idp/SingleLogoutService.php',
++	'certFingerprint' => 'afe71c28ef740bc87425be13a2263d37971da1f9',
++        'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
++);
++
+diff -uraN simplesamlphp-1.5.1/metadata/saml20-sp-hosted.php simplesaml/metadata/saml20-sp-hosted.php
+--- simplesamlphp-1.5.1/metadata/saml20-sp-hosted.php	1970-01-01 01:00:00.000000000 +0100
++++ simplesaml/metadata/saml20-sp-hosted.php	2010-04-09 16:55:12.000000000 +0200
+@@ -0,0 +1,6 @@
++<?php
++$metadata = array( 
++    '__DYNAMIC:1__' => array( 
++        'host'  => '__DEFAULT__' 
++    ) 
++); 
+diff -uraN simplesamlphp-1.5.1/metadata/saml20-sp-remote.php simplesaml/metadata/saml20-sp-remote.php
+--- simplesamlphp-1.5.1/metadata/saml20-sp-remote.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesaml/metadata/saml20-sp-remote.php	2010-04-13 13:39:40.000000000 +0200
+@@ -25,3 +25,9 @@
+ 	'simplesaml.nameidattribute' => 'uid',
+ 	'simplesaml.attributes' => FALSE,
+ );
++
++$metadata['http://localhost/~patailama/simplesaml/saml2/sp/metadata.php'] = array(
++	'AssertionConsumerService' => 'http://localhost/~patailama/simplesaml/saml2/sp/AssertionConsumerService.php',
++	'SingleLogoutService' => 'http://localhost/~patailama/simplesaml/saml2/sp/SingleLogoutService.php',
++);
++
