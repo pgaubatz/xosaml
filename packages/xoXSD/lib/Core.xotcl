@@ -176,7 +176,12 @@ Choice instproc check {} {
 	if { ![my checkMinOccurs $choice] } {
 		return false
 	}
-	return [[my getSlot $choice] check]
+	foreach slot [my getSlot $choice] {
+		if { ![$slot check] } {
+			return false
+		}
+	}
+	return true
 }
 
 Generic instproc export { {addXmlNamespaces true} {name ""} } {
@@ -549,7 +554,7 @@ Generic instproc getSlotType {slot} {
 Generic instproc doGetSlot {slot} {
 	set slot [namespace tail $slot]
 	
-	if { ![my slotExists $slot] } {
+	if { ![my slotExists $slot] || ![my exists [namespace tail $slot]] } {
 		foreach child [my children] {
 			set ret [$child doGetSlot $slot]
 			if { $ret != false } { return $ret }
@@ -557,9 +562,28 @@ Generic instproc doGetSlot {slot} {
 		# there is no such slot:
 		return false
 		
-	} else {
-		return [my $slot]
 	}
+
+	set parent [my info parent]
+	if { [Object isobject $parent] } {
+		set classname [namespace tail [my class]]
+		set c [$parent getSlotClass $classname true]
+	
+		if { [$c multivalued] } {
+			set slots [list]
+			foreach child [$parent $classname] {
+				if { [$child exists $slot] } {
+					lappend slots [$child $slot]
+				}
+			}
+			if { [llength $slots] == 0 } {
+				return false
+			}
+			return $slots
+		}
+	}
+	
+	return [my $slot]
 }
 
 Generic instproc doSetSlot {slot value} {
@@ -571,42 +595,43 @@ Generic instproc doSetSlot {slot value} {
 			if { $result != -1 } { return $result } 		
 		}
 		return -1
-	} else {
-		set c [my getSlotClass $slot]
-		
-		#Check if the given value-object matches the required type
-		if { [$c type] != [$value class] } {
-			my error "\"$slot\" has to be of type [$c type]"
+	} 
+	
+	set c [my getSlotClass $slot]
+	
+	#Check if the given value-object matches the required type
+	if { [$c type] != [$value class] } {
+		my error "\"$slot\" has to be of type [$c type]"
+		return false
+	}
+	
+	#Check for a simpleType's enumeration restriction
+	set enum [list]
+	if { [$c exists enumvalues] } {
+		set enum [$c enumvalues]
+	}
+	if { [llength $enum] > 0 } {
+		if { [lsearch -exact $enum [$value getContent]] == -1 } {
+			my error "\"$slot\" is not correctly formatted."
 			return false
 		}
-		
-		#Check for a simpleType's enumeration restriction
-		set enum [list]
-		if { [$c exists enumvalues] } {
-			set enum [$c enumvalues]
-		}
-		if { [llength $enum] > 0 } {
-			if { [lsearch -exact $enum [$value getContent]] == -1 } {
-				my error "\"$slot\" is not correctly formatted."
-				return false
-			}
-		}
-		
-		#finally set slot
-		if { [$c multivalued] && [my slotFilled $slot] } {
-			set occurs [llength [my $slot]]
-			set maxOccurs [$c maxOccurs]
-			if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
-				my $slot add $value
-			} else {
-				my error "\"$slot\" cannot be set because of a maxOccurs restriction."
-				return false
-			}
-		} else {
-			my $slot $value
-		}
-		return true
 	}
+	
+	#finally set slot
+	if { [$c multivalued] && [my slotFilled $slot] } {
+		set occurs [llength [my $slot]]
+		set maxOccurs [$c maxOccurs]
+		if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
+			my $slot add $value
+		} else {
+			my error "\"$slot\" cannot be set because of a maxOccurs restriction."
+			return false
+		}
+	} else {
+		my $slot $value
+	}
+	return true
+	
 }
 
 Choice instproc doSetSlot {slot value} {
