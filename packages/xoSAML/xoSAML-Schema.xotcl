@@ -5,10 +5,10 @@ package require xoXSD
 
 namespace import -force ::xoXSD::Slots::*
 
-namespace eval ::xoXSD addNamespace "::xoSAML::saml"
-namespace eval ::xoXSD addNamespace "::xoSAML::samlp"
-namespace eval ::xoXSD addNamespace "::xoSAML::xenc"
-namespace eval ::xoXSD addNamespace "::xoSAML::ds"
+namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::saml"
+namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::samlp"
+namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::xenc"
+namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::ds"
 
 namespace eval ::xoSAML::saml {
 
