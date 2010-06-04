@@ -4,21 +4,25 @@ package require XOTcl
 package require xoXSD
 package require xoSAML::Schema
 
-namespace eval ::xoXSD addNamespace "::xoSAML" 0
+proc xoSAML {script} {
+	namespace eval ::xoXSD::sandbox $script
+}
+
+namespace eval ::xoXSD::sandbox addNamespace "::xoSAML" 0
 
 namespace eval ::xoSAML {
 	
 namespace export *
 
-::xotcl::Class NameIdentifier	-superclass ::xoXSD::BaseClass
-::xotcl::Class Subject		-superclass ::xoXSD::BaseClass
-::xotcl::Class Response		-superclass ::xoXSD::BaseClass
-::xotcl::Class Request		-superclass ::xoXSD::BaseClass
-::xotcl::Class Status		-superclass ::xoXSD::BaseClass
-::xotcl::Class Assertion	-superclass ::xoXSD::BaseClass
-::xotcl::Class Condition	-superclass ::xoXSD::BaseClass
-::xotcl::Class Request		-superclass ::xoXSD::BaseClass
-::xotcl::Class Attribute	-superclass ::xoXSD::BaseClass	
+::xotcl::Class NameIdentifier	-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Subject		-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Response		-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Request		-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Status		-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Assertion	-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Condition	-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Request		-superclass ::xoXSD::CoreObjectWrapper
+::xotcl::Class Attribute	-superclass ::xoXSD::CoreObjectWrapper
 
 Request instproc init { {type ""} } {
 	my Namespace "::xoSAML::samlp"
@@ -86,10 +90,9 @@ Status instproc init {code} {
 		return
 	}
 	
-	StatusCode status
-	status Value "$prefix$found"
-	
-	my StatusCode status
+	set code [my createSandboxedObject StatusCode]
+	$code Value "$prefix$found"
+	my StatusCode $code
 }
 
 Assertion instproc init args {	
@@ -121,8 +124,8 @@ Attribute instproc init {{attrName ""} {attrValue ""}} {
 		my Name $attrName
 	}
 	if { $attrValue != "" } {
-		saml:AttributeValue value $attrValue
-		my AttributeValue value
+		set val [my createSandboxedObject saml:AttributeValue $attrValue]
+		my AttributeValue $val 
 	}
 }
 
