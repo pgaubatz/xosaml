@@ -5,8 +5,6 @@ package require xoXSD::Slots
 package require xoXSD::DataTypes
 package require xoXSD::Core
 
-namespace unknown [list ::xoXSD::unknown]
-
 namespace import -force ::xotcl::my
 namespace import -force ::xotcl::next
 namespace import -force ::xotcl::self
@@ -15,66 +13,14 @@ namespace import -force ::xotcl::Class
 
 namespace eval ::xoXSD {
 	
-::xotcl::Class BaseClass -slots {
+::xotcl::Class CoreObjectWrapper -slots {
 	::xotcl::Attribute Type
 	::xotcl::Attribute Namespace
 	::xotcl::Attribute Object
 }
 
-::xotcl::Class Generic -superclass ::xoXSD::BaseClass
-
-variable searchPath [list]
-
-proc addNamespace {ns {position end}} {
-	global searchPath
-	if { $position == "end" } {
-		lappend searchPath $ns
-	} else {
-		set searchPath [linsert $searchPath $position $ns]
-	}
-}
-
-addNamespace "::xoXSD::Core"
-addNamespace "::xoXSD::DataTypes"
-
-proc unknown {cmd args} { 
-	global searchPath
-	
-	set found false
-	set cmd [string map {":" "::"} $cmd]
-	
-	foreach path $searchPath {
-		if { [namespace qualifiers $cmd] != "" } {
-			set path [namespace qualifiers $path]
-		}
-		append path "::$cmd"
-		if { [Object isobject $path] } {
-			set found true
-			break
-		}
-	}
-
-	if { $found && [lindex $args 0] != ""} {
-		set cmdname [lindex $args 0]
-		set cmdargs [lrange $args 1 end]
-		if { [lsearch [$path info heritage] "::xoXSD::BaseClass"] == -1 } {
-			set run "::xoXSD::Generic $cmdname $path $cmdargs"
-		} else {
-			set run "$path $cmdname $cmdargs"
-		}	
-		
-		uplevel #0 $run
-		
-	} else {
-		#fallback: invoke the standard unknown-handler...
-		::unknown $cmd $args
-	}
-}	
-
-	
-
-BaseClass instproc init args {
-	if { [my Type] != "" } {
+CoreObjectWrapper instproc init args {
+	if { [my Type] ne "" } {
 		set object "[my Namespace]::[my Type]"
 		my Object [$object new]
 	} else {
@@ -82,41 +28,37 @@ BaseClass instproc init args {
 	}
 }
 
-BaseClass instproc getObject {} {
+CoreObjectWrapper instproc getObject {} {
 	return [my Object]	
 }
 
-BaseClass instproc unknown {cmd args} {
-	if { $cmd == "export" || \
-	     $cmd == "check"  || \
-	     $cmd == "print"  || \
-	     $cmd == "printSlots" } {
-		return [[my Object] $cmd]
-	}
-	# simply forward everything else to the ::xoXSD::Core::*-Object:
-	return [[my Object] unknown $cmd [join $args]]
+CoreObjectWrapper instproc createSandboxedObject {type {args {}}} {
+	set obj [Object autoname xoxsdobj]
+	namespace eval ::xoXSD::sandbox $type $obj $args
+	return xoXSD::sandbox::$obj
 }
 
-BaseClass instproc addAny {slot} {
-	return [[my Object] addAny $slot]
-}
+CoreObjectWrapper instforward export 		{% my Object} %proc
+CoreObjectWrapper instforward check 		{% my Object} %proc
+CoreObjectWrapper instforward print 		{% my Object} %proc
+CoreObjectWrapper instforward printSlots 	{% my Object} %proc
+CoreObjectWrapper instforward addAny 		{% my Object} %proc
+CoreObjectWrapper instforward addAnyAttribute 	{% my Object} %proc	
+CoreObjectWrapper instforward unknown 		{% my Object} %proc
+	
+	
+::xotcl::Class DefaultCoreObjectWrapper -superclass ::xoXSD::CoreObjectWrapper
 
-BaseClass instproc addAnyAttribute {slotname type value} {
-	return [[my Object] addAnyAttribute $slotname $type $value]
-}	
-
-
-
-Generic instproc init args {
+DefaultCoreObjectWrapper instproc init args {
 	set classpath [lindex $args 0]
 	my Namespace [namespace qualifiers $classpath]
 	my Type [namespace tail $classpath]	
-
+  
 	next
 	
 	set args [lrange $args 1 end]
 
-	if { [lindex $args 0] != "" } {
+	if { [lindex $args 0] ne "" } {
 		foreach slot [[my Object] attributes] {
 			if { [$slot text] } {
 				[my Object] initSlot $slot [join $args]
@@ -130,3 +72,53 @@ Generic instproc init args {
 
 }
 
+
+namespace eval ::xoXSD::sandbox {
+	
+variable __searchPath [list]
+
+proc addNamespace {ns {position end}} {
+	variable __searchPath
+	set __searchPath [linsert $__searchPath $position $ns]
+}
+
+addNamespace "::xoXSD::Core"
+addNamespace "::xoXSD::DataTypes"
+
+namespace unknown [list ::xoXSD::sandbox::unknown]
+
+proc unknown {cmd args} { 
+	variable __searchPath
+	
+	set found false
+	set cmd [string map {":" "::"} $cmd]
+	
+	foreach path $__searchPath {
+		if { [namespace qualifiers $cmd] ne "" } {
+			set path [namespace qualifiers $path]
+		}
+		append path "::$cmd"
+		if { [Object isobject $path] } {
+			set found true
+			break
+		}
+	}
+
+	if { $found && [lindex $args 0] ne ""} {
+		set cmdname [lindex $args 0]
+		set cmdargs [lrange $args 1 end]
+		if { [lsearch [$path info heritage] "::xoXSD::CoreObjectWrapper"] == -1 } {
+			set run "::xoXSD::DefaultCoreObjectWrapper $cmdname $path $cmdargs"
+		} else {
+			set run "$path $cmdname $cmdargs"
+		}	
+		
+		uplevel 1 $run
+		
+	} else {
+		#fallback: invoke the standard unknown-handler...
+		::unknown $cmd $args
+	}
+}	
+	
+}
