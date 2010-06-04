@@ -43,8 +43,8 @@ CodeGenerator instproc parseAndEval {data {nsmap ""}} {
 		return false
 	}
 	eval $o
-	# return a list of generated objects
-	return [lreverse [my objectnames]]
+	# return the root-object
+	return [lindex [lreverse [my objectnames]] end]
 }
 
 CodeGenerator instproc getPrefix {node} {

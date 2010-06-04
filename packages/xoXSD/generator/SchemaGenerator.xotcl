@@ -60,7 +60,7 @@ SchemaGenerator instproc generate {} {
 	append o "package require xoXSD\n\n"
 	append o "namespace import -force ::xoXSD::Slots::*\n\n"
 	foreach parser [my parsers] {
-		append o "namespace eval ::xoXSD addNamespace \"[$parser getNamespace]\"\n"
+		append o "namespace eval ::xoXSD::sandbox addNamespace \"[$parser getNamespace]\"\n"
 	}
 	append o "\n"
 	foreach parser [my parsers] {

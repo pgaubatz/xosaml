@@ -308,7 +308,10 @@ Generic instproc printSlots {} {
 }
 	
 Generic instproc addAny {slot} {
-	if { [$slot procsearch getObject] != "" } {
+	if { ![Object isobject $slot] } {
+		set slot "::xoXSD::sandbox::$slot"
+	}
+	if { [$slot procsearch getObject] ne "" } {
 		set slot [$slot getObject]
 	}
 	set slotname [namespace tail [$slot class]]
@@ -369,12 +372,6 @@ Generic instproc addAny {slot} {
 }
 	
 Generic instproc addAnyAttribute {slotname type value} {
-	if { [Object isobject $value] } {
-		if { [$value procsearch getObject] != "" } {
-			set value [$value getObject]
-		}
-	}
-	
 	# first check if the element actually has an <any> element:
 	set anyAttribute [my getSlotClass __anyAttribute]
 	if { $anyAttribute == false } {
@@ -856,14 +853,17 @@ Generic instproc unknown {cmd args} {
 	set args [join $args]
 	
 	#read slot
-	if { $args == "" } {
+	if { $args eq "" } {
 		return [my getSlot $cmd]	
 	}
 	
 	#set slot...
-	if { [my getSlotType $cmd] == "XMLAttribute" } {
+	if { [my getSlotType $cmd] eq "XMLAttribute" } {
 		return [my initSlot $cmd $args]	
 	} else {
+		if { ![Object isobject $args] } {
+			set args "::xoXSD::sandbox::$args"
+		}
 		return [my setSlot $cmd [$args getObject]]
 	}
 }
