@@ -3,6 +3,8 @@
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML
 
+xoSAML {
+
 #
 #these examples were taken from [sstc-saml-tech-overview-2.0-cd-02] chapter 5.1.2
 #
@@ -152,3 +154,5 @@ res1 print
 #	</saml:Assertion>
 #</samlp:Response>
 #
+
+}

@@ -38,4 +38,7 @@ package require xoSAML::Schema
 }
 
 ::xoXSD::CodeGenerator gen
+puts "namespace eval ::xoXSD::sandbox \{"
 puts [gen parse $data]
+puts "\}"
+
