@@ -3,6 +3,8 @@
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML
 
+xoSAML {
+
 #
 #<element name="SubjectConfirmationData" type="saml:SubjectConfirmationDataType"/>
 #<complexType name="SubjectConfirmationDataType" mixed="true">
@@ -34,3 +36,5 @@ s1 addAnyAttribute ANewAttribute ::xoXSD::DataTypes::string "SomeContent"
 s1 print
 
 s1 printSlots
+
+}

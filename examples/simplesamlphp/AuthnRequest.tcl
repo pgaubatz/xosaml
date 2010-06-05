@@ -7,6 +7,8 @@ package require xoSAML::Http::Client
 package require xoXSD::CodeGenerator
 package require base64
 
+xoSAML {
+
 #
 # Define some variables:
 #
@@ -37,7 +39,6 @@ request Issuer issuer
 request NameIDPolicy policy
 
 set SAMLRequest [request export]
-
 
 #
 # Post the SAML (Authn)Request
@@ -85,15 +86,13 @@ http getUrl $url
 set doc [http getDocumentElement]
 set SAMLResponse [::base64::decode [[$doc find "name" "SAMLResponse"] getAttribute "value"]]
 
-
 #
 # Parse the returned SAML Response
 #
 
 ::xoXSD::CodeGenerator generator
 
-set objects [generator parseAndEval $SAMLResponse]
-set response [lindex $objects 0]
+set response [generator parseAndEval $SAMLResponse]
 set assertion [$response Assertion]
 
 puts "1) The SAML Response's StatusCode is: [[[[$response Status] StatusCode] Value] getContent]\n"
@@ -124,3 +123,5 @@ foreach attribute [[$assertion AttributeStatement] Attribute] {
 #		o) uid
 #			o) Value: "testuid" 
 #
+
+}
