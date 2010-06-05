@@ -37,7 +37,7 @@ SchemaGenerator instproc getTargetPrefix {document} {
 }
 
 SchemaGenerator instproc addSchema {data} {
-	if { [my xoNamespacePrefix] == "" } {
+	if { [my xoNamespacePrefix] eq "" } {
 		puts "ERROR: A namespace has to be defined before! (via \"setNamespace\")"
 		return
 	}	
@@ -47,7 +47,7 @@ SchemaGenerator instproc addSchema {data} {
 	set targetPrefix [my getTargetPrefix $root]
 	set targetNamespace [$root getAttribute "targetNamespace"]
 	
-	if { [$root nodeName] != "schema" } {
+	if { [$root nodeName] ne "schema" } {
 		error "ERROR: $filename is not an XML schema file."
 	}
 

@@ -17,7 +17,7 @@ namespace eval ::xoXSD::SchemaGenerator::Virtual {
 
 xoClass instproc init {{name} {type "NONE"}} {
 	my name $name
-	if { $type != "" } {
+	if { $type ne "" } {
 		my type $type
 	}
 	my type $type
@@ -38,7 +38,7 @@ xoClass instproc asXOTcl {} {
 
 xoClass instproc addSlot {slot} {
 	foreach s [my getSlots] {
-		if { [$s name] == [$slot name] } {
+		if { [$s name] eq [$slot name] } {
 			return
 		}
 	}
@@ -63,10 +63,10 @@ xoClass instproc getSlots {} {
 
 xoSlot instproc init {{name} {type ""} {xmltype ""}} {
 	my name $name
-	if { $type != "" } {
+	if { $type ne "" } {
 		my type $type
 	}
-	if { $xmltype != "" } {
+	if { $xmltype ne "" } {
 		my xmltype $xmltype
 	}
 	my args [list]
@@ -78,7 +78,7 @@ xoSlot instproc addArg {arg} {
 
 xoSlot instproc asXOTcl {} {
 	set output "\t[my type] [my name]"
-	if { [my xmltype] != ""} {
+	if { [my xmltype] ne ""} {
 		append output " -type [my xmltype]"
 	}
 	foreach arg [my args] {

@@ -32,7 +32,7 @@ namespace export *
 
 XMLAttribute instproc getInfo {} {
 	set o [list]
-	if { [[self] use] != "optional" } {
+	if { [[self] use] ne "optional" } {
 		lappend o "Use: [[self] use]"
 	}
 	if { [[self] namespace] != false } {
@@ -42,17 +42,17 @@ XMLAttribute instproc getInfo {} {
 }
 
 XMLAttribute instproc getType {} {
-	if { [namespace tail [self]] == "__anyAttribute" } {
+	if { [namespace tail [self]] eq "__anyAttribute" } {
 		return "<<Any>>"
 	} 
 	return [[self] type]
 }
 
 XMLAttribute instproc getName {n} {
-	if { [namespace tail $n] == "__anyAttribute" } {
+	if { [namespace tail $n] eq "__anyAttribute" } {
 		return "<<Any>>"
 	} 
-	if { [namespace tail $n] == "__text" } {
+	if { [namespace tail $n] eq "__text" } {
 		return "<<Text>>"
 	} 
 	return [namespace tail $n]
@@ -93,14 +93,14 @@ XMLElement instproc getHierarchy {} {
 }
 
 XMLElement instproc getType {} {
-	if { [namespace tail [self]] == "__any" } {
+	if { [namespace tail [self]] eq "__any" } {
 		return "<<Any>>"
 	} 	
 	return [[self] type]
 }
 
 XMLElement instproc getName {n} {
-	if { [namespace tail $n] == "__any" } {
+	if { [namespace tail $n] eq "__any" } {
 		return "<<Any>>"
 	}
 	return [namespace tail $n]

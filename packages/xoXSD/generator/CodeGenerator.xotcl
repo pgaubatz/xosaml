@@ -14,11 +14,11 @@ namespace eval ::xoXSD {
 }
 
 CodeGenerator instproc parse {data {nsmap ""}} {
-	if { $data == "" } return
+	if { $data eq "" } return
 	
 	my objects [list]
 	my objectnames [list]
-	if { $nsmap != "" } {
+	if { $nsmap ne "" } {
 		my nsmap $nsmap
 	}
 	
@@ -39,7 +39,7 @@ CodeGenerator instproc parse {data {nsmap ""}} {
 
 CodeGenerator instproc parseAndEval {data {nsmap ""}} {
 	set o [my parse $data $nsmap]
-	if { $o == "" } {
+	if { $o eq "" } {
 		return false
 	}
 	namespace eval ::xoXSD::sandbox $o
@@ -54,12 +54,12 @@ CodeGenerator instproc getPrefix {node} {
 		return [string range $name 0 [expr {$pos - 0}]]
 	}
 	
-	if { [my nsmap] == "" } {
+	if { [my nsmap] eq "" } {
 		return ""
 	}
 	set nsuri [$node namespaceURI]
 	foreach ns [my nsmap] {
-		if { [$node namespaceURI] == [lindex $ns 1] } {
+		if { [$node namespaceURI] eq [lindex $ns 1] } {
 			return "[lindex $ns 0]\:"
 		}
 	}
@@ -69,7 +69,7 @@ CodeGenerator instproc getPrefix {node} {
 CodeGenerator instproc getName {node} {
 	set name [my stripPrefix [$node nodeName]]
 	set prefix [my getPrefix $node]
-	if { $prefix == "" } {
+	if { $prefix eq "" } {
 		puts "#WARNING: Could not determine a XML namespace prefix for \"$name\" (namespace: [$node namespaceURI])"
 	}
 	return "$prefix$name"
@@ -89,7 +89,7 @@ CodeGenerator instproc stripInitString {name} {
 
 CodeGenerator instproc handleNode {node} {
 	set nodeName [$node nodeName]
-	if { $nodeName == "#comment" || $nodeName == "#cdata" } {
+	if { $nodeName eq "#comment" || $nodeName eq "#cdata" } {
 		return
 	}
 	
@@ -99,7 +99,7 @@ CodeGenerator instproc handleNode {node} {
 	
 	set init "$name $objname"
 	foreach child [$node childNodes] {
-		if { [$child nodeName] == "#text" } {
+		if { [$child nodeName] eq "#text" } {
 			set text [string trim [$child nodeValue]]
 			set text [string map {"\n" "\\n" "\r" "\\r"} $text]
 			append init " \"$text\""
@@ -118,7 +118,7 @@ CodeGenerator instproc handleNode {node} {
 	}
 	
 	foreach attribute [$node attributes] {
-		if { [lindex $attribute 1] != "" } continue
+		if { [lindex $attribute 1] ne "" } continue
 		lappend obj "$objname $attribute \"[$node getAttribute [lindex $attribute 0]]\""
 	}
 	

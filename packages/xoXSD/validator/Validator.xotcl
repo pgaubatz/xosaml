@@ -39,7 +39,7 @@ Validator instproc validateFile {xmlfile} {
 			# Parse succeeded (1.789) with no errors and no warnings.
 			if { [string match "Parse succeeded (*" $line] } {
 				regexp {with (.+?) error.? and (.+?) warning.?} $line matches err warn
-				if { $err != "no" || $warn != "no" } {
+				if { $err ne "no" || $warn ne "no" } {
 					my result "$err errors and $warn warnings"
 				} else {
 					return true
