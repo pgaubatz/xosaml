@@ -5,8 +5,8 @@ package require http
 package require tdom
 
 namespace eval ::xoSAML::Http {
-	
-namespace export *
+
+namespace export Client
 
 ::xotcl::Class Client -slots {
 	::xotcl::Attribute token -default false
@@ -22,10 +22,10 @@ Client instproc getUrl {url} {
 	::http::cleanup [my token]
 	set args ""
 	set query [my getQuery]
-	if { $query != "" } {
+	if { $query ne "" } {
 		append args " -query $query"
 	}
-	if { [my cookies] != "" } {
+	if { [my cookies] ne "" } {
 		append args " -headers \[list Cookie [my cookies]\]"
 	}
 	my token [eval ::http::geturl $url $args]
@@ -69,7 +69,7 @@ Client instproc getDocumentElement {} {
 }
 
 Client instproc readCookies {} {
-	if { [my getHeader "Set-Cookie"] == "" } return
+	if { [my getHeader "Set-Cookie"] eq "" } return
 	my cookies [lindex [split [my getHeader "Set-Cookie"] {;}] 0]
 }
 

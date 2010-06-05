@@ -40,7 +40,7 @@ namespace export *
 ##############################################
 
 Generic instproc init { {rootClass ""} } {
-	if { $rootClass == "" } {
+	if { $rootClass eq "" } {
 		my rootClass [my class]
 	} else {
 		my rootClass $rootClass
@@ -48,7 +48,7 @@ Generic instproc init { {rootClass ""} } {
 	
 	set heritage [list]
 	foreach c [[my class] info heritage] {
-		if { [namespace qualifiers $c] == "::xoXSD::Core" } break
+		if { [namespace qualifiers $c] eq "::xoXSD::Core" } break
 		lappend heritage $c
 	}
 
@@ -69,11 +69,11 @@ Generic instproc init { {rootClass ""} } {
 	foreach slot [my getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
 		
-		if { $slotclass == "XMLAttribute" } {
+		if { $slotclass eq "XMLAttribute" } {
 			my addAttribute $slot
-		} elseif { $slotclass == "XMLElement" } {
+		} elseif { $slotclass eq "XMLElement" } {
 			my addElement $slot
-		} elseif { $slotclass == "XMLChild" } {
+		} elseif { $slotclass eq "XMLChild" } {
 			my lappend childslots $slot
 		}
 	}	
@@ -85,7 +85,7 @@ Sequence instproc init args {
 	
 	set slots [list]
 	foreach slot [my getLocalSlots] {
-		if { [namespace tail [$slot class]] == "XMLAttribute" } {
+		if { [namespace tail [$slot class]] eq "XMLAttribute" } {
 			continue
 		}
 		lappend slots [list $slot [$slot sequence]]
@@ -97,10 +97,10 @@ Sequence instproc init args {
 		set slotname [namespace tail $slot]
 		set slotclass [namespace tail [$slot class]]
 		
-		if { $slotclass == "XMLChild" } {
+		if { $slotclass eq "XMLChild" } {
 			foreach child [my children] {
 				set childclass [namespace tail [$child class]]
-				if { $childclass == $slotname } {
+				if { $childclass eq $slotname } {
 					my lappend sequence $child	
 				}
 			}
@@ -139,7 +139,7 @@ Choice instproc init args {
 
 Generic instproc check {} {	
 	foreach slot [my attributes] {
-		if { [$slot use] == "required" && ![my slotFilled $slot] } {
+		if { [$slot use] eq "required" && ![my slotFilled $slot] } {
 			my error "needs object: [namespace tail $slot] (type: [$slot type])"
 			return false
 		}
@@ -170,7 +170,7 @@ Choice instproc check {} {
 			break
 		}
 	}	
-	if { $choice == "" } { 
+	if { $choice eq "" } { 
 		return true 
 	}
 	if { ![my checkMinOccurs $choice] } {
@@ -266,7 +266,7 @@ Generic instproc initSlot {slot args} {
 		return false
 	}
 	set slottype [$slotclass type]
-	if { [namespace qualifiers $slottype] != "::xoXSD::DataTypes" } {
+	if { [namespace qualifiers $slottype] ne "::xoXSD::DataTypes" } {
 		my error "\"$slot\" is no basic data type."
 		return false
 	}
@@ -328,11 +328,11 @@ Generic instproc addAny {slot} {
 	set inst ""
 	foreach inst [concat [self] [my getAllChildren]] {
 		set c [$inst class]
-		if { $c == $cls || [lsearch [$c info heritage] $cls] != -1 } { 
+		if { $c eq $cls || [lsearch [$c info heritage] $cls] != -1 } { 
 			break
 		}
 	}
-	if { $inst == "" } { error "should not reach here. didn't find inst!" }
+	if { $inst eq "" } { error "should not reach here. didn't find inst!" }
 	
 	# check if a slot named $slotname already exists:
 	if { [$inst slotExists $slotname] } {
@@ -344,7 +344,7 @@ Generic instproc addAny {slot} {
 	set anyslot "$cls\::slot\::__any"
 	set anyCounter [$anyslot anyCounter]
 	set maxOccurs [$anyslot maxOccurs]
-	if { $maxOccurs != "unbounded" } {
+	if { $maxOccurs ne "unbounded" } {
 		if { $anyCounter >= $maxOccurs } {
 			my error "cannot be set because of a maxOccurs restriction."
 			return false
@@ -366,7 +366,7 @@ Generic instproc addAny {slot} {
 	my setSlot $slotname $slot
 	
 	# update the anyCounter if necessary
-	if { $maxOccurs != "unbounded" } {
+	if { $maxOccurs ne "unbounded" } {
 		$anyslot anyCounter [incr anyCounter]
 	}
 }
@@ -384,11 +384,11 @@ Generic instproc addAnyAttribute {slotname type value} {
 	set inst ""
 	foreach inst [concat [self] [my getAllChildren]] {
 		set c [$inst class]
-		if { $c == $cls || [lsearch [$c info heritage] $cls] != -1 } { 
+		if { $c eq $cls || [lsearch [$c info heritage] $cls] != -1 } { 
 			break
 		}
 	}
-	if { $inst == "" } { error "should not reach here. didn't find inst!" }
+	if { $inst eq "" } { error "should not reach here. didn't find inst!" }
 	
 	# check for namespace restrictions:
 	set anyslot "$cls\::slot\::__anyAttribute"
@@ -482,12 +482,12 @@ Generic instproc setXmlnsAttributes {root} {
 }
 	
 Generic instproc getXmlElementExportName { {element ""} } {
-	if { $element == "" } { 
+	if { $element eq "" } { 
 		set element [my class] 
 	}
 	set name [namespace tail $element]
 	set prefix [my getXmlPrefix]
-	if { $prefix != "" } {
+	if { $prefix ne "" } {
 		set name "$prefix:$name"
 	}	
 	return $name
@@ -586,7 +586,7 @@ Generic instproc doGetSlot {slot} {
 Generic instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
-		if { [my children] == "" } { return -1 }
+		if { [my children] eq "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
 			if { $result != -1 } { return $result } 		
@@ -597,7 +597,7 @@ Generic instproc doSetSlot {slot value} {
 	set c [my getSlotClass $slot]
 	
 	#Check if the given value-object matches the required type
-	if { [$c type] != [$value class] } {
+	if { [$c type] ne [$value class] } {
 		my error "\"$slot\" has to be of type [$c type]"
 		return false
 	}
@@ -618,7 +618,7 @@ Generic instproc doSetSlot {slot value} {
 	if { [$c multivalued] && [my slotFilled $slot] } {
 		set occurs [llength [my $slot]]
 		set maxOccurs [$c maxOccurs]
-		if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
+		if { $maxOccurs eq "unbounded" || $occurs < $maxOccurs } {
 			my $slot add $value
 		} else {
 			my error "\"$slot\" cannot be set because of a maxOccurs restriction."
@@ -648,7 +648,7 @@ Choice instproc doSetSlot {slot value} {
 			return $ret
 		}
 			
-		if { [my children] == "" } { return -1 }
+		if { [my children] eq "" } { return -1 }
 		foreach child [my children] {
 			set result [$child doSetSlot $slot $value]
 			if { $result != -1 } { return $result }
@@ -679,7 +679,7 @@ GenericChild instproc tryCreateChild {slot value} {
 	
 	set occurs [llength [$parent $name]]
 	set maxOccurs [$c maxOccurs]
-	if { $maxOccurs == "unbounded" || $occurs < $maxOccurs } {
+	if { $maxOccurs eq "unbounded" || $occurs < $maxOccurs } {
 		set ch [eval [my class] new -childof $parent [my rootClass]]
 		
 		$parent $name add $ch
@@ -753,23 +753,23 @@ Generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {
 		return true
 		
 	} elseif { [lsearch $namespaces "##other"] != -1 } {
-		if { [$value getXmlNamespace] != [$inst getXmlNamespace] } {
+		if { [$value getXmlNamespace] ne [$inst getXmlNamespace] } {
 			return true
 		} 
 		
 	} elseif { [lsearch $namespaces "##targetNamespace"] != -1 } {
-		if { [$value getXmlNamespace] == [$inst getXmlNamespace] } {
+		if { [$value getXmlNamespace] eq [$inst getXmlNamespace] } {
 			return true
 		} 
 		
 	} elseif { [lsearch $namespaces "##local"] != -1 } {
-		if { [$value getXmlNamespace] == "" } {
+		if { [$value getXmlNamespace] eq "" } {
 			return true
 		} 
 		
 	} else {
 		foreach ns $namespaces {
-			if { $ns == [$value getXmlNamespace] } {
+			if { $ns eq [$value getXmlNamespace] } {
 				return true
 			}
 		}

@@ -26,7 +26,7 @@ namespace export *
 
 Request instproc init { {type ""} } {
 	my Namespace "::xoSAML::samlp"
-	if { $type == "" } {
+	if { $type eq "" } {
 		my Type "AuthnRequest"
 	} else {
 		my Type $type
@@ -85,7 +85,7 @@ Status instproc init {code} {
 	
 	set found [lsearch -inline -nocase $codes $code]
 	
-	if { $found == "" } {
+	if { $found eq "" } {
 		puts "ERROR: \"$code\" doesn't seem to be a valid StatusCode."
 		return
 	}
@@ -120,10 +120,10 @@ Attribute instproc init {{attrName ""} {attrValue ""}} {
 	next
 	
 	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-	if { $attrName != "" } {
+	if { $attrName ne "" } {
 		my Name $attrName
 	}
-	if { $attrValue != "" } {
+	if { $attrValue ne "" } {
 		set val [my createSandboxedObject saml:AttributeValue $attrValue]
 		my AttributeValue $val 
 	}

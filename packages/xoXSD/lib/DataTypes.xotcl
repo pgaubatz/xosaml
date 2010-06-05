@@ -102,7 +102,7 @@ string instproc check {} {
 }
 	
 dateTime instproc setContent {data} {
-	if { $data == "now" } {
+	if { $data eq "now" } {
 		set data [clock seconds]
 	} elseif { [regexp {^\d*?\-\d{2}\-\d{2}T\d{2}\:\d{2}\:\d{2}Z$} $data] } {
 		set data [clock scan $data -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
@@ -111,14 +111,14 @@ dateTime instproc setContent {data} {
 }
 	
 dateTime instproc check {} {
-	if { [my data] == "now" || [::string is digit -strict [my data]] && [my data] >= 0 } {
+	if { [my data] eq "now" || [::string is digit -strict [my data]] && [my data] >= 0 } {
 		return true
 	}
 	return false
 }
 	
 dateTime instproc getContent {} {
-	if { [my data] == "" } {
+	if { [my data] eq "" } {
 		return ""
 	}
 	return [clock format [my data] -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
