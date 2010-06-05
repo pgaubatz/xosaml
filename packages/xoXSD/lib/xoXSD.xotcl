@@ -42,7 +42,8 @@ CoreObjectWrapper instforward printSlots 	{% my object} %proc
 CoreObjectWrapper instforward addAny 		{% my object} %proc
 CoreObjectWrapper instforward addAnyAttribute 	{% my object} %proc	
 CoreObjectWrapper instforward unknown 		{% my object} %proc
-	
+CoreObjectWrapper instforward marshal 		{% my object} %proc
+
 	
 ::xotcl::Class DefaultCoreObjectWrapper -superclass ::xoXSD::CoreObjectWrapper
 

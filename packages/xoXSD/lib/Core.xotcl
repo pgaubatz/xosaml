@@ -868,5 +868,7 @@ Generic instproc unknown {cmd args} {
 	}
 }
 
+Generic instforward marshal %self export
+
 }
 

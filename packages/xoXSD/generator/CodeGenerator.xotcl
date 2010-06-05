@@ -47,6 +47,8 @@ CodeGenerator instproc parseAndEval {data {nsmap ""}} {
 	return ::xoXSD::sandbox::[lindex [my objectnames] end]
 }
 
+CodeGenerator instforward unmarshal %self %parseAndEval
+
 CodeGenerator instproc getPrefix {node} {
 	set name [$node nodeName]
 	set pos [string last ":" $name]
