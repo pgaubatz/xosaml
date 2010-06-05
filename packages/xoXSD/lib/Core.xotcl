@@ -870,5 +870,16 @@ Generic instproc unknown {cmd args} {
 
 Generic instforward marshal %self export
 
+Generic instproc . args {
+	set args [split $args [list "." " "]]
+	# remove empty list elements:
+	set args [lsearch -all -inline -not -exact $args ""]
+	set cmd "\[my [lindex $args 0]\]"
+	foreach arg [lrange $args 1 end-1] {
+		set cmd "\[$cmd $arg\]"
+	}
+	eval "$cmd [lindex $args end]"
+}
+
 }
 

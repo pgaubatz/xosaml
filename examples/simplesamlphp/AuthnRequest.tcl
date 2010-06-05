@@ -95,11 +95,11 @@ set SAMLResponse [::base64::decode [[$doc find "name" "SAMLResponse"] getAttribu
 set response [generator parseAndEval $SAMLResponse]
 set assertion [$response Assertion]
 
-puts "1) The SAML Response's StatusCode is: [[[[$response Status] StatusCode] Value] getContent]\n"
-puts "2) The Subject has been authenticated via: [[[[$assertion AuthnStatement] AuthnContext] AuthnContextClassRef] getContent]\n"
+puts "1) The SAML Response's StatusCode is: [$response . Status . StatusCode . Value getContent]\n"
+puts "2) The Subject has been authenticated via: [$assertion . AuthnStatement . AuthnContext . AuthnContextClassRef getContent]\n"
 puts "3) The following Attributes have been found:"
-foreach attribute [[$assertion AttributeStatement] Attribute] {
-	puts "\n\to) [[$attribute Name] getContent]"
+foreach attribute [$assertion . AttributeStatement . Attribute] {
+	puts "\n\to) [$attribute . Name getContent]"
 	foreach value [$attribute AttributeValue] {
 		puts "\t\to) Value: \"[$value getContent]\" "	
 	}
