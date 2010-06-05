@@ -42,9 +42,9 @@ CodeGenerator instproc parseAndEval {data {nsmap ""}} {
 	if { $o == "" } {
 		return false
 	}
-	eval $o
+	namespace eval ::xoXSD::sandbox $o
 	# return the root-object
-	return [lindex [lreverse [my objectnames]] end]
+	return ::xoXSD::sandbox::[lindex [my objectnames] end]
 }
 
 CodeGenerator instproc getPrefix {node} {
