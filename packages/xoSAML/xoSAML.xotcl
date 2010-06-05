@@ -25,11 +25,10 @@ namespace export *
 ::xotcl::Class Attribute	-superclass ::xoXSD::CoreObjectWrapper
 
 Request instproc init { {type ""} } {
-	my Namespace "::xoSAML::samlp"
 	if { $type eq "" } {
-		my Type "AuthnRequest"
+		my type "::xoSAML::samlp::AuthnRequest"
 	} else {
-		my Type $type
+		my type $type
 	}
 
 	next
@@ -40,8 +39,7 @@ Request instproc init { {type ""} } {
 }
 
 Response instproc init args {
-	my Namespace "::xoSAML::samlp"
-	my Type "Response"
+	my type "::xoSAML::samlp::Response"
 	
 	next
 	
@@ -51,8 +49,7 @@ Response instproc init args {
 }
 
 Status instproc init {code} {	
-	my Namespace "::xoSAML::samlp"
-	my Type "Status"
+	my type "::xoSAML::samlp::Status"
 	
 	next
 	
@@ -95,9 +92,8 @@ Status instproc init {code} {
 	my StatusCode $code
 }
 
-Assertion instproc init args {	
-	my Namespace "::xoSAML::saml"
-	my Type "Assertion"
+Assertion instproc init args {
+	my type "::xoSAML::saml::Assertion"
 	
 	next
 	
@@ -107,15 +103,13 @@ Assertion instproc init args {
 }
 
 Subject instproc init args {
-	my Namespace "::xoSAML::saml"
-	my Type "Subject"
+	my type "::xoSAML::saml::Subject"
 	
 	next
 }
 
 Attribute instproc init {{attrName ""} {attrValue ""}} {
-	my Namespace "::xoSAML::saml"
-	my Type "Attribute"
+	my type "::xoSAML::saml::Attribute"
 	
 	next
 	

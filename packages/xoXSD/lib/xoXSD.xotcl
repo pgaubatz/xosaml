@@ -14,22 +14,19 @@ namespace import -force ::xotcl::Class
 namespace eval ::xoXSD {
 	
 ::xotcl::Class CoreObjectWrapper -slots {
-	::xotcl::Attribute Type
-	::xotcl::Attribute Namespace
-	::xotcl::Attribute Object
+	::xotcl::Attribute type
+	::xotcl::Attribute object
 }
 
 CoreObjectWrapper instproc init args {
-	if { [my Type] ne "" } {
-		set object "[my Namespace]::[my Type]"
-		my Object [$object new]
-	} else {
-		error "ERROR: no Type given..."	
+	if { [my type] eq "" } {
+		error "ERROR: no type given..."	
 	}
+	my object [[my type] new]
 }
 
 CoreObjectWrapper instproc getObject {} {
-	return [my Object]	
+	return [my object]	
 }
 
 CoreObjectWrapper instproc createSandboxedObject {type {args {}}} {
@@ -38,36 +35,32 @@ CoreObjectWrapper instproc createSandboxedObject {type {args {}}} {
 	return xoXSD::sandbox::$obj
 }
 
-CoreObjectWrapper instforward export 		{% my Object} %proc
-CoreObjectWrapper instforward check 		{% my Object} %proc
-CoreObjectWrapper instforward print 		{% my Object} %proc
-CoreObjectWrapper instforward printSlots 	{% my Object} %proc
-CoreObjectWrapper instforward addAny 		{% my Object} %proc
-CoreObjectWrapper instforward addAnyAttribute 	{% my Object} %proc	
-CoreObjectWrapper instforward unknown 		{% my Object} %proc
+CoreObjectWrapper instforward export 		{% my object} %proc
+CoreObjectWrapper instforward check 		{% my object} %proc
+CoreObjectWrapper instforward print 		{% my object} %proc
+CoreObjectWrapper instforward printSlots 	{% my object} %proc
+CoreObjectWrapper instforward addAny 		{% my object} %proc
+CoreObjectWrapper instforward addAnyAttribute 	{% my object} %proc	
+CoreObjectWrapper instforward unknown 		{% my object} %proc
 	
 	
 ::xotcl::Class DefaultCoreObjectWrapper -superclass ::xoXSD::CoreObjectWrapper
 
 DefaultCoreObjectWrapper instproc init args {
-	set classpath [lindex $args 0]
-	my Namespace [namespace qualifiers $classpath]
-	my Type [namespace tail $classpath]	
+	my type [lindex $args 0]	
   
 	next
 	
 	set args [lrange $args 1 end]
-
 	if { [lindex $args 0] ne "" } {
-		foreach slot [[my Object] attributes] {
+		foreach slot [[my object] attributes] {
 			if { [$slot text] } {
-				[my Object] initSlot $slot [join $args]
+				[my object] initSlot $slot [join $args]
 				break
 			}
 		}
 	}
-	
-	return [my Object]
+	return [my object]
 }
 
 }
