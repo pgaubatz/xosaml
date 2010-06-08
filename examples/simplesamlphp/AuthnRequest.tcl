@@ -24,13 +24,13 @@ set Password "studentpass"
 # Create the SAML (Authn)Request:
 #
 
-saml:Issuer issuer $SPUrl
+saml::Issuer issuer $SPUrl
 
-samlp:NameIDPolicy policy
+samlp::NameIDPolicy policy
 policy AllowCreate "true"
 policy Format "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
 
-samlp:AuthnRequest request
+samlp::AuthnRequest request
 request ID "identifier_1"
 request Version "2.0"
 request IssueInstant now

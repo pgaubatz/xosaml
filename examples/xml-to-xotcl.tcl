@@ -35,6 +35,7 @@ puts {#!/usr/bin/tclsh
 	
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML::Schema
+package require xoSAML::Environment
 }
 
 ::xoXSD::CodeGenerator gen

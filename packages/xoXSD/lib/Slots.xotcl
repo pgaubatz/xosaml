@@ -6,7 +6,7 @@ namespace eval ::xoXSD::Slots {
 
 namespace export *
 	
-::xotcl::Class XMLAttribute -superclass ::xotcl::Attribute -slots {
+::xotcl::Class XMLAttribute -superclass ::xotcl::Attribute  -slots {
 	::xotcl::Attribute use 	     -default "optional"
 	::xotcl::Attribute namespace -default false
 	
@@ -16,7 +16,7 @@ namespace export *
 	::xotcl::Attribute any	      -default false
 }
 	
-::xotcl::Class XMLElement -superclass ::xotcl::Attribute -slots {
+::xotcl::Class XMLElement -superclass ::xotcl::Attribute  -slots {
 	::xotcl::Attribute minOccurs -default 1
 	::xotcl::Attribute maxOccurs -default 1
 	::xotcl::Attribute namespace -default false
@@ -29,6 +29,20 @@ namespace export *
 
 ::xotcl::Class XMLChild -superclass ::xoXSD::Slots::XMLElement
 
+
+XMLAttribute instproc assign {domain var value} {
+	set s ""
+	if { [Object isobject $value] && [$value class] eq [[self] type] } {
+		set s $value
+	} else {
+		set s [[[self] type] new $value]
+	}
+	if { $s eq "" || ![$s valid] } {
+		$domain error "the content of \"$var\" is not valid."
+		return false
+	}
+	$domain set $var $s
+}
 
 XMLAttribute instproc getInfo {} {
 	set o [list]
@@ -57,6 +71,7 @@ XMLAttribute instproc getName {n} {
 	} 
 	return [namespace tail $n]
 }
+
 
 XMLElement instproc getInfo {} {
 	set o [list]

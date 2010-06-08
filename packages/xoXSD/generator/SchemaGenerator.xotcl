@@ -1,6 +1,7 @@
 package provide xoXSD::SchemaGenerator 0.1
 
 package require tdom
+package require struct::set
 package require XOTcl
 package require xoXSD::SchemaGenerator::Parser
 
@@ -53,22 +54,53 @@ SchemaGenerator instproc addSchema {data} {
 
 	my lappend parsers [::xoXSD::SchemaGenerator::Parser::parse $root $targetPrefix $targetNamespace [my xoNamespacePrefix]]
 }
-	
+
 SchemaGenerator instproc generate {} {
 	set o ""
 	append o "package require XOTcl\n"
 	append o "package require xoXSD\n\n"
 	append o "namespace import -force ::xoXSD::Slots::*\n\n"
 	foreach parser [my parsers] {
-		append o "namespace eval ::xoXSD::sandbox addNamespace \"[$parser getNamespace]\"\n"
-	}
-	append o "\n"
-	foreach parser [my parsers] {
 		append o [$parser getDummyClasses]
 	}
 	foreach parser [my parsers] {
 		append o [$parser getClasses]
 	}
+	return $o
+}
+
+SchemaGenerator instproc generateEnvironment {} {
+	set o "namespace eval ::xoXSD::sandbox \{\n\n"
+	
+	foreach parser [my parsers] {
+		append o "namespace import -force [$parser getNamespace]\::*\n"
+	}
+	append o "\n"
+	
+	# this procedure is needed to identify ambiguous classnames, i.e. when two 
+	# different classes in two different namespaces have exactly the same name: 
+	append o "# These classes are ambiguous, so you always have to properly namespace them:\n"
+	set classnames [list]
+	set ambiguous [list]
+	foreach parser [my parsers] {
+		set names [lsort -unique [$parser getClassNames]]
+		set intersect [::struct::set intersect $classnames $names]
+		::struct::set add ambiguous $intersect
+		::struct::set subtract names $intersect
+		::struct::set add classnames $names
+	}
+	foreach a $ambiguous {
+		foreach parser [my parsers] {
+			append o "namespace forget [$parser getNamespace]::$a\n"
+		}
+	}
+	append o "\n"
+	
+	foreach parser [my parsers] {
+		append o [$parser getInterpAliases]
+	}
+	
+	append o "\n\}\n"
 	return $o
 }
 

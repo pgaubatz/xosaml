@@ -53,7 +53,7 @@ CodeGenerator instproc getPrefix {node} {
 	set name [$node nodeName]
 	set pos [string last ":" $name]
 	if { $pos != -1 } { 
-		return [string range $name 0 [expr {$pos - 0}]]
+		return [string range $name 0 [expr {$pos - 1}]]
 	}
 	
 	if { [my nsmap] eq "" } {
@@ -74,11 +74,11 @@ CodeGenerator instproc getName {node} {
 	if { $prefix eq "" } {
 		puts "#WARNING: Could not determine a XML namespace prefix for \"$name\" (namespace: [$node namespaceURI])"
 	}
-	return "$prefix$name"
+	return "$prefix\::$name"
 }
 	
 CodeGenerator instproc stripPrefix {name} {
-	set pos [string first ":" $name]
+	set pos [string last ":" $name]
 	if { $pos == -1 } { return $name }
 	return [string range $name [expr {$pos + 1}] end]
 }

@@ -3,6 +3,7 @@
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoXSD::Validator
 package require xoSAML::Schema
+package require xoSAML::Environment
 
 foreach test [glob tests/*.xotcl] {
 	source $test
@@ -14,10 +15,12 @@ foreach schema [glob ../xsd/*.xsd] {
 	val addSchema $schema
 }
 
-set instances [::xoXSD::Generic info instances]
+set instances [lsearch -inline -all -glob [::xoXSD::Core::Generic info instances -closure] "::xoXSD::*"]
 set i 0
 foreach instance $instances {
-	puts -nonewline "Validating $instance ([incr i]/[llength $instances])... "
+	set s [namespace tail [[$instance class] info superclass]]
+	if { $s eq "Sequence" || $s eq "Choice" } continue
+	puts -nonewline "Validating $instance ([incr i])... "
 	if { [val validate [$instance export]] == true } {
 		puts "OK"
 	} else {

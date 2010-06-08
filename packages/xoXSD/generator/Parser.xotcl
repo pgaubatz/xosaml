@@ -238,7 +238,7 @@ schema instproc getClasses {{dummy false}} {
 		$sequence sortChildren
 	}
 	
-	set o "namespace eval [my getNamespace] \{\n\n"
+	set o "namespace eval [my getNamespace] \{\n\nnamespace export *\n\n"
 	append o "variable xmlNamespace \"[my xoTargetNamespace]\"\n"
 	append o "variable xmlPrefix \"[my xoTargetPrefix]\"\n"
 	append o "\n#\n# ComplexTypes:\n#\n"
@@ -263,7 +263,27 @@ schema instproc getClasses {{dummy false}} {
 schema instproc getDummyClasses {} {
 	return [my getClasses true]
 }	
+
+schema instproc getClassNames {} {
+	set l [list]
+	foreach c [my complexTypes] {
+		lappend l [lindex [split [$c name] "::"] 0]
+	}
+	foreach c [my elements] {
+		lappend l [$c name]
+	}
+	return $l
+}
 	
+schema instproc getInterpAliases {} {
+	set o ""
+	foreach c [lsort -unique [my getClassNames]] {
+		set ns [namespace tail [my getNamespace]]
+		append o "interp alias {} \[namespace current\]\::$ns\::$c {} [my getNamespace]\::$c\n"
+	}
+	return $o
+}
+
 schema instproc getNamespace {} {
 	return "[my xoNamespacePrefix]\::[my xoTargetPrefix]"
 }

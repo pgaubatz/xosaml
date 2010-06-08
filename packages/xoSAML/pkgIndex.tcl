@@ -10,4 +10,5 @@
 
 package ifneeded xoSAML 0.1 [list source [file join $dir xoSAML.xotcl]]
 package ifneeded xoSAML::Schema 0.1 [list source [file join $dir xoSAML-Schema.xotcl]]
+package ifneeded xoSAML::Environment 0.1 [list source [file join $dir xoSAML-Environment.xotcl]]
 package ifneeded xoSAML::Http::Client 0.1 [list source [file join $dir HttpClient.xotcl]]
