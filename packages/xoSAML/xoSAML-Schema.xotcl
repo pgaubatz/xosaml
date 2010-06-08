@@ -5,12 +5,9 @@ package require xoXSD
 
 namespace import -force ::xoXSD::Slots::*
 
-namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::saml"
-namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::samlp"
-namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::xenc"
-namespace eval ::xoXSD::sandbox addNamespace "::xoSAML::ds"
-
 namespace eval ::xoSAML::saml {
+
+namespace export *
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:assertion"
 variable xmlPrefix "saml"
@@ -104,6 +101,8 @@ Class SubjectConfirmation
 Class Advice
 }
 namespace eval ::xoSAML::samlp {
+
+namespace export *
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:protocol"
 variable xmlPrefix "samlp"
@@ -201,6 +200,8 @@ Class ManageNameIDRequest
 }
 namespace eval ::xoSAML::xenc {
 
+namespace export *
+
 variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
 variable xmlPrefix "xenc"
 
@@ -254,6 +255,8 @@ Class KA-Nonce
 Class CipherValue
 }
 namespace eval ::xoSAML::ds {
+
+namespace export *
 
 variable xmlNamespace "http://www.w3.org/2000/09/xmldsig#"
 variable xmlPrefix "ds"
@@ -361,6 +364,8 @@ Class Seed
 Class PgenCounter
 }
 namespace eval ::xoSAML::saml {
+
+namespace export *
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:assertion"
 variable xmlPrefix "saml"
@@ -621,6 +626,8 @@ Class SubjectConfirmation -superclass ::xoSAML::saml::SubjectConfirmationType
 Class Advice -superclass ::xoSAML::saml::AdviceType
 }
 namespace eval ::xoSAML::samlp {
+
+namespace export *
 
 variable xmlNamespace "urn:oasis:names:tc:SAML:2.0:protocol"
 variable xmlPrefix "samlp"
@@ -886,6 +893,8 @@ Class ManageNameIDRequest -superclass ::xoSAML::samlp::ManageNameIDRequestType
 }
 namespace eval ::xoSAML::xenc {
 
+namespace export *
+
 variable xmlNamespace "http://www.w3.org/2001/04/xmlenc#"
 variable xmlPrefix "xenc"
 
@@ -1009,6 +1018,8 @@ Class CipherValue -superclass ::xoXSD::Core::Element -slots {
 }
 }
 namespace eval ::xoSAML::ds {
+
+namespace export *
 
 variable xmlNamespace "http://www.w3.org/2000/09/xmldsig#"
 variable xmlPrefix "ds"

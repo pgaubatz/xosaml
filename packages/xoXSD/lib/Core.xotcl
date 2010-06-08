@@ -11,7 +11,7 @@ namespace eval ::xoXSD::Core {
 ##############################################	
 	
 ::xotcl::Class Generic		-superclass ::xotcl::Class -slots {
-	::xotcl::Attribute rootClass	
+	::xotcl::Attribute rootClass -default ""
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
 	::xotcl::Attribute childslots
@@ -39,11 +39,9 @@ namespace export *
 #              * Constructors *              #
 ##############################################
 
-Generic instproc init { {rootClass ""} } {
-	if { $rootClass eq "" } {
+Generic instproc init args {
+	if { [my rootClass] eq "" } {
 		my rootClass [my class]
-	} else {
-		my rootClass $rootClass
 	}
 	
 	set heritage [list]
@@ -60,7 +58,7 @@ Generic instproc init { {rootClass ""} } {
 	# create new instances of all classchildren
 	foreach c [concat [my class] [lreverse $heritage]] {
 		foreach	child [$c info classchildren] {
-			set ch [eval $child new -childof [self] [my rootClass]]
+			set ch [eval $child new -childof [self] -rootClass [my rootClass]]
 			my [namespace tail [$ch class]] $ch
 			my lappend children $ch
 		}
@@ -76,7 +74,12 @@ Generic instproc init { {rootClass ""} } {
 		} elseif { $slotclass eq "XMLChild" } {
 			my lappend childslots $slot
 		}
-	}	
+	}
+	
+	# init text-only elements with the given string $args
+	if { [llength $args] > 0 && [lsearch [my attributes] "*::__text"] != -1 } {
+		my __text [join $args]
+	}
 }
 
 Sequence instproc init args {
@@ -255,26 +258,6 @@ Generic instproc setSlot {slot value} {
 		return true
 	} else {
 		my error "there is no such Element/Attribute to be set: $slot"	
-		return false
-	}
-}
-
-Generic instproc initSlot {slot args} {	
-	set slotclass [my getSlotClass $slot]
-	if { $slotclass == false } {
-		my error "there is no such slot: $slot"
-		return false
-	}
-	set slottype [$slotclass type]
-	if { [namespace qualifiers $slottype] ne "::xoXSD::DataTypes" } {
-		my error "\"$slot\" is no basic data type."
-		return false
-	}
-	set content [$slottype new $args]
-	if { [$content valid] } {
-		my setSlot $slot $content
-	} else {
-		my error "the content of \"$slot\" is not valid."
 		return false
 	}
 }
@@ -598,8 +581,10 @@ Generic instproc doSetSlot {slot value} {
 	
 	#Check if the given value-object matches the required type
 	if { [$c type] ne [$value class] } {
-		my error "\"$slot\" has to be of type [$c type]"
-		return false
+		if { [$c type] ne [[$value class] info superclass] } {
+			my error "\"$slot\" has to be of type [$c type]"
+			return false
+		}
 	}
 	
 	#Check for a simpleType's enumeration restriction
@@ -858,14 +843,10 @@ Generic instproc unknown {cmd args} {
 	}
 	
 	#set slot...
-	if { [my getSlotType $cmd] eq "XMLAttribute" } {
-		return [my initSlot $cmd $args]	
-	} else {
-		if { ![Object isobject $args] } {
-			set args "::xoXSD::sandbox::$args"
-		}
-		return [my setSlot $cmd [$args getObject]]
+	if { ![Object isobject $args] } {
+		set args "::xoXSD::sandbox::$args"
 	}
+	return [my setSlot $cmd [$args getObject]]
 }
 
 Generic instforward marshal %self export
@@ -879,6 +860,12 @@ Generic instproc . args {
 		set cmd "\[$cmd $arg\]"
 	}
 	eval "$cmd [lindex $args end]"
+}
+
+Generic instproc createSandboxedObject {type {args {}}} {
+	set obj [Object autoname xoxsdobj]
+	namespace eval ::xoXSD::sandbox $type $obj $args
+	return xoXSD::sandbox::$obj
 }
 
 }

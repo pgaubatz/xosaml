@@ -1,0 +1,236 @@
+package provide xoSAML::Environment 0.1
+package require xoSAML::Schema
+
+namespace eval ::xoXSD::sandbox {
+
+namespace import -force ::xoSAML::saml::*
+namespace import -force ::xoSAML::samlp::*
+namespace import -force ::xoSAML::xenc::*
+namespace import -force ::xoSAML::ds::*
+
+# These classes are ambiguous, so you always have to properly namespace them:
+namespace forget ::xoSAML::saml::TransformsType
+namespace forget ::xoSAML::samlp::TransformsType
+namespace forget ::xoSAML::xenc::TransformsType
+namespace forget ::xoSAML::ds::TransformsType
+namespace forget ::xoSAML::saml::ReferenceType
+namespace forget ::xoSAML::samlp::ReferenceType
+namespace forget ::xoSAML::xenc::ReferenceType
+namespace forget ::xoSAML::ds::ReferenceType
+namespace forget ::xoSAML::saml::Transforms
+namespace forget ::xoSAML::samlp::Transforms
+namespace forget ::xoSAML::xenc::Transforms
+namespace forget ::xoSAML::ds::Transforms
+
+interp alias {} [namespace current]::saml::Action {} ::xoSAML::saml::Action
+interp alias {} [namespace current]::saml::ActionType {} ::xoSAML::saml::ActionType
+interp alias {} [namespace current]::saml::Advice {} ::xoSAML::saml::Advice
+interp alias {} [namespace current]::saml::AdviceType {} ::xoSAML::saml::AdviceType
+interp alias {} [namespace current]::saml::Assertion {} ::xoSAML::saml::Assertion
+interp alias {} [namespace current]::saml::AssertionIDRef {} ::xoSAML::saml::AssertionIDRef
+interp alias {} [namespace current]::saml::AssertionType {} ::xoSAML::saml::AssertionType
+interp alias {} [namespace current]::saml::AssertionURIRef {} ::xoSAML::saml::AssertionURIRef
+interp alias {} [namespace current]::saml::Attribute {} ::xoSAML::saml::Attribute
+interp alias {} [namespace current]::saml::AttributeStatement {} ::xoSAML::saml::AttributeStatement
+interp alias {} [namespace current]::saml::AttributeStatementType {} ::xoSAML::saml::AttributeStatementType
+interp alias {} [namespace current]::saml::AttributeType {} ::xoSAML::saml::AttributeType
+interp alias {} [namespace current]::saml::AttributeValue {} ::xoSAML::saml::AttributeValue
+interp alias {} [namespace current]::saml::Audience {} ::xoSAML::saml::Audience
+interp alias {} [namespace current]::saml::AudienceRestriction {} ::xoSAML::saml::AudienceRestriction
+interp alias {} [namespace current]::saml::AudienceRestrictionType {} ::xoSAML::saml::AudienceRestrictionType
+interp alias {} [namespace current]::saml::AuthenticatingAuthority {} ::xoSAML::saml::AuthenticatingAuthority
+interp alias {} [namespace current]::saml::AuthnContext {} ::xoSAML::saml::AuthnContext
+interp alias {} [namespace current]::saml::AuthnContextClassRef {} ::xoSAML::saml::AuthnContextClassRef
+interp alias {} [namespace current]::saml::AuthnContextDecl {} ::xoSAML::saml::AuthnContextDecl
+interp alias {} [namespace current]::saml::AuthnContextDeclRef {} ::xoSAML::saml::AuthnContextDeclRef
+interp alias {} [namespace current]::saml::AuthnContextType {} ::xoSAML::saml::AuthnContextType
+interp alias {} [namespace current]::saml::AuthnStatement {} ::xoSAML::saml::AuthnStatement
+interp alias {} [namespace current]::saml::AuthnStatementType {} ::xoSAML::saml::AuthnStatementType
+interp alias {} [namespace current]::saml::AuthzDecisionStatement {} ::xoSAML::saml::AuthzDecisionStatement
+interp alias {} [namespace current]::saml::AuthzDecisionStatementType {} ::xoSAML::saml::AuthzDecisionStatementType
+interp alias {} [namespace current]::saml::BaseID {} ::xoSAML::saml::BaseID
+interp alias {} [namespace current]::saml::BaseIDAbstractType {} ::xoSAML::saml::BaseIDAbstractType
+interp alias {} [namespace current]::saml::Condition {} ::xoSAML::saml::Condition
+interp alias {} [namespace current]::saml::ConditionAbstractType {} ::xoSAML::saml::ConditionAbstractType
+interp alias {} [namespace current]::saml::Conditions {} ::xoSAML::saml::Conditions
+interp alias {} [namespace current]::saml::ConditionsType {} ::xoSAML::saml::ConditionsType
+interp alias {} [namespace current]::saml::EncryptedAssertion {} ::xoSAML::saml::EncryptedAssertion
+interp alias {} [namespace current]::saml::EncryptedAttribute {} ::xoSAML::saml::EncryptedAttribute
+interp alias {} [namespace current]::saml::EncryptedElementType {} ::xoSAML::saml::EncryptedElementType
+interp alias {} [namespace current]::saml::EncryptedID {} ::xoSAML::saml::EncryptedID
+interp alias {} [namespace current]::saml::Evidence {} ::xoSAML::saml::Evidence
+interp alias {} [namespace current]::saml::EvidenceType {} ::xoSAML::saml::EvidenceType
+interp alias {} [namespace current]::saml::Issuer {} ::xoSAML::saml::Issuer
+interp alias {} [namespace current]::saml::KeyInfoConfirmationDataType {} ::xoSAML::saml::KeyInfoConfirmationDataType
+interp alias {} [namespace current]::saml::NameID {} ::xoSAML::saml::NameID
+interp alias {} [namespace current]::saml::NameIDType {} ::xoSAML::saml::NameIDType
+interp alias {} [namespace current]::saml::OneTimeUse {} ::xoSAML::saml::OneTimeUse
+interp alias {} [namespace current]::saml::OneTimeUseType {} ::xoSAML::saml::OneTimeUseType
+interp alias {} [namespace current]::saml::ProxyRestriction {} ::xoSAML::saml::ProxyRestriction
+interp alias {} [namespace current]::saml::ProxyRestrictionType {} ::xoSAML::saml::ProxyRestrictionType
+interp alias {} [namespace current]::saml::Statement {} ::xoSAML::saml::Statement
+interp alias {} [namespace current]::saml::StatementAbstractType {} ::xoSAML::saml::StatementAbstractType
+interp alias {} [namespace current]::saml::Subject {} ::xoSAML::saml::Subject
+interp alias {} [namespace current]::saml::SubjectConfirmation {} ::xoSAML::saml::SubjectConfirmation
+interp alias {} [namespace current]::saml::SubjectConfirmationData {} ::xoSAML::saml::SubjectConfirmationData
+interp alias {} [namespace current]::saml::SubjectConfirmationDataType {} ::xoSAML::saml::SubjectConfirmationDataType
+interp alias {} [namespace current]::saml::SubjectConfirmationType {} ::xoSAML::saml::SubjectConfirmationType
+interp alias {} [namespace current]::saml::SubjectLocality {} ::xoSAML::saml::SubjectLocality
+interp alias {} [namespace current]::saml::SubjectLocalityType {} ::xoSAML::saml::SubjectLocalityType
+interp alias {} [namespace current]::saml::SubjectType {} ::xoSAML::saml::SubjectType
+interp alias {} [namespace current]::samlp::Artifact {} ::xoSAML::samlp::Artifact
+interp alias {} [namespace current]::samlp::ArtifactResolve {} ::xoSAML::samlp::ArtifactResolve
+interp alias {} [namespace current]::samlp::ArtifactResolveType {} ::xoSAML::samlp::ArtifactResolveType
+interp alias {} [namespace current]::samlp::ArtifactResponse {} ::xoSAML::samlp::ArtifactResponse
+interp alias {} [namespace current]::samlp::ArtifactResponseType {} ::xoSAML::samlp::ArtifactResponseType
+interp alias {} [namespace current]::samlp::AssertionIDRequest {} ::xoSAML::samlp::AssertionIDRequest
+interp alias {} [namespace current]::samlp::AssertionIDRequestType {} ::xoSAML::samlp::AssertionIDRequestType
+interp alias {} [namespace current]::samlp::AttributeQuery {} ::xoSAML::samlp::AttributeQuery
+interp alias {} [namespace current]::samlp::AttributeQueryType {} ::xoSAML::samlp::AttributeQueryType
+interp alias {} [namespace current]::samlp::AuthnQuery {} ::xoSAML::samlp::AuthnQuery
+interp alias {} [namespace current]::samlp::AuthnQueryType {} ::xoSAML::samlp::AuthnQueryType
+interp alias {} [namespace current]::samlp::AuthnRequest {} ::xoSAML::samlp::AuthnRequest
+interp alias {} [namespace current]::samlp::AuthnRequestType {} ::xoSAML::samlp::AuthnRequestType
+interp alias {} [namespace current]::samlp::AuthzDecisionQuery {} ::xoSAML::samlp::AuthzDecisionQuery
+interp alias {} [namespace current]::samlp::AuthzDecisionQueryType {} ::xoSAML::samlp::AuthzDecisionQueryType
+interp alias {} [namespace current]::samlp::Extensions {} ::xoSAML::samlp::Extensions
+interp alias {} [namespace current]::samlp::ExtensionsType {} ::xoSAML::samlp::ExtensionsType
+interp alias {} [namespace current]::samlp::GetComplete {} ::xoSAML::samlp::GetComplete
+interp alias {} [namespace current]::samlp::IDPEntry {} ::xoSAML::samlp::IDPEntry
+interp alias {} [namespace current]::samlp::IDPEntryType {} ::xoSAML::samlp::IDPEntryType
+interp alias {} [namespace current]::samlp::IDPList {} ::xoSAML::samlp::IDPList
+interp alias {} [namespace current]::samlp::IDPListType {} ::xoSAML::samlp::IDPListType
+interp alias {} [namespace current]::samlp::LogoutRequest {} ::xoSAML::samlp::LogoutRequest
+interp alias {} [namespace current]::samlp::LogoutRequestType {} ::xoSAML::samlp::LogoutRequestType
+interp alias {} [namespace current]::samlp::LogoutResponse {} ::xoSAML::samlp::LogoutResponse
+interp alias {} [namespace current]::samlp::ManageNameIDRequest {} ::xoSAML::samlp::ManageNameIDRequest
+interp alias {} [namespace current]::samlp::ManageNameIDRequestType {} ::xoSAML::samlp::ManageNameIDRequestType
+interp alias {} [namespace current]::samlp::ManageNameIDResponse {} ::xoSAML::samlp::ManageNameIDResponse
+interp alias {} [namespace current]::samlp::NameIDMappingRequest {} ::xoSAML::samlp::NameIDMappingRequest
+interp alias {} [namespace current]::samlp::NameIDMappingRequestType {} ::xoSAML::samlp::NameIDMappingRequestType
+interp alias {} [namespace current]::samlp::NameIDMappingResponse {} ::xoSAML::samlp::NameIDMappingResponse
+interp alias {} [namespace current]::samlp::NameIDMappingResponseType {} ::xoSAML::samlp::NameIDMappingResponseType
+interp alias {} [namespace current]::samlp::NameIDPolicy {} ::xoSAML::samlp::NameIDPolicy
+interp alias {} [namespace current]::samlp::NameIDPolicyType {} ::xoSAML::samlp::NameIDPolicyType
+interp alias {} [namespace current]::samlp::NewEncryptedID {} ::xoSAML::samlp::NewEncryptedID
+interp alias {} [namespace current]::samlp::NewID {} ::xoSAML::samlp::NewID
+interp alias {} [namespace current]::samlp::RequestAbstractType {} ::xoSAML::samlp::RequestAbstractType
+interp alias {} [namespace current]::samlp::RequestedAuthnContext {} ::xoSAML::samlp::RequestedAuthnContext
+interp alias {} [namespace current]::samlp::RequestedAuthnContextType {} ::xoSAML::samlp::RequestedAuthnContextType
+interp alias {} [namespace current]::samlp::RequesterID {} ::xoSAML::samlp::RequesterID
+interp alias {} [namespace current]::samlp::Response {} ::xoSAML::samlp::Response
+interp alias {} [namespace current]::samlp::ResponseType {} ::xoSAML::samlp::ResponseType
+interp alias {} [namespace current]::samlp::Scoping {} ::xoSAML::samlp::Scoping
+interp alias {} [namespace current]::samlp::ScopingType {} ::xoSAML::samlp::ScopingType
+interp alias {} [namespace current]::samlp::SessionIndex {} ::xoSAML::samlp::SessionIndex
+interp alias {} [namespace current]::samlp::Status {} ::xoSAML::samlp::Status
+interp alias {} [namespace current]::samlp::StatusCode {} ::xoSAML::samlp::StatusCode
+interp alias {} [namespace current]::samlp::StatusCodeType {} ::xoSAML::samlp::StatusCodeType
+interp alias {} [namespace current]::samlp::StatusDetail {} ::xoSAML::samlp::StatusDetail
+interp alias {} [namespace current]::samlp::StatusDetailType {} ::xoSAML::samlp::StatusDetailType
+interp alias {} [namespace current]::samlp::StatusMessage {} ::xoSAML::samlp::StatusMessage
+interp alias {} [namespace current]::samlp::StatusResponseType {} ::xoSAML::samlp::StatusResponseType
+interp alias {} [namespace current]::samlp::StatusType {} ::xoSAML::samlp::StatusType
+interp alias {} [namespace current]::samlp::SubjectQuery {} ::xoSAML::samlp::SubjectQuery
+interp alias {} [namespace current]::samlp::SubjectQueryAbstractType {} ::xoSAML::samlp::SubjectQueryAbstractType
+interp alias {} [namespace current]::samlp::Terminate {} ::xoSAML::samlp::Terminate
+interp alias {} [namespace current]::samlp::TerminateType {} ::xoSAML::samlp::TerminateType
+interp alias {} [namespace current]::xenc::AgreementMethod {} ::xoSAML::xenc::AgreementMethod
+interp alias {} [namespace current]::xenc::AgreementMethodType {} ::xoSAML::xenc::AgreementMethodType
+interp alias {} [namespace current]::xenc::CarriedKeyName {} ::xoSAML::xenc::CarriedKeyName
+interp alias {} [namespace current]::xenc::CipherData {} ::xoSAML::xenc::CipherData
+interp alias {} [namespace current]::xenc::CipherDataType {} ::xoSAML::xenc::CipherDataType
+interp alias {} [namespace current]::xenc::CipherReference {} ::xoSAML::xenc::CipherReference
+interp alias {} [namespace current]::xenc::CipherReferenceType {} ::xoSAML::xenc::CipherReferenceType
+interp alias {} [namespace current]::xenc::CipherValue {} ::xoSAML::xenc::CipherValue
+interp alias {} [namespace current]::xenc::DataReference {} ::xoSAML::xenc::DataReference
+interp alias {} [namespace current]::xenc::EncryptedData {} ::xoSAML::xenc::EncryptedData
+interp alias {} [namespace current]::xenc::EncryptedDataType {} ::xoSAML::xenc::EncryptedDataType
+interp alias {} [namespace current]::xenc::EncryptedKey {} ::xoSAML::xenc::EncryptedKey
+interp alias {} [namespace current]::xenc::EncryptedKeyType {} ::xoSAML::xenc::EncryptedKeyType
+interp alias {} [namespace current]::xenc::EncryptedType {} ::xoSAML::xenc::EncryptedType
+interp alias {} [namespace current]::xenc::EncryptionMethod {} ::xoSAML::xenc::EncryptionMethod
+interp alias {} [namespace current]::xenc::EncryptionMethodType {} ::xoSAML::xenc::EncryptionMethodType
+interp alias {} [namespace current]::xenc::EncryptionProperties {} ::xoSAML::xenc::EncryptionProperties
+interp alias {} [namespace current]::xenc::EncryptionPropertiesType {} ::xoSAML::xenc::EncryptionPropertiesType
+interp alias {} [namespace current]::xenc::EncryptionProperty {} ::xoSAML::xenc::EncryptionProperty
+interp alias {} [namespace current]::xenc::EncryptionPropertyType {} ::xoSAML::xenc::EncryptionPropertyType
+interp alias {} [namespace current]::xenc::KA-Nonce {} ::xoSAML::xenc::KA-Nonce
+interp alias {} [namespace current]::xenc::KeyReference {} ::xoSAML::xenc::KeyReference
+interp alias {} [namespace current]::xenc::KeySize {} ::xoSAML::xenc::KeySize
+interp alias {} [namespace current]::xenc::OAEPparams {} ::xoSAML::xenc::OAEPparams
+interp alias {} [namespace current]::xenc::OriginatorKeyInfo {} ::xoSAML::xenc::OriginatorKeyInfo
+interp alias {} [namespace current]::xenc::RecipientKeyInfo {} ::xoSAML::xenc::RecipientKeyInfo
+interp alias {} [namespace current]::xenc::ReferenceList {} ::xoSAML::xenc::ReferenceList
+interp alias {} [namespace current]::xenc::ReferenceType {} ::xoSAML::xenc::ReferenceType
+interp alias {} [namespace current]::xenc::Transforms {} ::xoSAML::xenc::Transforms
+interp alias {} [namespace current]::xenc::TransformsType {} ::xoSAML::xenc::TransformsType
+interp alias {} [namespace current]::ds::CanonicalizationMethod {} ::xoSAML::ds::CanonicalizationMethod
+interp alias {} [namespace current]::ds::CanonicalizationMethodType {} ::xoSAML::ds::CanonicalizationMethodType
+interp alias {} [namespace current]::ds::DSAKeyValue {} ::xoSAML::ds::DSAKeyValue
+interp alias {} [namespace current]::ds::DSAKeyValueType {} ::xoSAML::ds::DSAKeyValueType
+interp alias {} [namespace current]::ds::DigestMethod {} ::xoSAML::ds::DigestMethod
+interp alias {} [namespace current]::ds::DigestMethodType {} ::xoSAML::ds::DigestMethodType
+interp alias {} [namespace current]::ds::DigestValue {} ::xoSAML::ds::DigestValue
+interp alias {} [namespace current]::ds::Exponent {} ::xoSAML::ds::Exponent
+interp alias {} [namespace current]::ds::G {} ::xoSAML::ds::G
+interp alias {} [namespace current]::ds::HMACOutputLength {} ::xoSAML::ds::HMACOutputLength
+interp alias {} [namespace current]::ds::J {} ::xoSAML::ds::J
+interp alias {} [namespace current]::ds::KeyInfo {} ::xoSAML::ds::KeyInfo
+interp alias {} [namespace current]::ds::KeyInfoType {} ::xoSAML::ds::KeyInfoType
+interp alias {} [namespace current]::ds::KeyName {} ::xoSAML::ds::KeyName
+interp alias {} [namespace current]::ds::KeyValue {} ::xoSAML::ds::KeyValue
+interp alias {} [namespace current]::ds::KeyValueType {} ::xoSAML::ds::KeyValueType
+interp alias {} [namespace current]::ds::Manifest {} ::xoSAML::ds::Manifest
+interp alias {} [namespace current]::ds::ManifestType {} ::xoSAML::ds::ManifestType
+interp alias {} [namespace current]::ds::MgmtData {} ::xoSAML::ds::MgmtData
+interp alias {} [namespace current]::ds::Modulus {} ::xoSAML::ds::Modulus
+interp alias {} [namespace current]::ds::Object {} ::xoSAML::ds::Object
+interp alias {} [namespace current]::ds::ObjectType {} ::xoSAML::ds::ObjectType
+interp alias {} [namespace current]::ds::P {} ::xoSAML::ds::P
+interp alias {} [namespace current]::ds::PGPData {} ::xoSAML::ds::PGPData
+interp alias {} [namespace current]::ds::PGPDataType {} ::xoSAML::ds::PGPDataType
+interp alias {} [namespace current]::ds::PGPKeyID {} ::xoSAML::ds::PGPKeyID
+interp alias {} [namespace current]::ds::PGPKeyPacket {} ::xoSAML::ds::PGPKeyPacket
+interp alias {} [namespace current]::ds::PgenCounter {} ::xoSAML::ds::PgenCounter
+interp alias {} [namespace current]::ds::Q {} ::xoSAML::ds::Q
+interp alias {} [namespace current]::ds::RSAKeyValue {} ::xoSAML::ds::RSAKeyValue
+interp alias {} [namespace current]::ds::RSAKeyValueType {} ::xoSAML::ds::RSAKeyValueType
+interp alias {} [namespace current]::ds::Reference {} ::xoSAML::ds::Reference
+interp alias {} [namespace current]::ds::ReferenceType {} ::xoSAML::ds::ReferenceType
+interp alias {} [namespace current]::ds::RetrievalMethod {} ::xoSAML::ds::RetrievalMethod
+interp alias {} [namespace current]::ds::RetrievalMethodType {} ::xoSAML::ds::RetrievalMethodType
+interp alias {} [namespace current]::ds::SPKIData {} ::xoSAML::ds::SPKIData
+interp alias {} [namespace current]::ds::SPKIDataType {} ::xoSAML::ds::SPKIDataType
+interp alias {} [namespace current]::ds::SPKISexp {} ::xoSAML::ds::SPKISexp
+interp alias {} [namespace current]::ds::Seed {} ::xoSAML::ds::Seed
+interp alias {} [namespace current]::ds::Signature {} ::xoSAML::ds::Signature
+interp alias {} [namespace current]::ds::SignatureMethod {} ::xoSAML::ds::SignatureMethod
+interp alias {} [namespace current]::ds::SignatureMethodType {} ::xoSAML::ds::SignatureMethodType
+interp alias {} [namespace current]::ds::SignatureProperties {} ::xoSAML::ds::SignatureProperties
+interp alias {} [namespace current]::ds::SignaturePropertiesType {} ::xoSAML::ds::SignaturePropertiesType
+interp alias {} [namespace current]::ds::SignatureProperty {} ::xoSAML::ds::SignatureProperty
+interp alias {} [namespace current]::ds::SignaturePropertyType {} ::xoSAML::ds::SignaturePropertyType
+interp alias {} [namespace current]::ds::SignatureType {} ::xoSAML::ds::SignatureType
+interp alias {} [namespace current]::ds::SignatureValue {} ::xoSAML::ds::SignatureValue
+interp alias {} [namespace current]::ds::SignatureValueType {} ::xoSAML::ds::SignatureValueType
+interp alias {} [namespace current]::ds::SignedInfo {} ::xoSAML::ds::SignedInfo
+interp alias {} [namespace current]::ds::SignedInfoType {} ::xoSAML::ds::SignedInfoType
+interp alias {} [namespace current]::ds::Transform {} ::xoSAML::ds::Transform
+interp alias {} [namespace current]::ds::TransformType {} ::xoSAML::ds::TransformType
+interp alias {} [namespace current]::ds::Transforms {} ::xoSAML::ds::Transforms
+interp alias {} [namespace current]::ds::TransformsType {} ::xoSAML::ds::TransformsType
+interp alias {} [namespace current]::ds::X509CRL {} ::xoSAML::ds::X509CRL
+interp alias {} [namespace current]::ds::X509Certificate {} ::xoSAML::ds::X509Certificate
+interp alias {} [namespace current]::ds::X509Data {} ::xoSAML::ds::X509Data
+interp alias {} [namespace current]::ds::X509DataType {} ::xoSAML::ds::X509DataType
+interp alias {} [namespace current]::ds::X509IssuerName {} ::xoSAML::ds::X509IssuerName
+interp alias {} [namespace current]::ds::X509IssuerSerial {} ::xoSAML::ds::X509IssuerSerial
+interp alias {} [namespace current]::ds::X509IssuerSerialType {} ::xoSAML::ds::X509IssuerSerialType
+interp alias {} [namespace current]::ds::X509SKI {} ::xoSAML::ds::X509SKI
+interp alias {} [namespace current]::ds::X509SerialNumber {} ::xoSAML::ds::X509SerialNumber
+interp alias {} [namespace current]::ds::X509SubjectName {} ::xoSAML::ds::X509SubjectName
+interp alias {} [namespace current]::ds::XPath {} ::xoSAML::ds::XPath
+interp alias {} [namespace current]::ds::Y {} ::xoSAML::ds::Y
+
+}
