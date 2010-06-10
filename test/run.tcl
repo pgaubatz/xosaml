@@ -5,8 +5,12 @@ package require xoXSD::Validator
 package require xoSAML::Schema
 package require xoSAML::Environment
 
+namespace eval ::test {
+	
+::xoSAML::Environment::load [namespace current]
+
 foreach test [glob tests/*.xotcl] {
-	source $test
+	namespace eval ::test source $test
 }
 
 ::xoXSD::Validator val "../tools/validator/lib"
@@ -14,8 +18,8 @@ foreach test [glob tests/*.xotcl] {
 foreach schema [glob ../xsd/*.xsd] {
 	val addSchema $schema
 }
-
-set instances [lsearch -inline -all -glob [::xoXSD::Core::Generic info instances -closure] "::xoXSD::*"]
+	
+set instances [lsearch -inline -all -glob [::xoXSD::Core::Generic info instances -closure] "::test::*"]
 set i 0
 foreach instance $instances {
 	set s [namespace tail [[$instance class] info superclass]]
@@ -32,3 +36,4 @@ foreach instance $instances {
 	}
 }
 
+}

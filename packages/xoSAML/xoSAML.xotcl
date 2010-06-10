@@ -2,17 +2,32 @@ package provide xoSAML 0.1
 
 package require XOTcl
 package require xoXSD
+package require xoXSD::CodeGenerator
 package require xoSAML::Schema
 package require xoSAML::Environment
 
+namespace eval ::xoSAML {
 
-proc xoSAML {script} {
-	namespace eval ::xoXSD::sandbox $script
+variable __codeGenerator
+	
+proc load {{targetNamespace ""}} {
+	if { $targetNamespace eq "" } {
+		set targetNamespace [uplevel 1 namespace current]
+	}
+	::xoSAML::Environment::load $targetNamespace
+	namespace eval $targetNamespace {
+		namespace import -force ::xoSAML::*
+	}
 }
 
+proc unmarshal {xml} {
+	variable __codeGenerator
+	if { ![info exists __codeGenerator] } {
+		set __codeGenerator [::xoXSD::CodeGenerator new -environment ::xoSAML::Environment]
+	}
+	return [$__codeGenerator unmarshal $xml]
+}
 
-namespace eval ::xoSAML {
-	
 namespace export *
 	
 ::xotcl::Class Request
@@ -86,7 +101,7 @@ Status instproc init {code} {
 		return
 	}
 
-	set code [my createSandboxedObject StatusCode]
+	set code [my createObject StatusCode]
 	$code Value "$prefix$found"
 	my StatusCode $code
 }
@@ -111,15 +126,10 @@ Attribute instproc init {{attrName ""} {attrValue ""}} {
 		my Name $attrName
 	}
 	if { $attrValue ne "" } {
-		set val [my createSandboxedObject ::xoSAML::saml::AttributeValue $attrValue]
+		set val [my createObject ::xoSAML::saml::AttributeValue $attrValue]
 		my AttributeValue $val 
 	}
 }
 
-}
-
-
-xoSAML {
-	namespace import -force ::xoSAML::*
 }
 

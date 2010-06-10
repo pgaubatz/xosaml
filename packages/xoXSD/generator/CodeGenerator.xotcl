@@ -11,6 +11,7 @@ namespace eval ::xoXSD {
 	::xotcl::Attribute objects
 	::xotcl::Attribute objectnames
 	::xotcl::Attribute nsmap -default ""
+	::xotcl::Attribute environment
 }
 
 CodeGenerator instproc parse {data {nsmap ""}} {
@@ -42,12 +43,27 @@ CodeGenerator instproc parseAndEval {data {nsmap ""}} {
 	if { $o eq "" } {
 		return false
 	}
-	namespace eval ::xoXSD::sandbox $o
-	# return the root-object
-	return ::xoXSD::sandbox::[lindex [my objectnames] end]
+	if { ![namespace exists [my environment]] } {
+		puts "Error: Couldn't load the xoXSD-Environment-namespace ([my environment])!"
+		return false
+	}
+	
+	# 1) Require a per-object namespace (from now on, there will be a
+	# Tcl namespace and an XOTcl object both being named [self]; see
+	# http://media.wu-wien.ac.at/doc/langRef-xotcl.html#Object-requireNamespace
+	my requireNamespace
+	
+	# 2) Load the xoXSD-Environment into the newly created namespace
+	[my environment]::load [self]
+	
+	# 3) have the xoXSD script evaluated
+	namespace eval [self] $o
+	
+	# 4) return the root-object
+	return [self]::[lindex [my objectnames] end]
 }
 
-CodeGenerator instforward unmarshal %self %parseAndEval
+CodeGenerator instforward unmarshal %self parseAndEval
 
 CodeGenerator instproc getPrefix {node} {
 	set name [$node nodeName]
@@ -84,9 +100,7 @@ CodeGenerator instproc stripPrefix {name} {
 }
 
 CodeGenerator instproc stripInitString {name} {
-	set pos [string first "\"" $name]
-	if { $pos == -1 } { return $name }
-	return [string range $name 0 [expr {$pos - 2}]]
+	return [lrange [split $name " "] 0 1]
 }
 
 CodeGenerator instproc handleNode {node} {
@@ -109,7 +123,6 @@ CodeGenerator instproc handleNode {node} {
 			break
 		}
 	}
-	
 	lappend obj $init
 	
 	if { [$node hasAttribute "xmlns"] } {

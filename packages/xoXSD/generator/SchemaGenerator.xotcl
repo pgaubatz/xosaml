@@ -70,7 +70,9 @@ SchemaGenerator instproc generate {} {
 }
 
 SchemaGenerator instproc generateEnvironment {} {
-	set o "namespace eval ::xoXSD::sandbox \{\n\n"
+	set o "namespace eval [my xoNamespacePrefix]\::Environment \{\n\n"
+	append o "proc load \{targetNamespace\} \{\n\n"
+	append o "namespace eval \$targetNamespace \{\n\n"
 	
 	foreach parser [my parsers] {
 		append o "namespace import -force [$parser getNamespace]\::*\n"
@@ -100,7 +102,7 @@ SchemaGenerator instproc generateEnvironment {} {
 		append o [$parser getInterpAliases]
 	}
 	
-	append o "\n\}\n"
+	append o "\n\}\n\}\n\}\n"
 	return $o
 }
 
