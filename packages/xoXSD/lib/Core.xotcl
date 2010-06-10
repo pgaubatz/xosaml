@@ -291,12 +291,7 @@ Generic instproc printSlots {} {
 }
 	
 Generic instproc addAny {slot} {
-	if { ![Object isobject $slot] } {
-		set slot "::xoXSD::sandbox::$slot"
-	}
-	if { [$slot procsearch getObject] ne "" } {
-		set slot [$slot getObject]
-	}
+	set slot [my lookupObject $slot]
 	set slotname [namespace tail [$slot class]]
 	
 	# first check if the element actually has an <any> element:
@@ -543,9 +538,9 @@ Generic instproc doGetSlot {slot} {
 		return false
 		
 	}
-
+	
 	set parent [my info parent]
-	if { [Object isobject $parent] } {
+	if { [Object isobject $parent] && [$parent class] ne "::xoXSD::CodeGenerator"} {
 		set classname [namespace tail [my class]]
 		set c [$parent getSlotClass $classname true]
 	
@@ -830,10 +825,6 @@ Generic instproc makeTableRow {width content} {
 	return "$line\n"
 }
 
-Generic instproc getObject {} {
-	return [self]
-}
-
 Generic instproc unknown {cmd args} {
 	set args [join $args]
 	
@@ -843,10 +834,7 @@ Generic instproc unknown {cmd args} {
 	}
 	
 	#set slot...
-	if { ![Object isobject $args] } {
-		set args "::xoXSD::sandbox::$args"
-	}
-	return [my setSlot $cmd [$args getObject]]
+	return [my setSlot $cmd [my lookupObject $args]]
 }
 
 Generic instforward marshal %self export
@@ -862,10 +850,21 @@ Generic instproc . args {
 	eval "$cmd [lindex $args end]"
 }
 
-Generic instproc createSandboxedObject {type {args {}}} {
-	set obj [Object autoname xoxsdobj]
-	namespace eval ::xoXSD::sandbox $type $obj $args
-	return xoXSD::sandbox::$obj
+Generic instproc createObject {type {args {}}} {
+	set ns [uplevel 2 namespace current]
+	set obj [Object autoname xoxsdobj] 
+	namespace eval $ns $type $obj $args
+	return "$ns\::$obj"
+}
+
+Generic instproc lookupObject {name} {
+	set i 1
+	set ns ""
+	while { ![Object isobject "$ns\::$name"] } {
+		# get the caller's namespace:
+		set ns [uplevel [incr i] namespace current]
+	}
+	return "$ns\::$name"
 }
 
 }

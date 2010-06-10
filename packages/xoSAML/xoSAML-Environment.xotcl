@@ -1,7 +1,11 @@
 package provide xoSAML::Environment 0.1
 package require xoSAML::Schema
 
-namespace eval ::xoXSD::sandbox {
+namespace eval ::xoSAML::Environment {
+
+proc load {targetNamespace} {
+
+namespace eval $targetNamespace {
 
 namespace import -force ::xoSAML::saml::*
 namespace import -force ::xoSAML::samlp::*
@@ -233,4 +237,6 @@ interp alias {} [namespace current]::ds::X509SubjectName {} ::xoSAML::ds::X509Su
 interp alias {} [namespace current]::ds::XPath {} ::xoSAML::ds::XPath
 interp alias {} [namespace current]::ds::Y {} ::xoSAML::ds::Y
 
+}
+}
 }

@@ -4,10 +4,9 @@ set auto_path [linsert $auto_path 0 ../../packages/]
 
 package require xoSAML
 package require xoSAML::Http::Client
-package require xoXSD::CodeGenerator
 package require base64
 
-xoSAML {
+::xoSAML::load
 
 #
 # Define some variables:
@@ -90,9 +89,7 @@ set SAMLResponse [::base64::decode [[$doc find "name" "SAMLResponse"] getAttribu
 # Parse the returned SAML Response
 #
 
-::xoXSD::CodeGenerator generator
-
-set response [generator parseAndEval $SAMLResponse]
+set response [::xoSAML::unmarshal $SAMLResponse]
 set assertion [$response Assertion]
 
 puts "1) The SAML Response's StatusCode is: [$response . Status . StatusCode . Value getContent]\n"
@@ -124,4 +121,3 @@ foreach attribute [$assertion . AttributeStatement . Attribute] {
 #			o) Value: "testuid" 
 #
 
-}

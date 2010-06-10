@@ -34,12 +34,11 @@ set data {
 puts {#!/usr/bin/tclsh
 	
 set auto_path [linsert $auto_path 0 ../packages/]
-package require xoSAML::Schema
 package require xoSAML::Environment
 }
 
-::xoXSD::CodeGenerator gen
-puts "namespace eval ::xoXSD::sandbox \{"
+::xoXSD::CodeGenerator gen -environment ::xoSAML::Environment
+puts "::xoSAML::Environment::load \[namespace current\]\n"
 puts [gen parse $data]
-puts "\}"
+
 
