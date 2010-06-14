@@ -1,4 +1,4 @@
-#!/usr/bin/tclsh
+#!/usr/bin/env tclsh
 
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoXSD::Validator

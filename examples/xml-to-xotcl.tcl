@@ -1,4 +1,4 @@
-#!/usr/bin/tclsh
+#!/usr/bin/env tclsh
 
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoXSD::CodeGenerator
@@ -31,7 +31,7 @@ set data {
 </samlp:Response>
 }
 
-puts {#!/usr/bin/tclsh
+puts {#!/usr/bin/env tclsh
 	
 set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML::Environment
