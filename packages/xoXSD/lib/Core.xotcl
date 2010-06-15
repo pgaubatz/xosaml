@@ -1,10 +1,9 @@
 package provide xoXSD::Core 0.1
 
 package require tdom
-package require XOTcl
 package require xoXSD::DataTypes
 
-namespace eval ::xoXSD::Core {
+namespace eval ::xoXSD {
 	
 ##############################################
 #               * Definition *               #
@@ -18,17 +17,17 @@ namespace eval ::xoXSD::Core {
 	::xotcl::Attribute children
 }
 	
-::xotcl::Class GenericChild	-superclass ::xoXSD::Core::Generic
+::xotcl::Class GenericChild	-superclass ::xoXSD::Generic
 
-::xotcl::Class Element		-superclass ::xoXSD::Core::Generic 
+::xotcl::Class Element		-superclass ::xoXSD::Generic 
 
-::xotcl::Class ComplexType	-superclass ::xoXSD::Core::Generic
+::xotcl::Class ComplexType	-superclass ::xoXSD::Generic
 
-::xotcl::Class Sequence		-superclass ::xoXSD::Core::GenericChild -slots {
+::xotcl::Class Sequence		-superclass ::xoXSD::GenericChild -slots {
 	::xotcl::Attribute sequence -default false
 }
 
-::xotcl::Class Choice		-superclass ::xoXSD::Core::GenericChild -slots {
+::xotcl::Class Choice		-superclass ::xoXSD::GenericChild -slots {
 	::xotcl::Attribute slotfree 	 -default true
 	::xotcl::Attribute choiceparents -default ""
 }
@@ -46,7 +45,7 @@ Generic instproc init args {
 	
 	set heritage [list]
 	foreach c [[my class] info heritage] {
-		if { [namespace qualifiers $c] eq "::xoXSD::Core" } break
+		if { [namespace qualifiers $c] eq "::xoXSD" } break
 		lappend heritage $c
 	}
 
@@ -77,8 +76,8 @@ Generic instproc init args {
 	}
 	
 	# init text-only elements with the given string $args
-	if { [llength $args] > 0 && ![Object isobject [join $args]]} {
-		my setContent [join $args]
+	if { [llength $args] > 0 } {
+		my trySetContent [join $args]
 	}
 }
 
@@ -263,13 +262,11 @@ Generic instproc setSlot {slot value} {
 }
 
 Generic instproc setContent {text} {
-	if { $text eq "" } return
-	if { [lsearch [my attributes] "*::__text"] != -1 } {
-		my __text $text
-	} else {
-		my error "there is no textual content to be set"
-		return false
+	if { [my trySetContent $text] } {
+		return true
 	}
+	my error "there is no textual content to be set"
+	return false
 }
 	
 Generic instproc printSlots {} {
@@ -514,7 +511,7 @@ Generic instproc getLocalSlots {} {
 	
 	# iterate over class structure
 	set heritage [[my class] info heritage]
-	foreach c [lsearch -inline -all -not $heritage "::xoXSD::Core::*"] {
+	foreach c [lsearch -inline -all -not $heritage "::xoXSD::*"] {
 		foreach slot [$c info slots] {
 			set key slotname([namespace tail $slot])
 			
@@ -875,6 +872,17 @@ Generic instproc lookupObject {name} {
 		set ns [uplevel [incr i] namespace current]
 	}
 	return "$ns\::$name"
+}
+
+Generic instproc trySetContent {text} {
+	if { [Object isobject $text] } {
+		return false
+	}
+	if { [lsearch [my attributes] "*::__text"] != -1 } {
+		my __text $text
+		return true
+	}
+	return false
 }
 
 }

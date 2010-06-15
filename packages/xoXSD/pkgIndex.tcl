@@ -10,8 +10,8 @@
 
 package ifneeded xoXSD 0.1 [list source [file join $dir "lib" xoXSD.xotcl]]
 package ifneeded xoXSD::Core 0.1 [list source [file join $dir "lib" Core.xotcl]]
-package ifneeded xoXSD::Slots 0.1 [list source [file join $dir "lib" Slots.xotcl]]
 package ifneeded xoXSD::DataTypes 0.1 [list source [file join $dir "lib" DataTypes.xotcl]]
+package ifneeded xoXSD::Slots 0.1 [list source [file join $dir "lib" Slots.xotcl]]
 package ifneeded xoXSD::CodeGenerator 0.1 [list source [file join $dir "generator" CodeGenerator.xotcl]]
 package ifneeded xoXSD::SchemaGenerator 0.1 [list source [file join $dir "generator" SchemaGenerator.xotcl]]
 package ifneeded xoXSD::SchemaGenerator::Parser 0.1 [list source [file join $dir "generator" Parser.xotcl]]
