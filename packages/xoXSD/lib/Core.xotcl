@@ -77,8 +77,8 @@ Generic instproc init args {
 	}
 	
 	# init text-only elements with the given string $args
-	if { [llength $args] > 0 && [lsearch [my attributes] "*::__text"] != -1 } {
-		my __text [join $args]
+	if { [llength $args] > 0 && ![Object isobject [join $args]]} {
+		my setContent [join $args]
 	}
 }
 
@@ -258,6 +258,16 @@ Generic instproc setSlot {slot value} {
 		return true
 	} else {
 		my error "there is no such Element/Attribute to be set: $slot"	
+		return false
+	}
+}
+
+Generic instproc setContent {text} {
+	if { $text eq "" } return
+	if { [lsearch [my attributes] "*::__text"] != -1 } {
+		my __text $text
+	} else {
+		my error "there is no textual content to be set"
 		return false
 	}
 }
