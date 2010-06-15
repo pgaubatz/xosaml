@@ -209,7 +209,7 @@ schema instproc getClasses {{dummy false}} {
 		set quit true
 		for {set i 0} {$i < [llength $complexTypes]} {incr i} {
 			set c [lindex $complexTypes $i]
-			if { [namespace qualifiers [$c type]] eq "::xoXSD::Core" } {
+			if { [namespace qualifiers [$c type]] eq "::xoXSD" } {
 				continue
 			}
 			
@@ -335,7 +335,7 @@ element instproc realInit args {
 			#handle simple text-elements:
 			set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new "__text" "XMLAttribute" $type]
 			$slot addArg "-text true"
-			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] "::xoXSD::Core::Element"]
+			my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] "::xoXSD::Element"]
 			[my xoclass] addSlot $slot
 			[my root] addElement [my xoclass]
 			if { [my parent] ne [my root] } {
@@ -468,7 +468,7 @@ sequence instproc realInit args {
 	set i [[my root] sequenceCounter]
 	my name "[[my parent] name]\::__sequence$i"
 	[my root] sequenceCounter [incr i]
-	set type "::xoXSD::Core::Sequence"
+	set type "::xoXSD::Sequence"
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	[my root] addSequence [self]
@@ -513,7 +513,7 @@ choice instproc realInit args {
 	set i [[my root] choiceCounter]
 	my name "[[my parent] name]\::__choice$i"
 	[my root] choiceCounter [incr i]
-	set type "::xoXSD::Core::Choice"
+	set type "::xoXSD::Choice"
 	my xoclass [::xoXSD::SchemaGenerator::Virtual::xoClass new [my name] $type]
 	[my root] addComplexType [my xoclass]
 	set slot [my parentAddSlot [namespace tail [my name]] "XMLChild"]
@@ -528,7 +528,7 @@ choice instproc realInit args {
 
 
 complexType instproc realInit args {
-	set type "::xoXSD::Core::ComplexType"		
+	set type "::xoXSD::ComplexType"		
 
 	if { [[my node] hasAttribute name] } {
 		set xmlname [[my node] getAttribute name]	
