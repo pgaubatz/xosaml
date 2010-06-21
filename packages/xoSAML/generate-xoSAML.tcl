@@ -16,7 +16,7 @@ foreach schema [glob ../../xsd/*.xsd] {
 }
 
 set o "package provide xoSAML::Schema 0.1\n\n"
-append o [gen generate]
+append o [gen generateSchema]
 ::fileutil::writeFile "generated/Schema.xotcl" $o
 
 set o "package provide xoSAML::Environment 0.1\n"

@@ -8,7 +8,7 @@ package require xoXSD::SchemaGenerator::Parser
 namespace import -force ::xotcl::*
 
 namespace eval ::xoXSD {
-	
+
 ::xotcl::Class SchemaGenerator -slots {
 	::xotcl::Attribute xoNamespacePrefix
 	::xotcl::Attribute parsers
@@ -55,7 +55,7 @@ SchemaGenerator instproc addSchema {data} {
 	my lappend parsers [::xoXSD::SchemaGenerator::Parser::parse $root $targetPrefix $targetNamespace [my xoNamespacePrefix]]
 }
 
-SchemaGenerator instproc generate {} {
+SchemaGenerator instproc generateSchema {} {
 	set o ""
 	append o "package require XOTcl\n"
 	append o "package require xoXSD\n\n"

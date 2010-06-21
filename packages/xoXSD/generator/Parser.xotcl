@@ -279,7 +279,7 @@ schema instproc getInterpAliases {} {
 	set o ""
 	foreach c [lsort -unique [my getClassNames]] {
 		set ns [namespace tail [my getNamespace]]
-		append o "interp alias {} \[namespace current\]\::$ns\::$c {} [my getNamespace]\::$c\n"
+		append o "interp alias {} $ns\::$c {} [my getNamespace]\::$c\n"
 	}
 	return $o
 }
