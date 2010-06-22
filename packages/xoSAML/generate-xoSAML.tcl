@@ -6,8 +6,7 @@ package require XOTcl
 package require fileutil
 package require xoXSD::SchemaGenerator
 
-::xoXSD::SchemaGenerator gen
-gen setNamespace "::xoSAML"
+::xoXSD::SchemaGenerator gen "::xoSAML"
 
 foreach schema [glob ../../xsd/*.xsd] {
 	set fd [open $schema]
