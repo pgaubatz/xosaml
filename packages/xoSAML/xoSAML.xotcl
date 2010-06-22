@@ -23,7 +23,7 @@ proc load {{targetNamespace ""}} {
 proc unmarshal {xml} {
 	variable __codeGenerator
 	if { ![info exists __codeGenerator] } {
-		set __codeGenerator [::xoXSD::CodeGenerator new -environment ::xoSAML::Environment]
+		set __codeGenerator [::xoXSD::CodeGenerator new "::xoSAML::Environment"]
 	}
 	return [$__codeGenerator unmarshal $xml]
 }
