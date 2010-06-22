@@ -14,11 +14,8 @@ namespace eval ::xoXSD {
 	::xotcl::Attribute parsers
 }
 
-SchemaGenerator instproc init {} {
+SchemaGenerator instproc init {ns} {
 	my parsers [list]
-}
-	
-SchemaGenerator instproc setNamespace {ns} {
 	my xoNamespacePrefix $ns
 }
 
