@@ -37,7 +37,7 @@ set auto_path [linsert $auto_path 0 ../packages/]
 package require xoSAML::Environment
 }
 
-::xoXSD::CodeGenerator gen -environment ::xoSAML::Environment
+::xoXSD::CodeGenerator gen
 puts "::xoSAML::Environment::load \[namespace current\]\n"
 puts [gen parse $data]
 
