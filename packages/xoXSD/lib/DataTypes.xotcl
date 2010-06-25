@@ -5,7 +5,7 @@ package require xoXSD::Core
 
 namespace eval ::xoXSD::DataTypes {
 	
-::xotcl::Class DataType -superclass ::xoXSD::Generic -slots {
+::xotcl::Class DataType -superclass ::xoXSD::XSDObject -slots {
 	::xotcl::Attribute data
 	::xotcl::Attribute valid -default false
 }

@@ -9,7 +9,7 @@ namespace eval ::xoXSD {
 #               * Definition *               #
 ##############################################	
 	
-::xotcl::Class Generic		-superclass ::xotcl::Class -slots {
+::xotcl::Class XSDObject	-superclass ::xotcl::Class -slots {
 	::xotcl::Attribute rootClass -default ""
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
@@ -17,17 +17,17 @@ namespace eval ::xoXSD {
 	::xotcl::Attribute children
 }
 	
-::xotcl::Class GenericChild	-superclass ::xoXSD::Generic
+::xotcl::Class XSDChildObject	-superclass ::xoXSD::XSDObject
 
-::xotcl::Class Element		-superclass ::xoXSD::Generic 
+::xotcl::Class Element		-superclass ::xoXSD::XSDObject 
 
-::xotcl::Class ComplexType	-superclass ::xoXSD::Generic
+::xotcl::Class ComplexType	-superclass ::xoXSD::XSDObject
 
-::xotcl::Class Sequence		-superclass ::xoXSD::GenericChild -slots {
+::xotcl::Class Sequence		-superclass ::xoXSD::XSDChildObject -slots {
 	::xotcl::Attribute sequence -default false
 }
 
-::xotcl::Class Choice		-superclass ::xoXSD::GenericChild -slots {
+::xotcl::Class Choice		-superclass ::xoXSD::XSDChildObject -slots {
 	::xotcl::Attribute slotfree 	 -default true
 	::xotcl::Attribute choiceparents -default ""
 }
@@ -38,7 +38,7 @@ namespace export *
 #              * Constructors *              #
 ##############################################
 
-Generic instproc init args {
+XSDObject instproc init args {
 	if { [my rootClass] eq "" } {
 		my rootClass [my class]
 	}
@@ -82,7 +82,7 @@ Generic instproc init args {
 }
 
 Sequence instproc init args {
-	# Generic->init
+	# XSDObject->init
 	next 
 	
 	set slots [list]
@@ -120,7 +120,7 @@ Sequence instproc init args {
 }
 
 Choice instproc init args {
-	# Generic->init
+	# XSDObject->init
 	next 	
 	
 	# get "choice-parents"...
@@ -139,7 +139,7 @@ Choice instproc init args {
 # * Various "publicly" available functions * #
 ##############################################
 
-Generic instproc check {} {	
+XSDObject instproc check {} {	
 	foreach slot [my attributes] {
 		if { [$slot use] eq "required" && ![my slotFilled $slot] } {
 			my error "needs object: [namespace tail $slot] (type: [$slot type])"
@@ -186,7 +186,7 @@ Choice instproc check {} {
 	return true
 }
 
-Generic instproc export { {addXmlNamespaces true} {name ""} } {
+XSDObject instproc export { {addXmlNamespaces true} {name ""} } {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
@@ -212,12 +212,12 @@ Generic instproc export { {addXmlNamespaces true} {name ""} } {
 	return [$root asXML]
 }
 
-Generic instproc print {} {
+XSDObject instproc print {} {
 	puts "Exporting [self] ([my class]) ..."
 	puts [my export]
 }
 
-Generic instproc printContent {} {
+XSDObject instproc printContent {} {
 	set content [my getContent]
 	if { $content == false } {
 		my error "doesn't have any textual content!"
@@ -226,7 +226,7 @@ Generic instproc printContent {} {
 	puts "The textual content of [self] ([my class]) is:\n$content"
 }
 
-Generic instproc getSlot {slot} {
+XSDObject instproc getSlot {slot} {
 	set s [my doGetSlot $slot]
 	if { $s == false } {
 		my error "there is no such Element/Attribute to be get: $slot"	
@@ -235,7 +235,7 @@ Generic instproc getSlot {slot} {
 	return $s
 }
 
-Generic instproc getSlotClass {slot {withChildSlots false}} {
+XSDObject instproc getSlotClass {slot {withChildSlots false}} {
 	set slotclass [my doGetSlotClass $slot $withChildSlots]
 	if { $slot == false } {
 		my error "there is no such slot: $slot"	
@@ -244,7 +244,7 @@ Generic instproc getSlotClass {slot {withChildSlots false}} {
 	return $slotclass
 }
 
-Generic instproc getContent {} {
+XSDObject instproc getContent {} {
 	set content [my getSlot __text]
 	if { $content == false } {
 		return ""
@@ -252,7 +252,7 @@ Generic instproc getContent {} {
 	return [$content getContent]
 }
 
-Generic instproc setSlot {slot value} {
+XSDObject instproc setSlot {slot value} {
 	if { [my doSetSlot $slot $value] == true } {
 		return true
 	} else {
@@ -261,7 +261,7 @@ Generic instproc setSlot {slot value} {
 	}
 }
 
-Generic instproc setContent {text} {
+XSDObject instproc setContent {text} {
 	if { [my trySetContent $text] } {
 		return true
 	}
@@ -269,7 +269,7 @@ Generic instproc setContent {text} {
 	return false
 }
 	
-Generic instproc printSlots {} {
+XSDObject instproc printSlots {} {
 	# first get a list of all elements and attributes:
 	set elements   [my elements]
 	set attributes [my attributes]
@@ -297,7 +297,7 @@ Generic instproc printSlots {} {
 	}
 }
 	
-Generic instproc addAny {slot} {
+XSDObject instproc addAny {slot} {
 	set slot [my lookupObject $slot]
 	set slotname [namespace tail [$slot class]]
 	
@@ -356,7 +356,7 @@ Generic instproc addAny {slot} {
 	}
 }
 	
-Generic instproc addAnyAttribute {slotname type value} {
+XSDObject instproc addAnyAttribute {slotname type value} {
 	# first check if the element actually has an <any> element:
 	set anyAttribute [my getSlotClass __anyAttribute]
 	if { $anyAttribute == false } {
@@ -397,7 +397,7 @@ Generic instproc addAnyAttribute {slotname type value} {
 # Note: you shouldn't call them directly.    #
 ##############################################
 
-Generic instproc exportAttributes {doc root} {
+XSDObject instproc exportAttributes {doc root} {
 	# iterate over all attributes
 	foreach attribute [my attributes] {
 		my exportAttribute $doc $root $attribute
@@ -409,7 +409,7 @@ Generic instproc exportAttributes {doc root} {
 	}
 }
 
-Generic instproc exportAttribute {doc root attribute} {
+XSDObject instproc exportAttribute {doc root attribute} {
 	if { ![my slotFilled $attribute] } return
 	
 	set content [[my [namespace tail $attribute]] getContent]
@@ -420,7 +420,7 @@ Generic instproc exportAttribute {doc root attribute} {
 	}
 }
 
-Generic instproc exportElements {doc root} {
+XSDObject instproc exportElements {doc root} {
 	# iterate over all elements
 	foreach element [my elements] {
 		my exportElement $doc $root $element
@@ -442,7 +442,7 @@ Sequence instproc exportElements {doc root} {
 	}
 }
 
-Generic instproc exportElement {doc root element} {
+XSDObject instproc exportElement {doc root element} {
 	if { ![my slotFilled $element] } return
 	set name [my getXmlElementExportName $element] 
 	foreach element [my [namespace tail $element]] {
@@ -450,7 +450,7 @@ Generic instproc exportElement {doc root element} {
 	}
 }
 
-Generic instproc setXmlnsAttributes {root} {
+XSDObject instproc setXmlnsAttributes {root} {
 	foreach element [my elements] {
 		set element [namespace tail $element]
 		if { ![my slotFilled $element] } continue
@@ -466,7 +466,7 @@ Generic instproc setXmlnsAttributes {root} {
 	}
 }
 	
-Generic instproc getXmlElementExportName { {element ""} } {
+XSDObject instproc getXmlElementExportName { {element ""} } {
 	if { $element eq "" } { 
 		set element [my class] 
 	}
@@ -478,7 +478,7 @@ Generic instproc getXmlElementExportName { {element ""} } {
 	return $name
 }
 
-Generic instproc getRootNamespaceVariable {varname} {
+XSDObject instproc getRootNamespaceVariable {varname} {
 	set qualifiers [namespace qualifiers [my rootClass]]
 	if { [namespace eval $qualifiers info exists $varname] } {
 		namespace upvar $qualifiers $varname var
@@ -487,22 +487,22 @@ Generic instproc getRootNamespaceVariable {varname} {
 	return ""
 }
 
-Generic instproc getXmlNamespace {} {
+XSDObject instproc getXmlNamespace {} {
 	return [my getRootNamespaceVariable xmlNamespace]
 }
 
-Generic instproc getXmlPrefix {} {
+XSDObject instproc getXmlPrefix {} {
 	return [my getRootNamespaceVariable xmlPrefix]
 }
 
-Generic instproc getSlots {{withChildSlots false}} {
+XSDObject instproc getSlots {{withChildSlots false}} {
 	if { $withChildSlots } {
 		return [concat [my elements] [my attributes] [my childslots]]
 	} 
 	return [concat [my elements] [my attributes]]
 }
 
-Generic instproc getLocalSlots {} {
+XSDObject instproc getLocalSlots {} {
 	# now create a list of all slots
 	set slots [[my class] info slots]
 	
@@ -526,14 +526,14 @@ Generic instproc getLocalSlots {} {
 	return $slots
 }
 
-Generic instproc getSlotType {slot} {
+XSDObject instproc getSlotType {slot} {
 	# returns either XMLAttribute, XMLElement, XMLChild or false
 	set slotclass [my getSlotClass $slot]
 	if { $slotclass == false } { return false }
 	return [namespace tail [$slotclass class]]
 }
 
-Generic instproc doGetSlot {slot} {
+XSDObject instproc doGetSlot {slot} {
 	set slot [namespace tail $slot]
 	
 	if { ![my slotExists $slot] || ![my exists [namespace tail $slot]] } {
@@ -568,7 +568,7 @@ Generic instproc doGetSlot {slot} {
 	return [my $slot]
 }
 
-Generic instproc doSetSlot {slot value} {
+XSDObject instproc doSetSlot {slot value} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot] } {
 		if { [my children] eq "" } { return -1 }
@@ -655,7 +655,7 @@ Sequence instproc doSetSlot {slot value} {
 	return [my tryCreateChild $slot $value]
 }	
 	
-GenericChild instproc tryCreateChild {slot value} {
+XSDChildObject instproc tryCreateChild {slot value} {
 	set name [namespace tail [my class]]
 	set parent [my info parent]
 	set c [$parent getSlotClass $name true]
@@ -678,7 +678,7 @@ GenericChild instproc tryCreateChild {slot value} {
 	return -1
 }
 
-Generic instproc doGetSlotClass {slot {withChildSlots false}} {
+XSDObject instproc doGetSlotClass {slot {withChildSlots false}} {
 	set slot [namespace tail $slot]
 	if { ![my slotExists $slot $withChildSlots] } {
 		foreach child [my children] {
@@ -692,20 +692,20 @@ Generic instproc doGetSlotClass {slot {withChildSlots false}} {
 	}
 }
 
-Generic instproc error {msg} {
+XSDObject instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-Generic instproc slotExists {slot {withChildSlots false}} {
+XSDObject instproc slotExists {slot {withChildSlots false}} {
 	set existance [lsearch [my getSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
 	return [expr { $existance != -1 } ]
 }
 
-Generic instproc slotFilled {slot} {
+XSDObject instproc slotFilled {slot} {
 	return [my exists [namespace tail $slot]]
 }
 
-Generic instproc getAllChildren {} {
+XSDObject instproc getAllChildren {} {
 	set children [my children]
 	foreach child [my children] {
 		set children [concat $children [$child getAllChildren]]
@@ -713,7 +713,7 @@ Generic instproc getAllChildren {} {
 	return $children
 }
 	
-Generic instproc addElement {element} {
+XSDObject instproc addElement {element} {
 	my lappend elements $element
 }
 		
@@ -722,11 +722,11 @@ Sequence instproc addElement {element} {
 	my lappend sequence $element
 }	
 	
-Generic instproc addAttribute {attribute} {
+XSDObject instproc addAttribute {attribute} {
 	my lappend attributes $attribute
 }
 
-Generic instproc addChild {child} {
+XSDObject instproc addChild {child} {
 	my lappend children $child
 }
 
@@ -735,7 +735,7 @@ Sequence instproc addChild {child} {
 	my lappend sequence $child
 }
 	
-Generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {	
+XSDObject instproc checkAnyNamespaceRestrictions {namespaces inst value} {	
 	if { [lsearch $namespaces "##any"] != -1 } {
 		return true
 		
@@ -765,7 +765,7 @@ Generic instproc checkAnyNamespaceRestrictions {namespaces inst value} {
 	return false
 }
 
-Generic instproc checkMinOccurs {slot} {
+XSDObject instproc checkMinOccurs {slot} {
 	set name [namespace tail $slot]
 	set validity true
 	if { [$slot minOccurs] > 0 } {
@@ -781,7 +781,7 @@ Generic instproc checkMinOccurs {slot} {
 	return $validity
 }
 
-Generic instproc makeTable {tableheader headers content} {
+XSDObject instproc makeTable {tableheader headers content} {
 	set width [list]
 	foreach header $headers {
 		lappend width [string length $header]
@@ -824,7 +824,7 @@ Generic instproc makeTable {tableheader headers content} {
 	return $o
 }
 
-Generic instproc makeTableRow {width content} {
+XSDObject instproc makeTableRow {width content} {
 	set line "| "
 	for {set i 0} {$i < [llength $content]} {incr i} {
 		append line [format "%-*s | " [lindex $width $i] [lindex $content $i]]
@@ -832,7 +832,7 @@ Generic instproc makeTableRow {width content} {
 	return "$line\n"
 }
 
-Generic instproc unknown {cmd args} {
+XSDObject instproc unknown {cmd args} {
 	set args [join $args]
 	
 	#read slot
@@ -844,9 +844,9 @@ Generic instproc unknown {cmd args} {
 	return [my setSlot $cmd [my lookupObject $args]]
 }
 
-Generic instforward marshal %self export
+XSDObject instforward marshal %self export
 
-Generic instproc . args {
+XSDObject instproc . args {
 	set args [split $args [list "." " "]]
 	# remove empty list elements:
 	set args [lsearch -all -inline -not -exact $args ""]
@@ -857,14 +857,14 @@ Generic instproc . args {
 	eval "$cmd [lindex $args end]"
 }
 
-Generic instproc createObject {type {args {}}} {
+XSDObject instproc createObject {type {args {}}} {
 	set ns [uplevel 2 namespace current]
 	set obj [Object autoname xoxsdobj] 
 	namespace eval $ns $type $obj $args
 	return "$ns\::$obj"
 }
 
-Generic instproc lookupObject {name} {
+XSDObject instproc lookupObject {name} {
 	set i 1
 	set ns ""
 	while { ![Object isobject "$ns\::$name"] } {
@@ -874,7 +874,7 @@ Generic instproc lookupObject {name} {
 	return "$ns\::$name"
 }
 
-Generic instproc trySetContent {text} {
+XSDObject instproc trySetContent {text} {
 	if { [Object isobject $text] } {
 		return false
 	}
