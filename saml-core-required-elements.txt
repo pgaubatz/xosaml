@@ -1,26 +1,26 @@
 This list has been generated via:
-$ tools/list-xml-elements.tcl xsd/saml-schema-assertion-2.0.xsd xsd/saml-schema-protocol-2.0.xsd
+$ tools/list-xml-elements.tcl xsd/saml-schema-assertion-2.0.xsd xsd/saml-schema-protocol-2.0.xsd xsd/xenc-schema.xsd xsd/xmldsig-core-schema.xsd > saml-core-required-elements.txt
 
 These (XSD)-Elements need to be handled by the generator
 in order to support the SAML Core standard:
 
 Occurences Element
 ======================
-159	-> element		DONE
-58	-> attribute		DONE
-48	-> complexType		DONE	
-32	-> sequence		DONE	
-21	-> extension		DONE
-21	-> complexContent	DONE	
-18	-> choice		DONE	
-7	-> enumeration		DONE	
-5	-> any			DONE
-4	-> restriction		DONE
-4	-> import		-
-3	-> attributeGroup	DONE
-2	-> simpleType		DONE
-2	-> simpleContent	DONE
-2	-> schema		DONE
-2	-> documentation	DONE 	-> can be ignored
-2	-> anyAttribute		DONE
-2	-> annotation		DONE 	-> can be ignored
+254	 -> element		DONE
+90	 -> attribute		DONE
+82	 -> complexType		DONE
+59	 -> sequence		DONE
+28	 -> choice		DONE
+24	 -> extension		DONE
+23	 -> complexContent	DONE
+21	 -> any			DONE
+8	 -> restriction		DONE
+7	 -> enumeration		DONE
+6	 -> simpleType		DONE
+5	 -> import		-
+4	 -> schema		DONE
+3	 -> attributeGroup	DONE
+3	 -> anyAttribute	DONE
+3	 -> simpleContent	DONE
+2	 -> documentation	DONE	-> can be ignored
+2	 -> annotation		DONE	-> can be ignored
