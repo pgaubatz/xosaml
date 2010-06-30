@@ -34,7 +34,7 @@ XMLAttribute instproc assign {domain var value} {
 	if { ![Object isobject $value] } {	
 		set value [[[self] type] new $value]
 	} 
-	if { $value eq "" || [$value class] ne [[self] type] || ![$value valid] } {
+	if { $value eq "" || [$value class] ne [[self] type] || ![$value check] } {
 		$domain error "the content of \"$var\" is not valid."
 		return false
 	}

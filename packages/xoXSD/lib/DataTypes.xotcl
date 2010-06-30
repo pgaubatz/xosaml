@@ -15,7 +15,7 @@ DataType instproc init { {data ""} } {
 }
 
 DataType instproc getContent {} {
-	if { [my valid] } {
+	if { [my check] } {
 		return [my data]
 	} else {
 		return ""
