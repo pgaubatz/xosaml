@@ -31,17 +31,14 @@ namespace export *
 
 
 XMLAttribute instproc assign {domain var value} {
-	set s ""
-	if { [Object isobject $value] && [$value class] eq [[self] type] } {
-		set s $value
-	} else {
-		set s [[[self] type] new $value]
-	}
-	if { $s eq "" || ![$s valid] } {
+	if { ![Object isobject $value] } {	
+		set value [[[self] type] new $value]
+	} 
+	if { $value eq "" || [$value class] ne [[self] type] || ![$value valid] } {
 		$domain error "the content of \"$var\" is not valid."
 		return false
 	}
-	$domain set $var $s
+	$domain set $var $value
 }
 
 XMLAttribute instproc getInfo {} {
