@@ -184,14 +184,14 @@ Choice instproc check {} {
 	return true
 }
 
-XSDObject instproc export { {addXmlNamespaces true} {name ""} } {
+XSDObject instproc marshal { {addXmlNamespaces true} {name ""} } {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
 	}
 	
 	# create the document:
-	set doc [dom createDocument [my getXmlElementExportName]]
+	set doc [dom createDocument [my getXmlElementMarshalName]]
 	set root [$doc documentElement]
 	
 	# add the xmlns-attributes:
@@ -202,17 +202,17 @@ XSDObject instproc export { {addXmlNamespaces true} {name ""} } {
 	}
 	
 	# add the attributes:
-	my exportAttributes $doc $root
+	my marshalAttributes $doc $root
 	
 	# add the containing sub-elements:
-	my exportElements $doc $root	
+	my marshalElements $doc $root	
 
 	return [$root asXML]
 }
 
 XSDObject instproc print {} {
-	puts "Exporting [self] ([my class]) ..."
-	puts [my export]
+	puts "Marshalling [self] ([my class]) ..."
+	puts [my marshal]
 }
 
 XSDObject instproc printContent {} {
@@ -395,19 +395,19 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 # Note: you shouldn't call them directly.    #
 ##############################################
 
-XSDObject instproc exportAttributes {doc root} {
+XSDObject instproc marshalAttributes {doc root} {
 	# iterate over all attributes
 	foreach attribute [my attributes] {
-		my exportAttribute $doc $root $attribute
+		my marshalAttribute $doc $root $attribute
 	}
 	
 	# do the same with all children
 	foreach child [my children] {
-		$child exportAttributes $doc $root	
+		$child marshalAttributes $doc $root	
 	}
 }
 
-XSDObject instproc exportAttribute {doc root attribute} {
+XSDObject instproc marshalAttribute {doc root attribute} {
 	if { ![my slotFilled $attribute] } return
 	
 	set content [[my [namespace tail $attribute]] getContent]
@@ -418,33 +418,33 @@ XSDObject instproc exportAttribute {doc root attribute} {
 	}
 }
 
-XSDObject instproc exportElements {doc root} {
+XSDObject instproc marshalElements {doc root} {
 	# iterate over all elements
 	foreach element [my elements] {
-		my exportElement $doc $root $element
+		my marshalElement $doc $root $element
 	}
 	
 	# do the same with all children
 	foreach child [my children] {
-		$child exportElements $doc $root	
+		$child marshalElements $doc $root	
 	}
 }
 
-Sequence instproc exportElements {doc root} {
+Sequence instproc marshalElements {doc root} {
 	foreach obj [my sequence] {
 		if { [string match "*::slot::*" $obj ] } {
-			my exportElement $doc $root $obj
+			my marshalElement $doc $root $obj
 		} else {
-			$obj exportElements $doc $root	
+			$obj marshalElements $doc $root	
 		}
 	}
 }
 
-XSDObject instproc exportElement {doc root element} {
+XSDObject instproc marshalElement {doc root element} {
 	if { ![my slotFilled $element] } return
-	set name [my getXmlElementExportName $element] 
+	set name [my getXmlElementMarshalName $element] 
 	foreach element [my [namespace tail $element]] {
-		$root appendXML [$element export false $name]
+		$root appendXML [$element marshal false $name]
 	}
 }
 
@@ -464,7 +464,7 @@ XSDObject instproc setXmlnsAttributes {root} {
 	}
 }
 	
-XSDObject instproc getXmlElementExportName { {element ""} } {
+XSDObject instproc getXmlElementMarshalName { {element ""} } {
 	if { $element eq "" } { 
 		set element [my class] 
 	}
@@ -842,7 +842,7 @@ XSDObject instproc unknown {cmd args} {
 	return [my setSlot $cmd [my lookupObject $args]]
 }
 
-XSDObject instforward marshal %self export
+XSDObject instforward export %self marshal
 
 XSDObject instproc . args {
 	set args [split $args [list "." " "]]

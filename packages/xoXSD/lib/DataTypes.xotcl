@@ -30,10 +30,6 @@ DataType instproc setContent {data} {
 DataType instproc check {} {
 	return true
 }
-
-DataType instproc export {} {
-	return [my getContent]
-}
 	
 DataType instproc print {} {
 	puts [my getContent]
@@ -42,6 +38,10 @@ DataType instproc print {} {
 DataType instproc getXmlNamespace args {
 	return "http://www.w3.org/2001/XMLSchema-datatypes"
 }
+
+DataType instforward export  %self getContent
+DataType instforward marshal %self getContent
+
 
 # String Data Types
 ::xotcl::Class string 		  -superclass ::xoXSD::DataTypes::DataType
