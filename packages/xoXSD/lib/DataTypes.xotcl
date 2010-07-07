@@ -1,7 +1,6 @@
 package provide xoXSD::DataTypes 0.1
 
 package require XOTcl
-package require xoXSD::Core
 
 namespace eval ::xoXSD::DataTypes {
 	
