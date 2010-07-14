@@ -67,8 +67,10 @@ SchemaGenerator instproc generateSchema {} {
 }
 
 SchemaGenerator instproc generateEnvironment {} {
-	set o "namespace eval [my xoNamespacePrefix]\::Environment \{\n\n"
+	set o "package require xoXSD::DataTypes\n\n"
+	append o "namespace eval [my xoNamespacePrefix]\::Environment \{\n\n"
 	append o "proc load \{targetNamespace\} \{\n\n"
+	append o "::xoXSD::DataTypes::load \$targetNamespace\n\n"
 	append o "namespace eval \$targetNamespace \{\n\n"
 	
 	foreach parser [my parsers] {
