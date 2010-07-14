@@ -19,6 +19,6 @@ append o [gen generateSchema]
 ::fileutil::writeFile "generated/Schema.xotcl" $o
 
 set o "package provide xoSAML::Environment 0.1\n"
-append o "package require xoSAML::Schema\n\n"
+append o "package require xoSAML::Schema\n"
 append o [gen generateEnvironment]
 ::fileutil::writeFile "generated/Environment.xotcl" $o

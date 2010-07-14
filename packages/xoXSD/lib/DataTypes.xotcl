@@ -3,7 +3,18 @@ package provide xoXSD::DataTypes 0.1
 package require XOTcl
 
 namespace eval ::xoXSD::DataTypes {
-	
+
+proc load {targetNamespace} {
+	namespace eval $targetNamespace {
+		if { [lsearch [interp aliases] "xsd::*"] == 0 } return
+		foreach c [::xoXSD::DataTypes::DataType info subclass -closure] {
+			if { [namespace qualifiers $c] ne "::xoXSD::DataTypes" } continue
+			set name [namespace tail $c]
+			interp alias {} xsd::$name {} ::xoXSD::DataTypes::$name
+		}
+	}
+}
+
 ::xotcl::Class DataType -slots {
 	::xotcl::Attribute data
 	::xotcl::Attribute valid -default false

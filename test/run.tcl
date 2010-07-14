@@ -19,7 +19,7 @@ foreach schema [glob ../xsd/*.xsd] {
 	val addSchema $schema
 }
 	
-set instances [lsearch -inline -all -glob [::xoXSD::Generic info instances -closure] "::test::*"]
+set instances [lsearch -inline -all -glob [::xoXSD::XSDObject info instances -closure] "::test::*"]
 set i 0
 foreach instance $instances {
 	set s [namespace tail [[$instance class] info superclass]]
