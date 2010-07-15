@@ -9,6 +9,8 @@
 # full path name of this file's directory.
 
 package ifneeded xoSAML 0.1 [list source [file join $dir xoSAML.xotcl]]
+package ifneeded xoSAML::Bindings 0.1 [list source [file join $dir Bindings.xotcl]]
+package ifneeded xoSAML::Objects 0.1 [list source [file join $dir Objects.xotcl]]
 package ifneeded xoSAML::Schema 0.1 [list source [file join $dir "generated" Schema.xotcl]]
 package ifneeded xoSAML::Environment 0.1 [list source [file join $dir "generated" Environment.xotcl]]
 package ifneeded xoSAML::Http::Client 0.1 [list source [file join $dir HttpClient.xotcl]]

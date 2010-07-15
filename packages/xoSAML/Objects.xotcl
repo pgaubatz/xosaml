@@ -1,0 +1,141 @@
+package provide xoSAML::Objects 0.1
+
+package require XOTcl
+package require xoSAML::Schema
+
+namespace eval ::xoSAML::Objects {
+
+namespace eval Private {
+	::xotcl::Class Wrapper -slots {
+		::xotcl::Attribute object
+	}
+	
+	Wrapper instproc initObject {type {args ""}} {
+		my object [$type new $args]
+	}
+	
+	Wrapper instproc getSubstitutedCommand {} {
+		return [lindex [split [dict get [info frame -2] cmd] " "] 0]
+    	}
+    	
+    	Wrapper instproc unknown {cmd args} {
+    		if { [llength $args] } {
+    			return [[my object] $cmd $args]
+    		} 
+    		return [[my object] $cmd]
+    	}
+}
+
+namespace export *	
+
+::xotcl::Class Request		-superclass Private::Wrapper
+::xotcl::Class Condition	-superclass Private::Wrapper
+::xotcl::Class Response		-superclass Private::Wrapper
+	
+::xotcl::Class NameIdentifier	-superclass ::xoSAML::saml::NameIDType
+::xotcl::Class Subject		-superclass ::xoSAML::saml::Subject
+::xotcl::Class Assertion	-superclass ::xoSAML::saml::Assertion
+::xotcl::Class Attribute	-superclass ::xoSAML::saml::Attribute
+::xotcl::Class Status		-superclass ::xoSAML::samlp::Status
+
+Request instproc init { {type ""} } {
+	set type "::xoSAML::samlp::[namespace tail [my getSubstitutedCommand]]"
+	if { ![Object isobject $type] || ![$type isclass] } {
+		set type "::xoSAML::samlp::AuthnRequest"
+	}
+	my initObject $type
+	
+	#set reasonable defaults...
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Request instproc send {receiver} {
+	puts "ERROR: Load a SAML Binding if you want to use the function '[self proc]'!"
+}
+
+Response instproc init args {
+	set type "::xoSAML::samlp::[namespace tail [my getSubstitutedCommand]]"
+	if { ![Object isobject $type] || ![$type isclass] } {
+		set type "::xoSAML::samlp::Response"
+	}
+	my initObject $type
+	
+	#set reasonable defaults
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Response instproc receive {sender} {
+	puts "ERROR: Load a SAML Binding if you want to use the function '[self proc]'!"
+}
+
+Status instproc init {code} {
+	next
+	
+	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
+	set codes [list \
+		"Success" \
+		"Requester" \
+		"Responder" \
+		"VersionMismatch" \
+		"AuthnFailed" \
+		"InvalidAttrNameOrValue" \
+		"InvalidNameIDPolicy" \
+		"NoAuthnContext" \
+		"NoAvailableIDP" \
+		"NoPassive" \
+		"NoSupportedIDP" \
+		"PartialLogout" \
+		"ProxyCountExceeded" \
+		"RequestDenied" \
+		"RequestUnsupported" \
+		"RequestVersionDeprecated" \
+		"RequestVersionTooHigh" \
+		"RequestVersionTooLow" \
+		"ResourceNotRecognized" \
+		"TooManyResponses" \
+		"UnknownAttrProfile" \
+		"UnknownPrincipal" \
+		"UnsupportedBinding" \
+	]
+	
+	set found [lsearch -inline -nocase $codes $code]
+	
+	if { $found eq "" } {
+		puts "ERROR: \"$code\" doesn't seem to be a valid StatusCode."
+		return
+	}
+
+	set code [my createObject StatusCode]
+	$code Value "$prefix$found"
+	my StatusCode $code
+}
+
+Assertion instproc init args {	
+	next
+	
+	#set reasonable defaults
+	my Version "2.0"
+	my IssueInstant now
+}
+
+Subject instproc init args {
+	next
+}
+
+Attribute instproc init {{attrName ""} {attrValue ""}} {	
+	next
+	
+	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+	if { $attrName ne "" } {
+		my Name $attrName
+	}
+	if { $attrValue ne "" } {
+		set val [my createObject ::xoSAML::saml::AttributeValue $attrValue]
+		my AttributeValue $val 
+	}
+}
+
+}
+

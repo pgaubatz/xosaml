@@ -1,23 +1,33 @@
 package provide xoSAML 0.1
 
 package require XOTcl
+
 package require xoXSD
 package require xoXSD::CodeGenerator
+
+package require xoSAML::Objects
+package require xoSAML::Bindings
 package require xoSAML::Schema
 package require xoSAML::Environment
 
 namespace eval ::xoSAML {
-
-variable __codeGenerator
 	
 proc load {{targetNamespace ""}} {
 	if { $targetNamespace eq "" } {
 		set targetNamespace [uplevel 1 namespace current]
 	}
 	::xoSAML::Environment::load $targetNamespace
+	::xoSAML::Bindings::load none $targetNamespace
 	namespace eval $targetNamespace {
-		namespace import -force ::xoSAML::*
+		namespace import -force ::xoSAML::Objects::*
 	}
+}
+
+proc loadBinding {binding {targetNamespace ""}} {
+	if { $targetNamespace eq "" } {
+		set targetNamespace [uplevel 1 namespace current]
+	}
+	return [::xoSAML::Bindings::load $binding $targetNamespace]
 }
 
 proc unmarshal {xml} {
@@ -26,109 +36,6 @@ proc unmarshal {xml} {
 		set __codeGenerator [::xoXSD::CodeGenerator new "::xoSAML::Environment"]
 	}
 	return [$__codeGenerator unmarshal $xml]
-}
-
-namespace export *
-	
-::xotcl::Class Request
-::xotcl::Class Condition	
-::xotcl::Class NameIdentifier	-superclass ::xoSAML::saml::NameIDType
-::xotcl::Class Subject		-superclass ::xoSAML::saml::Subject
-::xotcl::Class Assertion	-superclass ::xoSAML::saml::Assertion
-::xotcl::Class Attribute	-superclass ::xoSAML::saml::Attribute
-::xotcl::Class Response		-superclass ::xoSAML::samlp::Response
-::xotcl::Class Status		-superclass ::xoSAML::samlp::Status
-
-Request instproc init { {type ""} } {
-	if { [namespace qualifiers [[my class] info superclass]] eq "::xotcl" } {
-		if { $type eq "" } {
-			[my class] superclass "::xoSAML::samlp::AuthnRequest"
-		} else {
-			[my class] superclass $type
-		}
-		[my class] recreate [self]
-	}
-
-	next
-	
-	#set reasonable defaults...
-	my Version "2.0"
-	my IssueInstant now
-}
-
-Response instproc init args {
-	next
-	
-	#set reasonable defaults
-	my Version "2.0"
-	my IssueInstant now
-}
-
-Status instproc init {code} {
-	next
-	
-	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
-	set codes [list \
-		"Success" \
-		"Requester" \
-		"Responder" \
-		"VersionMismatch" \
-		"AuthnFailed" \
-		"InvalidAttrNameOrValue" \
-		"InvalidNameIDPolicy" \
-		"NoAuthnContext" \
-		"NoAvailableIDP" \
-		"NoPassive" \
-		"NoSupportedIDP" \
-		"PartialLogout" \
-		"ProxyCountExceeded" \
-		"RequestDenied" \
-		"RequestUnsupported" \
-		"RequestVersionDeprecated" \
-		"RequestVersionTooHigh" \
-		"RequestVersionTooLow" \
-		"ResourceNotRecognized" \
-		"TooManyResponses" \
-		"UnknownAttrProfile" \
-		"UnknownPrincipal" \
-		"UnsupportedBinding" \
-	]
-	
-	set found [lsearch -inline -nocase $codes $code]
-	
-	if { $found eq "" } {
-		puts "ERROR: \"$code\" doesn't seem to be a valid StatusCode."
-		return
-	}
-
-	set code [my createObject StatusCode]
-	$code Value "$prefix$found"
-	my StatusCode $code
-}
-
-Assertion instproc init args {	
-	next
-	
-	#set reasonable defaults
-	my Version "2.0"
-	my IssueInstant now
-}
-
-Subject instproc init args {
-	next
-}
-
-Attribute instproc init {{attrName ""} {attrValue ""}} {	
-	next
-	
-	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-	if { $attrName ne "" } {
-		my Name $attrName
-	}
-	if { $attrValue ne "" } {
-		set val [my createObject ::xoSAML::saml::AttributeValue $attrValue]
-		my AttributeValue $val 
-	}
 }
 
 }
