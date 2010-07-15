@@ -3,10 +3,10 @@
 set auto_path [linsert $auto_path 0 ../../packages/]
 
 package require xoSAML
-package require xoSAML::Http::Client
-package require base64
 
 ::xoSAML::load
+::xoSAML::loadBinding HTTP::Post
+
 
 #
 # Define some variables:
@@ -37,65 +37,61 @@ request AssertionConsumerServiceIndex "1"
 request Issuer issuer
 request NameIDPolicy policy
 
-set SAMLRequest [request export]
 
 #
 # Post the SAML (Authn)Request
 #
-::xoSAML::Http::Client http
 
-http addQuery SAMLRequest [::base64::encode -wrapchar "" $SAMLRequest] 
-http getUrl $IdPUrl
+set http [request send $IdPUrl]
 
 
 #
-# Get the IdP's login-site
+# Get the IdP's login-site (User's duty)
 #
 
-set loginurl [http getHeader "Location"]
+set loginurl [$http getHeader "Location"]
 
-http getUrl $loginurl
+$http getUrl $loginurl
 
 
 #
-# Post the login-data
+# Post the login-data (User's duty)
 #
 
 set pos [string first "?" $loginurl]
 set posturl [string range $loginurl 0 $pos] 
 
-set doc [http getDocumentElement]
+set doc [$http getDocumentElement]
 set authstate [[$doc find "name" "AuthState"] getAttribute "value"]
 
-http addQuery username $Username
-http addQuery password $Password
-http addQuery AuthState $authstate
+$http addQuery username $Username
+$http addQuery password $Password
+$http addQuery AuthState $authstate
 
-http getUrl $posturl
+$http getUrl $posturl
+
+
+#
+# Post the SAML Response (User's duty)
+#
+
+set url [$http getHeader "Location"]
+
+$http getUrl $url
 
 
 #
-# Get the SAML Response
+# Create a SAML Response
 #
 
-set url [http getHeader "Location"]
+samlp::Response response
 
-http getUrl $url
+response receive [$http getData]
 
-set doc [http getDocumentElement]
-set SAMLResponse [::base64::decode [[$doc find "name" "SAMLResponse"] getAttribute "value"]]
-
-#
-# Parse the returned SAML Response
-#
-
-set response [::xoSAML::unmarshal $SAMLResponse]
-set assertion [$response Assertion]
-
-puts "1) The SAML Response's StatusCode is: [$response . Status . StatusCode . Value getContent]\n"
-puts "2) The Subject has been authenticated via: [$assertion . AuthnStatement . AuthnContext . AuthnContextClassRef getContent]\n"
+puts "1) The SAML Response's StatusCode is: [response . Status . StatusCode . Value getContent]\n"
+puts "2) The Subject has been authenticated via: [response . Assertion . AuthnStatement . AuthnContext . AuthnContextClassRef getContent]\n"
 puts "3) The following Attributes have been found:"
-foreach attribute [$assertion . AttributeStatement . Attribute] {
+foreach attribute [response . Assertion . AttributeStatement . Attribute] {
 	puts "\n\to) [$attribute . Name getContent]"
 	foreach value [$attribute AttributeValue] {
 		puts "\t\to) Value: \"[$value getContent]\" "	
