@@ -2,7 +2,6 @@ package provide xoSAML::Bindings 0.1
 
 package require XOTcl
 package require xoSAML::Objects
-#package require xoSAML::Http::Client
 package require base64
 
 namespace eval ::xoSAML::Bindings {
