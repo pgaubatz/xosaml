@@ -2,7 +2,7 @@ package provide xoSAML::Bindings 0.1
 
 package require XOTcl
 package require xoSAML::Objects
-package require xoSAML::Http::Client
+#package require xoSAML::Http::Client
 package require base64
 
 namespace eval ::xoSAML::Bindings {
@@ -30,17 +30,12 @@ namespace eval HTTP::Post {
 	::xotcl::Class Request  -superclass ::xoSAML::Objects::Request
 	::xotcl::Class Response -superclass ::xoSAML::Objects::Response
 	
-	Request instproc send {receiver} {
-		set client [::xoSAML::Http::Client new]
-		$client addQuery SAMLRequest [::base64::encode -wrapchar "" [my export]] 
-		$client getUrl $receiver
-		return $client
+	Request instproc send args {
+		return [::base64::encode -wrapchar "" [my export]] 
 	}
 	
 	Response instproc receive {sender} {
-		set doc [[dom parse $sender] documentElement]
-		set input [[$doc find "name" "SAMLResponse"] getAttribute "value"]
-		set response [::base64::decode $input]
+		set response [::base64::decode $sender]
 		my object [::xoSAML::unmarshal $response]
 		return [self]
 	}

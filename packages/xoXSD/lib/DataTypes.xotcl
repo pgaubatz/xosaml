@@ -134,6 +134,10 @@ dateTime instproc getContent {} {
 	return [clock format [my data] -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
 }
 
+dateTime instproc getTimestamp {} {
+	return [my data]
+}
+
 base64Binary instproc check {} {
 	return [regexp {^((([A-Za-z0-9+/] ?){4})*(([A-Za-z0-9+/] ?){3}[A-Za-z0-9+/]|([A-Za-z0-9+/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+/] ?[AQgw] ?= ?=))?$} [my data]]	
 }
