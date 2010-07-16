@@ -17,14 +17,14 @@ package require xoSAML
 variable SPHostname		"localhost"
 variable SPPort			"8008"
 
-variable SPMetadataUrl 		"http://$SPHostname:$SPPort/Metadata"
-variable SPAssertionConsumerUrl "http://$SPHostname:$SPPort/AssertionConsumer"
+variable SPMetadataUrl		"http://$SPHostname:$SPPort/Metadata"
+variable SPAssertionConsumerUrl	"http://$SPHostname:$SPPort/AssertionConsumer"
 
-variable IdPUrl 		"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php"
+variable IdPUrl			"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php"
 
 
 #
-# 
+# Implement a specialised Http-Worker:
 #
 
 ::xotcl::Class Worker -superclass Httpd::Wrk
@@ -78,15 +78,18 @@ Worker instproc respond-default {} {
 }
 
 Worker instproc respond-AssertionConsumer {} {
+	
 	#
-	# Read the POST'ed formdata
+	# Read the POST'ed formdata:
 	#
+	
 	set SAMLResponse [[lindex [my set formData] 0] set content]
 	set RelayState   [[lindex [my set formData] 1] set content] 
 
 	#
-	# Create a SAML Response
+	# Create a SAML Response:
 	#
+	
 	samlp::Response response
 	response receive $SAMLResponse
 	
