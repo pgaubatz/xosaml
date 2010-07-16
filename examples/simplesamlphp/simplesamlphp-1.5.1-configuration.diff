@@ -114,3 +114,7 @@ diff -uraN simplesamlphp-1.5.1/metadata/saml20-sp-remote.php simplesaml/metadata
 +	'SingleLogoutService' => 'http://localhost/~patailama/simplesaml/saml2/sp/SingleLogoutService.php',
 +);
 +
++$metadata['http://localhost:8008/Metadata'] = array(
++	'AssertionConsumerService' => 'http://localhost:8008/AssertionConsumer'
++);
++
