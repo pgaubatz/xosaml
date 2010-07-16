@@ -13,4 +13,3 @@ package ifneeded xoSAML::Bindings 0.1 [list source [file join $dir Bindings.xotc
 package ifneeded xoSAML::Objects 0.1 [list source [file join $dir Objects.xotcl]]
 package ifneeded xoSAML::Schema 0.1 [list source [file join $dir "generated" Schema.xotcl]]
 package ifneeded xoSAML::Environment 0.1 [list source [file join $dir "generated" Environment.xotcl]]
-package ifneeded xoSAML::Http::Client 0.1 [list source [file join $dir HttpClient.xotcl]]
