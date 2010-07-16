@@ -3,6 +3,7 @@
 set auto_path [linsert $auto_path 0 ../../packages/]
 
 package require XOTcl
+package require uuid
 package require xotcl::comm::httpd
 package require xoSAML
 
@@ -22,6 +23,8 @@ variable SPAssertionConsumerUrl	"http://$SPHostname:$SPPort/AssertionConsumer"
 
 variable IdPUrl			"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php"
 
+variable SessionExpiry		"60"
+
 
 #
 # Implement a specialised Http-Worker:
@@ -38,6 +41,38 @@ Worker instproc respond {} {
 }
 
 Worker instproc respond-default {} {
+	global __sessions
+	
+	foreach c [split [my set meta(cookie)] ";"] {
+		set c [split [string trim $c] "="]
+		if { [lindex $c 0] eq "xoSAMLSession" } {
+			set session [lindex $c 1]
+			set expires -1
+			set now [clock seconds] 
+			if { [info exists __sessions($session)] } {
+				set expires $__sessions($session)
+			}
+			if { $expires != -1 && $now < $expires } {
+				my returnResponse [subst {
+					<html>
+					<body>
+					<h1>Restricted area</h1>
+					<p>
+						You're successfully authenticated and now have access to this restricted resource.<br>
+						Your session will expire in [expr $expires - $now] seconds...
+					</p>
+					</body>
+					</html>
+				} ] 
+				return
+			} 
+		}
+	}
+	
+	my respond-AuthenticationRequest
+}
+
+Worker instproc respond-AuthenticationRequest {} {
 	global IdPUrl SPMetadataUrl SPHostname SPPort
 	
 	#
@@ -113,11 +148,20 @@ Worker instproc respond-AssertionConsumer {} {
 	}
 	append o {
 		</ul>
-		<b>The requested resource was: <i>$RelayState</i></b>
+		<b>You may now access the restricted resource: <a href="$RelayState">$RelayState</a></b>
 		</body></html>
 	}
 	
-	my returnResponse [subst $o]
+	global SessionExpiry __sessions
+	
+	set uuid [::uuid::uuid generate]
+	set expires [expr {[clock seconds] + $SessionExpiry}]
+	set expires_text [clock format $expires -format {%a, %d %b %Y %T GMT} -gmt true]
+	set cookie "Set-Cookie: xoSAMLSession=$uuid; expires=$expires_text; Version=1"
+	
+	set __sessions($uuid) $expires
+	
+	my returnResponse [subst $o] 200 [list $cookie]
 }
 
 Worker instproc respond-Metadata {} {
@@ -134,13 +178,18 @@ Worker instproc respond-Metadata {} {
 	} ]
 }
 
-Worker instproc returnResponse {content {code 200}} { 
+Worker instproc returnResponse {content {code 200} {headers {}}} { 
 	my replyCode $code
 	my connection puts "Content-Type: text/html"
+	foreach h $headers {
+		my connection puts $h
+	}
 	my connection puts "Content-Length: [string length $content]\n"
 	my connection puts-nonewline $content
 	my close   
 }
+
+variable __sessions
 
 Httpd server -ipaddr $SPHostname -port $SPPort -root /tmp -httpdWrk Worker 
 
