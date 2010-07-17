@@ -20,6 +20,14 @@ proc load {{targetNamespace ""}} {
 	::xoSAML::Bindings::load none $targetNamespace
 	namespace eval $targetNamespace {
 		namespace import -force ::xoSAML::Objects::*
+		foreach c [list Condition Subject Assertion Attribute] {
+			interp alias {}       $c {} ::xoSAML::Objects::$c
+			interp alias {} saml::$c {} ::xoSAML::Objects::$c
+		}
+		foreach c [list Status] {
+			interp alias {}        $c {} ::xoSAML::Objects::$c
+			interp alias {} samlp::$c {} ::xoSAML::Objects::$c
+		}
 	}
 }
 
