@@ -70,36 +70,38 @@ Response instproc receive {sender} {
 	puts "ERROR: Load a SAML Binding if you want to use the function '[self proc]'!"
 }
 
+Status set codes [list \
+	"Success" \
+	"Requester" \
+	"Responder" \
+	"VersionMismatch" \
+	"AuthnFailed" \
+	"InvalidAttrNameOrValue" \
+	"InvalidNameIDPolicy" \
+	"NoAuthnContext" \
+	"NoAvailableIDP" \
+	"NoPassive" \
+	"NoSupportedIDP" \
+	"PartialLogout" \
+	"ProxyCountExceeded" \
+	"RequestDenied" \
+	"RequestUnsupported" \
+	"RequestVersionDeprecated" \
+	"RequestVersionTooHigh" \
+	"RequestVersionTooLow" \
+	"ResourceNotRecognized" \
+	"TooManyResponses" \
+	"UnknownAttrProfile" \
+	"UnknownPrincipal" \
+	"UnsupportedBinding" \
+]
+
 Status instproc init {code} {
 	next
 	
 	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
-	set codes [list \
-		"Success" \
-		"Requester" \
-		"Responder" \
-		"VersionMismatch" \
-		"AuthnFailed" \
-		"InvalidAttrNameOrValue" \
-		"InvalidNameIDPolicy" \
-		"NoAuthnContext" \
-		"NoAvailableIDP" \
-		"NoPassive" \
-		"NoSupportedIDP" \
-		"PartialLogout" \
-		"ProxyCountExceeded" \
-		"RequestDenied" \
-		"RequestUnsupported" \
-		"RequestVersionDeprecated" \
-		"RequestVersionTooHigh" \
-		"RequestVersionTooLow" \
-		"ResourceNotRecognized" \
-		"TooManyResponses" \
-		"UnknownAttrProfile" \
-		"UnknownPrincipal" \
-		"UnsupportedBinding" \
-	]
-	
+
+	[self class] instvar codes
 	set found [lsearch -inline -nocase $codes $code]
 	
 	if { $found eq "" } {
