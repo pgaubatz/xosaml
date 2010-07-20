@@ -192,9 +192,7 @@ Server instproc init args {
 	
 	my HostPort		"[my ipaddr]:[my port]"
 	my MetadataUrl 	 	"http://[my HostPort]/Metadata" 					
-	my AssertionConsumerUrl "http://[my HostPort]/AssertionConsumer" 				
-	my IdPUrl		"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php" 	
-	my SessionExpiry	"60"
+	my AssertionConsumerUrl "http://[my HostPort]/AssertionConsumer"
 	
 	my instvar Sessions
 	set Sessions() [list]
@@ -218,6 +216,12 @@ Server instproc addSession {uuid expires} {
 # Finally start the Http-Server:
 #
 
-Server server -ipaddr localhost -port 8008 -root /tmp -httpdWrk Worker 
-
+Server server 									\
+	-ipaddr localhost 							\
+	-port 8008 								\
+	-root /tmp 								\
+	-httpdWrk Worker 							\
+	-IdPUrl http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php \
+	-SessionExpiry 60
+	
 vwait forever
