@@ -38,7 +38,14 @@ DataType instproc setContent {data} {
 }
 	
 DataType instproc check {} {
-	return true
+	my return true
+}
+	
+DataType instproc return {value} {
+	if { $value eq true || $value == 1 } {
+		return true
+	}
+	return false
 }
 	
 DataType instproc print {} {
@@ -108,7 +115,7 @@ DataType instforward marshal %self getContent
 ::xotcl::Class anyType 		  -superclass ::xoXSD::DataTypes::DataType
 
 string instproc check {} {
-	return [regexp {^[\x9\xA\xD\x20-\xD7FF\xE000-\xFFFD\x10000-\x10FFFF]*$} [my data]]
+	my return [regexp {^[\x9\xA\xD\x20-\xD7FF\xE000-\xFFFD\x10000-\x10FFFF]*$} [my data]]
 }
 	
 dateTime instproc setContent {data} {
@@ -122,9 +129,9 @@ dateTime instproc setContent {data} {
 	
 dateTime instproc check {} {
 	if { [my data] eq "now" || [::string is digit -strict [my data]] && [my data] >= 0 } {
-		return true
+		my return true
 	}
-	return false
+	my return false
 }
 	
 dateTime instproc getContent {} {
@@ -139,11 +146,11 @@ dateTime instproc getTimestamp {} {
 }
 
 base64Binary instproc check {} {
-	return [regexp {^((([A-Za-z0-9+/] ?){4})*(([A-Za-z0-9+/] ?){3}[A-Za-z0-9+/]|([A-Za-z0-9+/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+/] ?[AQgw] ?= ?=))?$} [my data]]	
+	my return [regexp {^((([A-Za-z0-9+/] ?){4})*(([A-Za-z0-9+/] ?){3}[A-Za-z0-9+/]|([A-Za-z0-9+/] ?){2}[AEIMQUYcgkosw048] ?=|[A-Za-z0-9+/] ?[AQgw] ?= ?=))?$} [my data]]	
 }
 	
 boolean instproc check {} {
-	return [::string is boolean -strict [my data]]
+	my return [::string is boolean -strict [my data]]
 }
 
 boolean instproc getContent {} {
@@ -154,41 +161,41 @@ boolean instproc getContent {} {
 }
 	
 decimal instproc check {} {
-	return [regexp {^[+-]?(\d+(\.\d*)?|(\.\d+))$} [my data]]
+	my return [regexp {^[+-]?(\d+(\.\d*)?|(\.\d+))$} [my data]]
 }
 	
 integer instproc check {} {
 	set isDecimal [next]
 	set isInteger [regexp {^[+-]?\d+$} [my data]]
-	return [expr {$isDecimal && $isInteger}]
+	my return [expr {$isDecimal && $isInteger}]
 }
 	
 nonNegativeInteger instproc check {} {
 	set isInteger [next]
 	set isNonNegative [regexp {^[+]?\d+$} [my data]]
-	return [expr {$isInteger && $isNonNegative}]
+	my return [expr {$isInteger && $isNonNegative}]
 }
 	
 unsignedShort instproc check {} {
 	set isNonNegativeInteger [next]
-	return [expr {$isNonNegativeInteger && [my data] <= 65535}]
+	my return [expr {$isNonNegativeInteger && [my data] <= 65535}]
 }
 
 anyURI instproc check {} {
-	return [regexp {(?:[[:alpha:]]?)(?:\w){2,7}:(?://?)(?:[^[:space:]>"]*)|(^\#(.*))|(^urn\:([[:alnum:]]|\-)*?\:(.*))} [my data]]
+	my return [regexp {(?:[[:alpha:]]?)(?:\w){2,7}:(?://?)(?:[^[:space:]>"]*)|(^\#(.*))|(^urn\:([[:alnum:]]|\-)*?\:(.*))} [my data]]
 }
 
 ID instproc check {} {
 	set isNCName [next]
-	return [expr {$isNCName}]
+	my return [expr {$isNCName}]
 }
 	
 NCName instproc check {} {
-	return [regexp {^[^./|:*@]+$} [my data]]
+	my return [regexp {^[^./|:*@]+$} [my data]]
 }
 	
 anyType instproc check {} {
-	return true
+	my return true
 }
 
 }
