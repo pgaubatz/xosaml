@@ -12,25 +12,19 @@ package require xoSAML
 
 
 #
-# Define some variables:
-#
-
-variable SPHostname		"localhost"
-variable SPPort			"8008"
-
-variable SPMetadataUrl		"http://$SPHostname:$SPPort/Metadata"
-variable SPAssertionConsumerUrl	"http://$SPHostname:$SPPort/AssertionConsumer"
-
-variable IdPUrl			"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php"
-
-variable SessionExpiry		"60"
-
-
-#
 # Implement a specialised Http-Worker:
 #
 
-::xotcl::Class Worker -superclass Httpd::Wrk
+::xotcl::Class Worker -superclass Httpd::Wrk 
+
+Worker instforward getSession		{% my info parent} %proc
+Worker instforward addSession		{% my info parent} %proc
+
+Worker instforward HostPort		{% my info parent} %proc
+Worker instforward MetadataUrl		{% my info parent} %proc
+Worker instforward AssertionConsumerUrl	{% my info parent} %proc
+Worker instforward IdPUrl		{% my info parent} %proc
+Worker instforward SessionExpiry	{% my info parent} %proc
 
 Worker instproc respond {} {
 	set response respond-[my set resourceName] 
@@ -41,45 +35,40 @@ Worker instproc respond {} {
 }
 
 Worker instproc respond-default {} {
-	global __sessions
-	
-	foreach c [split [my set meta(cookie)] ";"] {
-		set c [split [string trim $c] "="]
-		if { [lindex $c 0] eq "xoSAMLSession" } {
-			set session [lindex $c 1]
-			set expires -1
-			set now [clock seconds] 
-			if { [info exists __sessions($session)] } {
-				set expires $__sessions($session)
-			}
-			if { $expires != -1 && $now < $expires } {
-				my returnResponse [subst {
-					<html>
-					<body>
-					<h1>Restricted area</h1>
-					<p>
-						You're successfully authenticated and now have access to this restricted resource.<br>
-						Your session will expire in [expr $expires - $now] seconds...
-					</p>
-					</body>
-					</html>
-				} ] 
-				return
-			} 
-		}
+	if { [my exists meta(cookie)] } {
+        	foreach c [split [my set meta(cookie)] ";"] {
+        		set c [split [string trim $c] "="]
+        		if { [lindex $c 0] eq "xoSAMLSession" } {
+        			set session [lindex $c 1]
+        			set expires [my getSession $session]
+        			set now [clock seconds] 
+        			if { $expires != -1 && $now < $expires } {
+        				my returnResponse [subst {
+        					<html>
+        					<body>
+        					<h1>Restricted area</h1>
+        					<p>
+        						You're successfully authenticated and now have access to this restricted resource.<br>
+        						Your session will expire in [expr $expires - $now] seconds...
+        					</p>
+        					</body>
+        					</html>
+        				} ] 
+        				return
+        			} 
+        		}
+        	}
 	}
 	
 	my respond-AuthenticationRequest
 }
 
 Worker instproc respond-AuthenticationRequest {} {
-	global IdPUrl SPMetadataUrl SPHostname SPPort
-	
 	#
 	# Create the SAML (Authn)Request:
 	#
 	
-	saml::Issuer issuer $SPMetadataUrl
+	saml::Issuer issuer [my MetadataUrl]
 	
 	samlp::NameIDPolicy policy
 	policy AllowCreate "true"
@@ -92,7 +81,7 @@ Worker instproc respond-AuthenticationRequest {} {
 	request NameIDPolicy policy
 	
 	set SAMLRequest [request send] 
-	set RelayState "http://$SPHostname:$SPPort/[my set resourceName]"
+	set RelayState "http://[my HostPort]/[my set resourceName]"
 	
 	my returnResponse [subst {
 		<html>
@@ -102,7 +91,7 @@ Worker instproc respond-AuthenticationRequest {} {
 			You're trying to access <i>$RelayState</i>...<br>
 			Please authenticate yourself!
 		</p>
-		<form action="$IdPUrl" method="POST">
+		<form action="[my IdPUrl]" method="POST">
 			<input type="hidden" name="SAMLRequest" value="$SAMLRequest">
 			<input type="hidden" name="RelayState" value="$RelayState">
 			<input type="submit" value="Continue...">
@@ -152,27 +141,23 @@ Worker instproc respond-AssertionConsumer {} {
 		</body></html>
 	}
 	
-	global SessionExpiry __sessions
-	
 	set uuid [::uuid::uuid generate]
-	set expires [expr {[clock seconds] + $SessionExpiry}]
+	set expires [expr {[clock seconds] + [my SessionExpiry]}]
 	set expires_text [clock format $expires -format {%a, %d %b %Y %T GMT} -gmt true]
 	set cookie "Set-Cookie: xoSAMLSession=$uuid; expires=$expires_text; Version=1"
 	
-	set __sessions($uuid) $expires
+	my addSession $uuid $expires
 	
 	my returnResponse [subst $o] 200 [list $cookie]
 }
 
 Worker instproc respond-Metadata {} {
-	global SPMetadataUrl SPAssertionConsumerUrl
-	
 	my returnResponse [subst {
 		<?xml version="1.0"?>
-		<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="$SPMetadataUrl"> 
+		<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="[my MetadataUrl]"> 
 			<SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"> 
 				<NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat> 
-				 <AssertionConsumerService index="0" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="$SPAssertionConsumerUrl"/> 
+				<AssertionConsumerService index="0" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="[my AssertionConsumerUrl]"/> 
 			</SPSSODescriptor>
 		</EntityDescriptor> 
 	} ]
@@ -189,8 +174,50 @@ Worker instproc returnResponse {content {code 200} {headers {}}} {
 	my close   
 }
 
-variable __sessions
 
-Httpd server -ipaddr $SPHostname -port $SPPort -root /tmp -httpdWrk Worker 
+#
+# Implement a specialised Http-Server:
+#
+
+::xotcl::Class Server -superclass ::xotcl::comm::httpd::Httpd -slots {
+	::xotcl::Attribute HostPort
+	::xotcl::Attribute MetadataUrl
+	::xotcl::Attribute AssertionConsumerUrl
+	::xotcl::Attribute IdPUrl
+	::xotcl::Attribute SessionExpiry
+}
+
+Server instproc init args {
+	next
+	
+	my HostPort		"[my ipaddr]:[my port]"
+	my MetadataUrl 	 	"http://[my HostPort]/Metadata" 					
+	my AssertionConsumerUrl "http://[my HostPort]/AssertionConsumer" 				
+	my IdPUrl		"http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php" 	
+	my SessionExpiry	"60"
+	
+	my instvar Sessions
+	set Sessions() [list]
+}
+
+Server instproc getSession {uuid} {
+	my instvar Sessions
+	if { [info exists Sessions($uuid)] } {
+		return $Sessions($uuid)
+	}
+	return -1
+}
+
+Server instproc addSession {uuid expires} {
+	my instvar Sessions
+	set Sessions($uuid) $expires
+}
+
+
+#
+# Finally start the Http-Server:
+#
+
+Server server -ipaddr localhost -port 8008 -root /tmp -httpdWrk Worker 
 
 vwait forever
