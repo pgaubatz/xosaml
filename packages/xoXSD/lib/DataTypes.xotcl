@@ -135,7 +135,7 @@ dateTime instproc check {} {
 }
 	
 dateTime instproc getContent {} {
-	if { [my data] eq "" } {
+	if { [my data] eq "" || ![my check] } {
 		return ""
 	}
 	return [clock format [my data] -format {%Y-%m-%dT%H:%M:%SZ} -locale en_US -timezone :UTC]
