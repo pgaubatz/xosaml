@@ -179,7 +179,7 @@ Choice instproc check {} {
 	return true
 }
 
-XSDObject instproc marshal { -name {-addXmlNamespaces:boolean true} {-compact:boolean false} } {
+XSDObject instproc marshal { -name {-compact:boolean false} } {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
@@ -190,7 +190,7 @@ XSDObject instproc marshal { -name {-addXmlNamespaces:boolean true} {-compact:bo
 	set root [$doc documentElement]
 	
 	# add the xmlns-attributes:
-	if { $addXmlNamespaces } {
+	if { [self callingproc] ne "marshalElement" } {
 		set prefix [my getXmlPrefix]	
 		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
 		my setXmlnsAttributes $root	
@@ -450,7 +450,7 @@ XSDObject instproc marshalElement {doc root element} {
 	if { ![my slotFilled $element] } return
 	set name [my getXmlElementMarshalName $element] 
 	foreach element [my [namespace tail $element]] {
-		$root appendXML [$element marshal -addXmlNamespaces false -name $name]
+		$root appendXML [$element marshal -name $name]
 	}
 }
 
