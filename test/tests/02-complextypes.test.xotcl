@@ -1,0 +1,143 @@
+
+::STORM::TestCase MarshalComplexTypes \
+	-setup_script {
+		package require xoSAML
+		
+		::xoSAML::load ::sandbox
+	} \
+	-cleanup_script {
+		namespace delete ::sandbox
+	}
+
+
+::STORM::TestScenario MarshalComplexTypes::AuthnRequest \
+	-expected_result {<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" AssertionConsumerServiceIndex="1" ID="identifier_1" Version="2.0" IssueInstant="1970-01-01T00:00:00Z"><saml:Issuer>https://sp.example.com/SAML2</saml:Issuer><samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" AllowCreate="true"/></samlp:AuthnRequest>} \
+	-test_body {
+		namespace eval ::sandbox {
+        		Issuer iss1 https://sp.example.com/SAML2
+        		
+        		NameIDPolicy pol1
+        		pol1 AllowCreate true
+        		pol1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+        		
+        		Request req1
+        		req1 IssueInstant 0
+        		req1 ID identifier_1
+        		req1 AssertionConsumerServiceIndex 1
+        		req1 Issuer iss1
+        		req1 NameIDPolicy pol1
+        		
+        		return [req1 marshal -compact true] 
+		}
+	} 
+
+::STORM::TestScenario MarshalComplexTypes::Response \
+	-expected_result {<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="identifier_2" InResponseTo="indentifier_1" Destination="https://sp.example.com/SAML2/SSO/POST" IssueInstant="1970-01-01T00:00:00Z" Version="2.0"><saml:Issuer>https://idp.example.org/SAML2</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/></samlp:Status><saml:Assertion ID="identifier_3" Version="2.0" IssueInstant="1970-01-01T00:00:00Z"><saml:Issuer>https://idp.example.org/SAML2</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">3f7b3dcf-1674-4ecd-92c8-1544f346baf8</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="identifier_1" NotOnOrAfter="1970-01-01T00:00:00Z" Recipient="https://sp.example.com/SAML2/SSO/POST"/></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="1970-01-01T00:00:01Z" NotOnOrAfter="1970-01-01T00:00:00Z"><saml:AudienceRestriction><saml:Audience>https://sp.example.com/SAML2</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement SessionIndex="identifier_3" AuthnInstant="1970-01-01T00:00:00Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion></samlp:Response>} \
+	-test_body { 
+		namespace eval ::sandbox {
+                        Issuer iss2 https://idp.example.org/SAML2
+                         
+                        Status sta1 Success
+                         
+                        NameID nam1 3f7b3dcf-1674-4ecd-92c8-1544f346baf8
+                        nam1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+                         
+                        SubjectConfirmationData scd1
+                        scd1 InResponseTo identifier_1
+                        scd1 Recipient https://sp.example.com/SAML2/SSO/POST
+                        scd1 NotOnOrAfter 0
+                         
+                        SubjectConfirmation sc1
+                        sc1 Method urn:oasis:names:tc:SAML:2.0:cm:bearer
+                        sc1 SubjectConfirmationData scd1
+                         
+                        Subject sub1
+                        sub1 NameID nam1
+                        sub1 SubjectConfirmation sc1
+                         
+                        Audience aud1 https://sp.example.com/SAML2
+                         
+                        AudienceRestriction aur1
+                        aur1 Audience aud1
+                         
+                        Conditions con1
+                        con1 NotBefore 1
+                        con1 NotOnOrAfter 0
+                        con1 AudienceRestriction aur1
+                         
+                        AuthnContextClassRef ref1 urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+                         
+                        AuthnContext ctx1
+                        ctx1 AuthnContextClassRef ref1
+                         
+                        AuthnStatement ast1
+                        ast1 AuthnInstant 0
+                        ast1 SessionIndex identifier_3
+                        ast1 AuthnContext ctx1
+                         
+                        Assertion ass1
+        		ass1 IssueInstant 0
+                        ass1 ID identifier_3
+                        ass1 Issuer iss2
+                        ass1 Subject sub1
+                        ass1 Conditions con1
+                        ass1 AuthnStatement ast1
+                         
+                        Response res1
+                        res1 IssueInstant 0
+                        res1 ID identifier_2
+                        res1 InResponseTo indentifier_1
+                        res1 Destination https://sp.example.com/SAML2/SSO/POST
+                        res1 Issuer iss2
+                        res1 Status sta1
+                        res1 Assertion ass1
+        		
+                        return [res1 marshal -compact true]
+		}
+	} 
+
+
+
+
+::STORM::TestCase RoundtripComplexTypes \
+        -setup_script {
+        	package require xoSAML
+		package require fileutil
+		
+        	::xoSAML::load ::sandbox
+        } \
+	-cleanup_script {
+		namespace delete ::sandbox
+	}
+
+	
+::xotcl::Class RoundtripTestScenario -superclass ::STORM::TestScenario -slots {
+	::xotcl::Attribute xml_file
+} 
+
+RoundtripTestScenario instproc init args {
+	next
+	my expected_result true
+	my test_body {
+		namespace eval ::sandbox {
+			set xml [::fileutil::cat [my xml_file]]
+			
+			# strip all whitespaces between elements:
+			regsub -all {>\s+<} $xml {><} xml
+			regsub -all {\n}    $xml {}   xml
+			
+			set obj [::xoSAML::unmarshal $xml]
+			if { [$obj marshal -compact true] eq $xml } {
+				return true
+			}
+			
+			return false
+		}
+	}
+}
+
+RoundtripTestScenario RoundtripComplexTypes::Request   -xml_file tests/request.xml
+RoundtripTestScenario RoundtripComplexTypes::Request2  -xml_file tests/request2.xml
+RoundtripTestScenario RoundtripComplexTypes::Response  -xml_file tests/response.xml
+RoundtripTestScenario RoundtripComplexTypes::Response2 -xml_file tests/response2.xml
+

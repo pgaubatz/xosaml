@@ -1,0 +1,340 @@
+
+#####################################################################
+#
+# STORM -- scenario-based testing of object-oriented runtime models
+#
+# (c) Mark Strembeck
+#
+#####################################################################
+
+package provide STORM 0.5
+
+package require XOTcl
+namespace import -force ::xotcl::*
+
+namespace eval ::STORM {
+
+  #################
+  # Class TestSuite
+  #################
+  Class TestSuite -slots {
+    Attribute setup_script  
+    Attribute cleanup_script
+    Attribute detailed_report -default 0 
+    Attribute halt_on_first_error -default 0 
+    Attribute order -default "" -multivalued true
+  }
+
+  TestSuite instproc init args {
+    my instvar tr
+    set tr [::STORM::Report [self]::tr]
+    $tr addLine "----------------------------------------------"
+    $tr addLine "Begin Test Run: [clock format [clock seconds]]"
+    $tr addLine "----------------------------------------------\n"
+    if {[my detailed_report]} {$tr detailed 1}
+  }
+
+  TestSuite instproc do {script} {
+    eval $script
+  }
+
+  TestSuite instproc runTestCase {t} {
+    my instvar tr
+    set pre [$t checkPreConditions]
+    if {![$pre success]} {
+      $tr log TestCase $t FAILED "TestCase $t incomplete -> [$pre comment]"
+      return 0
+    }
+    set scenarios [$t runTestScenarios]
+    if {![$scenarios success]} {
+      $tr log TestCase $t FAILED "TestCase $t incomplete -> Failed test scenario:\
+                                [$scenarios object_reference] - Message: [$scenarios comment]"
+      return 0
+    }
+    set post [$t checkPostConditions]
+    if {![$post success]} {
+      $tr log TestCase $t FAILED "TestCase $t incomplete - [$post comment] "
+      return 0 
+    }
+    $tr log TestCase $t Successful "TestCase $t completed"
+    return 1
+  }
+
+  TestSuite instproc runAllTestCases {} {
+    my instvar tr setup_script cleanup_script
+    set err 0
+    if {[my order] == ""} { 
+      my order [::STORM::TestCase info instances] 
+    }
+    if {[info exists setup_script]} { my do $setup_script }
+    foreach t [my order] {
+      if {![my runTestCase $t]} {
+	set err 1
+	if {[my halt_on_first_error]} { 
+	  if {[info exists cleanup_script]} { my do $cleanup_script }
+	  return 0 
+	}
+	continue
+      }
+    }
+    if {[info exists cleanup_script]} { my do $cleanup_script }
+    $tr addLine \n
+    if {!$err} {
+      $tr log TestSuite [self] Successful "TestSuite [self] completed"
+      $tr addLine "Successfully tested [my testCaseCount] test cases including\
+                 [my testScenarioCount] test scenarios"
+      $tr addLine "\n----------------------------------------------"
+      $tr addLine "End Test Run: [clock format [clock seconds]]"
+      $tr addLine "----------------------------------------------"
+      return 1
+    } else {
+      $tr log TestSuite [self] FAILED "TestSuite [self] incomplete"
+      $tr addLine "\n----------------------------------------------"
+      $tr addLine "End Test Run: [clock format [clock seconds]]"
+      $tr addLine "----------------------------------------------"
+      return 0
+    }
+  }
+
+  TestSuite instproc testCaseCount {} {
+    if {[my order] != ""} { 
+      return [llength [my order]] 
+    }
+    return [llength [::STORM::TestCase info instances]]
+  }
+
+  TestSuite instproc testScenarioCount {} {
+    if {[my order] == ""} { 
+      my order [::STORM::TestCase info instances] 
+    }
+    set count 0
+    foreach tc [my order] {
+      if {[$tc order] != ""} {
+	incr count [llength [$tc order]]
+      } else {
+	incr count [llength [$tc info children]]
+      }
+    }
+    return $count
+  }
+
+  TestSuite instproc destroy args {
+    my instvar tr
+    $tr print
+    next
+  }
+
+  ################
+  # Class TestCase
+  ################
+  Class TestCase -slots {
+    Attribute setup_script
+    Attribute preconditions -default "" -multivalued true
+    Attribute postconditions -default "" -multivalued true
+    Attribute cleanup_script
+    Attribute order -default "" -multivalued true
+  }
+
+  TestCase instproc do {script} {
+    eval $script
+  }
+
+  TestCase instproc checkPreConditions {} {
+    foreach pc [my preconditions] {
+      if {![my do $pc]} {
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success 0 -object_reference [self]\
+		    -comment "precondition << $pc >> failed"]
+      }
+    }
+    return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		-success 1 -object_reference [self]]
+  }
+  
+  TestCase instproc checkPostConditions {} {
+    foreach pc [my postconditions] {
+      if {![my do $pc]} {
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success 0 -object_reference [self]\
+		    -comment "postcondition << $pc >> failed"]
+      }
+    }
+    return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		-success 1 -object_reference [self]]
+  }
+
+  TestCase instproc runTestScenarios {} {
+    my instvar setup_script cleanup_script
+    if {[info exists setup_script]} { my do $setup_script }
+    if {[my order] == ""} {
+      my order [lsort -dictionary [[self] info children]]
+    }
+    foreach s [my order] {
+      if {[$s isclass ::STORM::TestScenario]} {
+	set pre [$s checkPreConditions]
+	if {![$pre success]} {
+	  if {[info exists cleanup_script]} { my do $cleanup_script }
+	  return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		      -success 0 -object_reference $s\
+		      -comment "Test scenario $s -> [$pre comment]"]
+	}
+	set testbody [$s test]
+	if {![$testbody success]} {
+	  $s cleanup
+	  if {[info exists cleanup_script]} { my do $cleanup_script }
+	  return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		      -success 0 -object_reference $s\
+		      -comment "Test scenario $s -> [$testbody comment]"]
+	}
+	set post [$s checkPostConditions]
+	if {![$post success]} {
+	  $s cleanup
+	  if {[info exists cleanup_script]} { my do $cleanup_script }
+	  return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		      -success 0 -object_reference $s\
+		      -comment "Test scenario $s -> [$post comment]"]
+	}
+	$s cleanup
+      }
+    }
+    if {[info exists cleanup_script]} { my do $cleanup_script }
+    return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		-success 1 -object_reference [self]\
+		-comment "Test case [self] successful"]
+  }
+
+  TestCase instproc resetAllAutonames {class} {
+    $class array unset __autonames
+  }
+
+  ####################
+  # Class TestScenario
+  ####################
+  Class TestScenario -slots {
+    Attribute test_body
+    Attribute expected_result
+    Attribute preconditions -default "" -multivalued true
+    Attribute postconditions -default "" -multivalued true
+    Attribute cleanup_script
+  }
+
+  TestScenario instproc init args {
+    next
+  }
+
+  # from tcllib ::struct::list:Lequal
+  TestScenario instproc lequal {a b} {
+    if {[llength $a] != [llength $b]} {
+      return 0
+    }
+    if {[lindex $a 0] == $a} {
+      return [string equal $a $b]
+    }
+    foreach i $a j $b {
+      if {![my lequal $i $j]} { return 0 }
+    }
+    return 1
+  }
+
+  TestScenario instproc do {script} {
+    eval $script
+  }
+
+  TestScenario instproc checkPreConditions {} {
+    foreach pc [my preconditions] {
+      if {![my do $pc]} {
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success 0 -object_reference [self]\
+		    -comment "precondition << $pc >> failed"]
+      }
+    }
+    return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		-success 1 -object_reference [self]]
+  }
+
+  TestScenario instproc checkPostConditions {} {
+    foreach pc [my postconditions] {
+      if {![my do $pc]} {
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success 0 -object_reference [self]\
+		    -comment "postcondition << $pc >> failed"]
+      }
+    }
+    return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		-success 1 -object_reference [self]]
+  }
+
+  TestScenario instproc cleanup {} {
+    my instvar cleanup_script 
+    if {[info exists cleanup_script]} {
+      my do $cleanup_script
+    }
+  }
+
+  TestScenario instproc test {} {
+    my instvar test_body expected_result cleanup_script
+    if {[info exists test_body]} {
+      set result [my do $test_body]
+      if {[info exists expected_result]} {
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success [my lequal $result $expected_result]\
+		    -object_reference [self]]
+	  
+      } else { 
+	return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		    -success 1 -object_reference [self]\
+		    -comment "[self]: no expected result defined"]
+      }
+    } else { 
+      return [::STORM::TestResult [::xotcl::Object autoname testresult%08d]\
+		  -success 0 -object_reference [self]\
+		  -comment "[self]: no test body defined"]
+    }
+  }
+
+  ##############
+  # Class Report
+  ##############
+  Class Report -slots {
+    Attribute detailed -default 0
+  }
+
+  Report instproc addLine {l} {
+    my append report "$l \n"
+  }
+
+  Report instproc log {type test status message} {
+    if {![my detailed]} {
+      my append report "$type $test **$status** \n"
+    } else {
+      my append report "$type $test **$status** message: $message \n"
+    }
+  }
+
+  Report instproc print {{channel stderr}} {
+    my instvar report
+    puts $channel "\n++++++ Begin TEST REPORT [self] ++++++ \n"
+    puts $channel $report
+    puts $channel "\n++++++ End TEST REPORT [self] ++++++++ \n"
+  }
+
+  Report instproc save {file} {
+    my instvar report
+    set output [open $file a+]
+    puts $output "\n++++++ Begin TEST REPORT [self] ++++++ \n"
+    puts $output $report
+    puts $output "\n++++++ End TEST REPORT [self] ++++++ \n"
+    close $output
+  }
+
+  ##################
+  # Class TestResult
+  ##################
+  Class TestResult -slots {
+    Attribute success -default {}
+    Attribute object_name -default {}
+    Attribute object_reference -default {}
+    Attribute comment -default {}
+  }
+
+}

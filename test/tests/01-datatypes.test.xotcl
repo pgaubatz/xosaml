@@ -1,0 +1,129 @@
+
+::STORM::TestCase CheckDataTypes \
+	-setup_script {
+		package require xoXSD::DataTypes
+		::xoXSD::DataTypes::load [namespace current]
+	}
+
+
+::STORM::TestScenario CheckDataTypes::string \
+	-expected_result true \
+	-test_body { xsd::string d "test 99"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::dateTime \
+	-expected_result true \
+	-test_body { xsd::dateTime d "0"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::dateTime2 \
+	-expected_result false \
+	-test_body { xsd::dateTime d "-1"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::dateTime3 \
+	-expected_result true \
+	-test_body { xsd::dateTime d "now"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::dateTime4 \
+	-expected_result true \
+	-test_body { xsd::dateTime d "1970-01-01T00:00:10Z"; return [d check] } 
+	
+::STORM::TestScenario CheckDataTypes::base64Binary \
+	-expected_result true \
+	-test_body { xsd::base64Binary d "RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ=="; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::base64Binary2 \
+	-expected_result false \
+	-test_body { xsd::base64Binary d "--RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ=="; return [d check] } 	
+
+::STORM::TestScenario CheckDataTypes::boolean \
+	-expected_result true \
+	-test_body { xsd::boolean d "1"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::boolean2 \
+	-expected_result true \
+	-test_body { xsd::boolean d "true"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::decimal \
+	-expected_result true \
+	-test_body { xsd::decimal d "1.123"; return [d check] } 
+	
+::STORM::TestScenario CheckDataTypes::decimal2 \
+	-expected_result true \
+	-test_body { xsd::decimal d "-1.123"; return [d check] } 
+	
+::STORM::TestScenario CheckDataTypes::decimal3 \
+	-expected_result true \
+	-test_body { xsd::decimal d "-1"; return [d check] }	
+
+::STORM::TestScenario CheckDataTypes::integer \
+	-expected_result true \
+	-test_body { xsd::integer d "9999"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::integer2 \
+	-expected_result false \
+	-test_body { xsd::integer d "9999.9"; return [d check] } 
+	
+::STORM::TestScenario CheckDataTypes::nonNegativeInteger \
+	-expected_result true \
+	-test_body { xsd::nonNegativeInteger d "123"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::nonNegativeInteger2 \
+	-expected_result false \
+	-test_body { xsd::nonNegativeInteger d "-123"; return [d check] }
+	
+::STORM::TestScenario CheckDataTypes::unsignedShort \
+	-expected_result true \
+	-test_body { xsd::unsignedShort d "65535"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::unsignedShort2 \
+	-expected_result false \
+	-test_body { xsd::unsignedShort d "-65535"; return [d check] } 
+	
+::STORM::TestScenario CheckDataTypes::unsignedShort3 \
+	-expected_result false \
+	-test_body { xsd::unsignedShort d "65536"; return [d check] } 
+		
+::STORM::TestScenario CheckDataTypes::anyURI \
+	-expected_result true \
+	-test_body { xsd::anyURI d "http://sp.example.com/SAML2"; return [d check] }
+	
+::STORM::TestScenario CheckDataTypes::anyURI2 \
+	-expected_result true \
+	-test_body { xsd::anyURI d "urn:oasis:names:tc:SAML:2.0:status:Success"; return [d check] }
+	
+::STORM::TestScenario CheckDataTypes::anyURI3 \
+	-expected_result false \
+	-test_body { xsd::anyURI d "this_is_no_valid_uri"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::ID \
+	-expected_result true \
+	-test_body { xsd::ID d "test_99"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::NCName \
+	-expected_result true \
+	-test_body { xsd::NCName d "_1950-10-04_10-00"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::NCName2 \
+	-expected_result false \
+	-test_body { xsd::NCName d "_1950-10-04:10-00"; return [d check] } 
+
+::STORM::TestScenario CheckDataTypes::anyType \
+	-expected_result true \
+	-test_body { xsd::anyType d "!¤$%&/()=?"; return [d check] } 
+
+
+
+
+::STORM::TestCase MarshalDataTypes \
+	-setup_script {
+		package require xoXSD::DataTypes
+		::xoXSD::DataTypes::load [namespace current]
+	}
+
+
+::STORM::TestScenario MarshalDataTypes::dateTime \
+	-expected_result "1970-01-01T00:00:10Z" \
+	-test_body { xsd::dateTime d 10; return [d getContent] }
+
+::STORM::TestScenario MarshalDataTypes::dateTime2 \
+	-expected_result "" \
+	-test_body { xsd::dateTime d -10; return [d getContent] }
