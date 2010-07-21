@@ -10,7 +10,6 @@ namespace eval ::xoXSD {
 ##############################################	
 	
 ::xotcl::Class XSDObject	-superclass ::xotcl::Class -slots {
-	::xotcl::Attribute rootClass -default ""
 	::xotcl::Attribute elements
 	::xotcl::Attribute attributes
 	::xotcl::Attribute childslots
@@ -36,11 +35,7 @@ namespace eval ::xoXSD {
 #              * Constructors *              #
 ##############################################
 
-XSDObject instproc init args {
-	if { [my rootClass] eq "" } {
-		my rootClass [my class]
-	}
-	
+XSDObject instproc init args {	
 	set heritage [list]
 	foreach c [[my class] info heritage] {
 		if { [namespace qualifiers $c] eq "::xoXSD" } break
@@ -55,7 +50,7 @@ XSDObject instproc init args {
 	# create new instances of all classchildren
 	foreach c [concat [my class] [lreverse $heritage]] {
 		foreach	child [$c info classchildren] {
-			set ch [eval $child new -childof [self] -rootClass [my rootClass]]
+			set ch [eval $child new -childof [self]]
 			my [namespace tail [$ch class]] $ch
 			my lappend children $ch
 		}
@@ -490,12 +485,14 @@ XSDObject instproc getXmlElementMarshalName { {element ""} } {
 }
 
 XSDObject instproc getRootNamespaceVariable {varname} {
-	set qualifiers [namespace qualifiers [my rootClass]]
-	if { [namespace eval $qualifiers info exists $varname] } {
-		namespace upvar $qualifiers $varname var
-		return $var
+	foreach c [concat [my class] [[my class] info heritage]] {
+		set qualifiers [namespace qualifiers $c]
+		if { $qualifiers eq "::xoXSD" } break
+		if { [namespace eval $qualifiers info exists $varname] } {
+			namespace upvar $qualifiers $varname var
+			return $var
+		}
 	}
-	return ""
 }
 
 XSDObject instproc getXmlNamespace {} {
@@ -678,7 +675,7 @@ XSDChildObject instproc tryCreateChild {slot value} {
 	set occurs [llength [$parent $name]]
 	set maxOccurs [$c maxOccurs]
 	if { $maxOccurs eq "unbounded" || $occurs < $maxOccurs } {
-		set ch [eval [my class] new -childof $parent [my rootClass]]
+		set ch [eval [my class] new -childof $parent]
 		
 		$parent $name add $ch
 		$parent addChild $ch
