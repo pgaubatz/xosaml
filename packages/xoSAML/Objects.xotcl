@@ -99,8 +99,10 @@ Status set codes [list \
 	"UnsupportedBinding" \
 ]
 
-Status instproc init {code} {
+Status instproc init { {code ""} } {
 	next
+	
+	if { $code eq "" } return
 	
 	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
 
