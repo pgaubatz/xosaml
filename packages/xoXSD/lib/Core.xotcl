@@ -468,7 +468,9 @@ XSDObject instproc setXmlnsAttributes {root} {
 		set ns [$element getXmlNamespace]
 		set prefix [$element getXmlPrefix]
 		
-		$root setAttribute "xmlns:$prefix" $ns
+		if { $prefix ne "" } {
+			$root setAttribute "xmlns:$prefix" $ns
+		}
 	}	
 	foreach child [my children] {
 		$child setXmlnsAttributes $root

@@ -18,14 +18,11 @@ CodeGenerator instproc init {{env ""}} {
 	my environment $env
 }
 
-CodeGenerator instproc parse {data {nsmap ""}} {
+CodeGenerator instproc parse {data} {
 	if { $data eq "" } return
 	
 	my objects [list]
 	my objectnames [list]
-	if { $nsmap ne "" } {
-		my nsmap $nsmap
-	}
 	
 	set doc [dom parse $data] 
 	set root [$doc documentElement]
@@ -42,8 +39,8 @@ CodeGenerator instproc parse {data {nsmap ""}} {
 	return $o
 }
 
-CodeGenerator instproc parseAndEval {data {nsmap ""}} {
-	set o [my parse $data $nsmap]
+CodeGenerator instproc parseAndEval {data} {
+	set o [my parse $data]
 	if { $o eq "" } {
 		return false
 	}
@@ -76,13 +73,13 @@ CodeGenerator instproc getPrefix {node} {
 		return [string range $name 0 [expr {$pos - 1}]]
 	}
 	
-	if { [my nsmap] eq "" } {
+	if { [my nsmap] eq "" || ![llength [my nsmap]] } {
 		return ""
 	}
 	set nsuri [$node namespaceURI]
 	foreach ns [my nsmap] {
 		if { [$node namespaceURI] eq [lindex $ns 1] } {
-			return "[lindex $ns 0]\:"
+			return [lindex $ns 0]
 		}
 	}
 	return ""
@@ -92,7 +89,7 @@ CodeGenerator instproc getName {node} {
 	set name [my stripPrefix [$node nodeName]]
 	set prefix [my getPrefix $node]
 	if { $prefix eq "" } {
-		puts "#WARNING: Could not determine a XML namespace prefix for \"$name\" (namespace: [$node namespaceURI])"
+		puts "#WARNING: Could not determine a XML namespace prefix for \"$name\" (namespace: [$node namespaceURI])! You should setup the \"nsmap\" attribute-slot..."
 	}
 	return "$prefix\::$name"
 }

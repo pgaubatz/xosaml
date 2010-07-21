@@ -40,6 +40,10 @@ proc unmarshal {xml} {
 	variable __codeGenerator
 	if { ![info exists __codeGenerator] } {
 		set __codeGenerator [::xoXSD::CodeGenerator new "::xoSAML::Environment"]
+		$__codeGenerator nsmap {
+			{ds   http://www.w3.org/2000/09/xmldsig#}
+			{xenc http://www.w3.org/2001/04/xmlenc#}
+		}
 	}
 	return [$__codeGenerator unmarshal $xml]
 }
