@@ -12,6 +12,9 @@ namespace eval Private {
 	
 	Wrapper instproc initObject {type {args ""}} {
 		my object [$type new $args]
+		foreach cmd [list print marshal] {
+			my forward $cmd {% my object} %proc
+		}
 	}
 	
 	Wrapper instproc getSubstitutedCommand {} {
