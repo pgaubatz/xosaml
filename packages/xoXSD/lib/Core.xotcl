@@ -184,7 +184,7 @@ Choice instproc check {} {
 	return true
 }
 
-XSDObject instproc marshal { {addXmlNamespaces true} {name ""} } {
+XSDObject instproc marshal { -name {-addXmlNamespaces:boolean true} {-compact:boolean false} } {
 	if { ![my check] } {
 		my error "is not valid."
 		return ""
@@ -205,14 +205,25 @@ XSDObject instproc marshal { {addXmlNamespaces true} {name ""} } {
 	my marshalAttributes $doc $root
 	
 	# add the containing sub-elements:
-	my marshalElements $doc $root	
+	my marshalElements $doc $root
 
-	return [$root asXML]
+	set xml [$root asXML]
+	
+	# prevent memory leaking:
+	$doc delete
+	
+	# strip all whitespaces between elements:
+	if { $compact } {
+		regsub -all {>\s+<} $xml {><} xml
+		regsub -all {\n}    $xml {}   xml
+	}
+
+	return $xml
 }
 
-XSDObject instproc print {} {
+XSDObject instproc print { {-compact:boolean false} } {
 	puts "Marshalling [self] ([my class]) ..."
-	puts [my marshal]
+	puts [my marshal -compact $compact]
 }
 
 XSDObject instproc printContent {} {
@@ -233,8 +244,8 @@ XSDObject instproc getSlot {slot} {
 	return $s
 }
 
-XSDObject instproc getSlotClass {slot {withChildSlots false}} {
-	set slotclass [my doGetSlotClass $slot $withChildSlots]
+XSDObject instproc getSlotClass { {-withChildSlots:boolean false} slot } {
+	set slotclass [my doGetSlotClass -withChildSlots $withChildSlots $slot]
 	if { $slot == false } {
 		my error "there is no such slot: $slot"	
 		return false
@@ -444,7 +455,7 @@ XSDObject instproc marshalElement {doc root element} {
 	if { ![my slotFilled $element] } return
 	set name [my getXmlElementMarshalName $element] 
 	foreach element [my [namespace tail $element]] {
-		$root appendXML [$element marshal false $name]
+		$root appendXML [$element marshal -addXmlNamespaces false -name $name]
 	}
 }
 
@@ -493,7 +504,7 @@ XSDObject instproc getXmlPrefix {} {
 	return [my getRootNamespaceVariable xmlPrefix]
 }
 
-XSDObject instproc getSlots {{withChildSlots false}} {
+XSDObject instproc getSlots { {-withChildSlots:boolean false} } {
 	if { $withChildSlots } {
 		return [concat [my elements] [my attributes] [my childslots]]
 	} 
@@ -547,7 +558,7 @@ XSDObject instproc doGetSlot {slot} {
 	set parent [my info parent]
 	if { [Object isobject $parent] && [$parent class] ne "::xoXSD::CodeGenerator"} {
 		set classname [namespace tail [my class]]
-		set c [$parent getSlotClass $classname true]
+		set c [$parent getSlotClass -withChildSlots true $classname]
 	
 		if { [$c multivalued] } {
 			set slots [list]
@@ -656,7 +667,7 @@ Sequence instproc doSetSlot {slot value} {
 XSDChildObject instproc tryCreateChild {slot value} {
 	set name [namespace tail [my class]]
 	set parent [my info parent]
-	set c [$parent getSlotClass $name true]
+	set c [$parent getSlotClass -withChildSlots true $name]
 	
 	if { ![$c multivalued] } {
 		return -1
@@ -676,9 +687,9 @@ XSDChildObject instproc tryCreateChild {slot value} {
 	return -1
 }
 
-XSDObject instproc doGetSlotClass {slot {withChildSlots false}} {
+XSDObject instproc doGetSlotClass { {-withChildSlots:boolean false} slot } {
 	set slot [namespace tail $slot]
-	if { ![my slotExists $slot $withChildSlots] } {
+	if { ![my slotExists -withChildSlots $withChildSlots $slot] } {
 		foreach child [my children] {
 			set result [$child doGetSlotClass $slot]
 			if { $result != false } { return $result }
@@ -686,7 +697,7 @@ XSDObject instproc doGetSlotClass {slot {withChildSlots false}} {
 		return false
 		
 	} else {
-		return [lsearch -inline -glob [my getSlots $withChildSlots] "*::$slot"]
+		return [lsearch -inline -glob [my getSlots -withChildSlots $withChildSlots] "*::$slot"]
 	}
 }
 
@@ -694,8 +705,8 @@ XSDObject instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-XSDObject instproc slotExists {slot {withChildSlots false}} {
-	set existance [lsearch [my getSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
+XSDObject instproc slotExists { {-withChildSlots:boolean false} slot } {
+	set existance [lsearch [my getSlots -withChildSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
 	return [expr { $existance != -1 } ]
 }
 
