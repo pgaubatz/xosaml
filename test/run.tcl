@@ -4,6 +4,9 @@ set auto_path "../packages/ $auto_path"
 
 package require STORM
 
+# This file has been adapted from Mark Strembeck's xoRBAC test-suite
+# see: http://wi.wu-wien.ac.at/home/mark/xoRBAC/
+
 # eliminate duplicate list elements while retaining element order
 proc luniqueorder {list} {
         set nl ""
