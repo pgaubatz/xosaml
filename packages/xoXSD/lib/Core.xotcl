@@ -56,13 +56,13 @@ XSDObject instproc init args {
 		}
 	}
 	
-	foreach slot [my getLocalSlots] {
+	foreach slot [my __getLocalSlots] {
 		set slotclass [namespace tail [$slot class]]
 		
 		if { $slotclass eq "XMLAttribute" } {
-			my addAttribute $slot
+			my __addAttribute $slot
 		} elseif { $slotclass eq "XMLElement" } {
-			my addElement $slot
+			my __addElement $slot
 		} elseif { $slotclass eq "XMLChild" } {
 			my lappend childslots $slot
 		}
@@ -70,7 +70,7 @@ XSDObject instproc init args {
 	
 	# init text-only elements with the given string $args
 	if { [llength $args] > 0 } {
-		my trySetContent [join $args]
+		my __trySetContent [join $args]
 	}
 }
 
@@ -79,7 +79,7 @@ Sequence instproc init args {
 	next 
 	
 	set slots [list]
-	foreach slot [my getLocalSlots] {
+	foreach slot [my __getLocalSlots] {
 		if { [namespace tail [$slot class]] eq "XMLAttribute" } {
 			continue
 		}
@@ -134,17 +134,17 @@ Choice instproc init args {
 
 XSDObject instproc check {} {	
 	foreach slot [my attributes] {
-		if { [$slot use] eq "required" && ![my slotFilled $slot] } {
+		if { [$slot use] eq "required" && ![my __slotFilled $slot] } {
 			my error "needs object: [namespace tail $slot] (type: [$slot type])"
 			return false
 		}
 	}
 	foreach slot [my elements] {
-		if { ![my checkMinOccurs $slot] } { 
+		if { ![my __checkMinOccurs $slot] } { 
 			return false 
 		}
 	}
-	foreach child [my getAllChildren] {
+	foreach child [my __getAllChildren] {
 		if { ![$child check] } {
 			return false
 		}
@@ -160,7 +160,7 @@ Choice instproc check {} {
 	
 	set choice ""
 	foreach slot [my elements] {
-		if { [my slotFilled $slot] } {
+		if { [my __slotFilled $slot] } {
 			set choice $slot
 			break
 		}
@@ -168,10 +168,10 @@ Choice instproc check {} {
 	if { $choice eq "" } { 
 		return true 
 	}
-	if { ![my checkMinOccurs $choice] } {
+	if { ![my __checkMinOccurs $choice] } {
 		return false
 	}
-	foreach slot [my getSlot $choice] {
+	foreach slot [my __getSlot $choice] {
 		if { ![$slot check] } {
 			return false
 		}
@@ -186,21 +186,21 @@ XSDObject instproc marshal { -name {-compact:boolean false} } {
 	}
 	
 	# create the document:
-	set doc [dom createDocument [my getXmlElementMarshalName]]
+	set doc [dom createDocument [my __getXmlElementMarshalName]]
 	set root [$doc documentElement]
 	
 	# add the xmlns-attributes:
-	if { [self callingproc] ne "marshalElement" } {
-		set prefix [my getXmlPrefix]	
-		$root setAttribute "xmlns:$prefix" [my getXmlNamespace]
-		my setXmlnsAttributes $root	
+	if { [self callingproc] ne "__marshalElement" } {
+		set prefix [my __getXmlPrefix]	
+		$root setAttribute "xmlns:$prefix" [my __getXmlNamespace]
+		my __setXmlnsAttributes $root	
 	}
 	
 	# add the attributes:
-	my marshalAttributes $doc $root
+	my __marshalAttributes $doc $root
 	
 	# add the containing sub-elements:
-	my marshalElements $doc $root
+	my __marshalElements $doc $root
 
 	set xml [$root asXML]
 	
@@ -230,43 +230,16 @@ XSDObject instproc printContent {} {
 	puts "The textual content of [self] ([my class]) is:\n$content"
 }
 
-XSDObject instproc getSlot {slot} {
-	set s [my doGetSlot $slot]
-	if { $s == false } {
-		my error "there is no such Element/Attribute to be get: $slot"	
-		return false
-	} 
-	return $s
-}
-
-XSDObject instproc getSlotClass { {-withChildSlots:boolean false} slot } {
-	set slotclass [my doGetSlotClass -withChildSlots $withChildSlots $slot]
-	if { $slot == false } {
-		my error "there is no such slot: $slot"	
-		return false
-	} 
-	return $slotclass
-}
-
 XSDObject instproc getContent {} {
-	set content [my getSlot __text]
+	set content [my __getSlot __text]
 	if { $content == false } {
 		return ""
 	}
 	return [$content getContent]
 }
 
-XSDObject instproc setSlot {slot value} {
-	if { [my doSetSlot $slot $value] == true } {
-		return true
-	} else {
-		my error "there is no such Element/Attribute to be set: $slot"	
-		return false
-	}
-}
-
 XSDObject instproc setContent {text} {
-	if { [my trySetContent $text] } {
+	if { [my __trySetContent $text] } {
 		return true
 	}
 	my error "there is no textual content to be set"
@@ -277,7 +250,7 @@ XSDObject instproc printSlots {} {
 	# first get a list of all elements and attributes:
 	set elements   [my elements]
 	set attributes [my attributes]
-	foreach child [my getAllChildren] {
+	foreach child [my __getAllChildren] {
 		set elements   [concat $elements   [$child elements  ]]
 		set attributes [concat $attributes [$child attributes]]
 	}
@@ -290,23 +263,23 @@ XSDObject instproc printSlots {} {
 		foreach e $elements {
 			lappend content [list [$e getName $e] [$e getType] [$e getInfo]]
 		}
-		puts [my makeTable "Elements of \"$classname\"" $headers $content]
+		puts [my __makeTable "Elements of \"$classname\"" $headers $content]
 	}
 	if { [llength $attributes] > 0 } {
 		set content [list]
 		foreach a $attributes {
 			lappend content [list [$a getName $a] [$a getType] [$a getInfo]]
 		}
-		puts [my makeTable "Attributes of \"$classname\"" $headers $content]
+		puts [my __makeTable "Attributes of \"$classname\"" $headers $content]
 	}
 }
 	
 XSDObject instproc addAny {slot} {
-	set slot [my lookupObject $slot]
+	set slot [my __lookupObject $slot]
 	set slotname [namespace tail [$slot class]]
 	
 	# first check if the element actually has an <any> element:
-	set any [my getSlotClass __any]
+	set any [my __getSlotClass __any]
 	if { $any == false } {
 		my error "there is no <any> element to be set."
 		return false
@@ -315,7 +288,7 @@ XSDObject instproc addAny {slot} {
 	# search for the class/instance that has the __any slot defined:
 	set cls [[$any info parent] info parent]
 	set inst ""
-	foreach inst [concat [self] [my getAllChildren]] {
+	foreach inst [concat [self] [my __getAllChildren]] {
 		set c [$inst class]
 		if { $c eq $cls || [lsearch [$c info heritage] $cls] != -1 } { 
 			break
@@ -324,7 +297,7 @@ XSDObject instproc addAny {slot} {
 	if { $inst eq "" } { error "should not reach here. didn't find inst!" }
 	
 	# check if a slot named $slotname already exists:
-	if { [$inst slotExists $slotname] } {
+	if { [$inst __slotExists $slotname] } {
 		my error "there's is already a slot named \"$slotname\"."
 		return false
 	}
@@ -342,17 +315,17 @@ XSDObject instproc addAny {slot} {
 	
 	# check for namespace restrictions:
 	set namespaces [split [$anyslot namespace] " "]
-	if { ![my checkAnyNamespaceRestrictions $namespaces $inst $slot] } {
+	if { ![my __checkAnyNamespaceRestrictions $namespaces $inst $slot] } {
 		my error "cannot be set because of namespace restrictions."
 		return false
 	}
 	
 	# dynamically create and add a new slot to the class
 	$cls slots "::xoXSD::Slots::XMLElement $slotname -type [$slot class]"
-	$inst addElement "$cls\::slot\::$slotname"
+	$inst __addElement "$cls\::slot\::$slotname"
 	
 	# finally set the newly created slot
-	my setSlot $slotname $slot
+	my __setSlot $slotname $slot
 	
 	# update the anyCounter if necessary
 	if { $maxOccurs ne "unbounded" } {
@@ -362,7 +335,7 @@ XSDObject instproc addAny {slot} {
 	
 XSDObject instproc addAnyAttribute {slotname type value} {
 	# first check if the element actually has an <any> element:
-	set anyAttribute [my getSlotClass __anyAttribute]
+	set anyAttribute [my __getSlotClass __anyAttribute]
 	if { $anyAttribute == false } {
 		my error "there is no <anyAttribute> attribute to be set."
 		return false
@@ -371,7 +344,7 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 	# search for the class/instance that has the __anyAttribute slot defined:
 	set cls [[$anyAttribute info parent] info parent]
 	set inst ""
-	foreach inst [concat [self] [my getAllChildren]] {
+	foreach inst [concat [self] [my __getAllChildren]] {
 		set c [$inst class]
 		if { $c eq $cls || [lsearch [$c info heritage] $cls] != -1 } { 
 			break
@@ -383,38 +356,61 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 	set anyslot "$cls\::slot\::__anyAttribute"
 	set namespaces [split [$anyslot namespace] " "]
 	set content [$type new $value]
-	if { ![my checkAnyNamespaceRestrictions $namespaces $inst $content] } {
+	if { ![my __checkAnyNamespaceRestrictions $namespaces $inst $content] } {
 		my error "cannot be set because of namespace restrictions."
 		return false
 	}
 	
 	# dynamically create and add a new slot to the class
 	$cls slots "::xoXSD::Slots::XMLAttribute $slotname -type $type"
-	$inst addAttribute "$cls\::slot\::$slotname"
+	$inst __addAttribute "$cls\::slot\::$slotname"
 	
 	# finally set the newly created slot
-	my setSlot $slotname $content
+	my __setSlot $slotname $content
 }
+
+XSDObject instproc . args {
+	set args [split $args [list "." " "]]
+	# remove empty list elements:
+	set args [lsearch -all -inline -not -exact $args ""]
+	set cmd "\[my [lindex $args 0]\]"
+	foreach arg [lrange $args 1 end-1] {
+		set cmd "\[$cmd $arg\]"
+	}
+	eval "$cmd [lindex $args end]"
+}
+
+XSDObject instproc createObject {type {args {}}} {
+	set ns [uplevel 2 namespace current]
+	set obj [Object autoname xoxsdobj] 
+	namespace eval $ns $type $obj $args
+	return "$ns\::$obj"
+}
+
+XSDObject instforward export %self marshal
+
+
+
 
 ##############################################
 #         * Various helper functions *       #
 # Note: you shouldn't call them directly.    #
 ##############################################
 
-XSDObject instproc marshalAttributes {doc root} {
+XSDObject instproc __marshalAttributes {doc root} {
 	# iterate over all attributes
 	foreach attribute [my attributes] {
-		my marshalAttribute $doc $root $attribute
+		my __marshalAttribute $doc $root $attribute
 	}
 	
 	# do the same with all children
 	foreach child [my children] {
-		$child marshalAttributes $doc $root	
+		$child __marshalAttributes $doc $root	
 	}
 }
 
-XSDObject instproc marshalAttribute {doc root attribute} {
-	if { ![my slotFilled $attribute] } return
+XSDObject instproc __marshalAttribute {doc root attribute} {
+	if { ![my __slotFilled $attribute] } return
 	
 	set content [[my [namespace tail $attribute]] getContent]
 	if { [$attribute text] } {
@@ -424,67 +420,67 @@ XSDObject instproc marshalAttribute {doc root attribute} {
 	}
 }
 
-XSDObject instproc marshalElements {doc root} {
+XSDObject instproc __marshalElements {doc root} {
 	# iterate over all elements
 	foreach element [my elements] {
-		my marshalElement $doc $root $element
+		my __marshalElement $doc $root $element
 	}
 	
 	# do the same with all children
 	foreach child [my children] {
-		$child marshalElements $doc $root	
+		$child __marshalElements $doc $root	
 	}
 }
 
-Sequence instproc marshalElements {doc root} {
+Sequence instproc __marshalElements {doc root} {
 	foreach obj [my sequence] {
 		if { [string match "*::slot::*" $obj ] } {
-			my marshalElement $doc $root $obj
+			my __marshalElement $doc $root $obj
 		} else {
-			$obj marshalElements $doc $root	
+			$obj __marshalElements $doc $root	
 		}
 	}
 }
 
-XSDObject instproc marshalElement {doc root element} {
-	if { ![my slotFilled $element] } return
-	set name [my getXmlElementMarshalName $element] 
+XSDObject instproc __marshalElement {doc root element} {
+	if { ![my __slotFilled $element] } return
+	set name [my __getXmlElementMarshalName $element] 
 	foreach element [my [namespace tail $element]] {
 		$root appendXML [$element marshal -name $name]
 	}
 }
 
-XSDObject instproc setXmlnsAttributes {root} {
+XSDObject instproc __setXmlnsAttributes {root} {
 	foreach element [my elements] {
 		set element [namespace tail $element]
-		if { ![my slotFilled $element] } continue
+		if { ![my __slotFilled $element] } continue
 		
 		set element [lindex [my $element] 0]
-		set ns [$element getXmlNamespace]
-		set prefix [$element getXmlPrefix]
+		set ns [$element __getXmlNamespace]
+		set prefix [$element __getXmlPrefix]
 		
 		if { $prefix ne "" } {
 			$root setAttribute "xmlns:$prefix" $ns
 		}
 	}	
 	foreach child [my children] {
-		$child setXmlnsAttributes $root
+		$child __setXmlnsAttributes $root
 	}
 }
 	
-XSDObject instproc getXmlElementMarshalName { {element ""} } {
+XSDObject instproc __getXmlElementMarshalName { {element ""} } {
 	if { $element eq "" } { 
 		set element [my class] 
 	}
 	set name [namespace tail $element]
-	set prefix [my getXmlPrefix]
+	set prefix [my __getXmlPrefix]
 	if { $prefix ne "" } {
 		set name "$prefix:$name"
 	}	
 	return $name
 }
 
-XSDObject instproc getRootNamespaceVariable {varname} {
+XSDObject instproc __getRootNamespaceVariable {varname} {
 	foreach c [concat [my class] [[my class] info heritage]] {
 		set qualifiers [namespace qualifiers $c]
 		if { $qualifiers eq "::xoXSD" } break
@@ -495,22 +491,40 @@ XSDObject instproc getRootNamespaceVariable {varname} {
 	}
 }
 
-XSDObject instproc getXmlNamespace {} {
-	return [my getRootNamespaceVariable xmlNamespace]
+XSDObject instproc __getXmlNamespace {} {
+	return [my __getRootNamespaceVariable xmlNamespace]
 }
 
-XSDObject instproc getXmlPrefix {} {
-	return [my getRootNamespaceVariable xmlPrefix]
+XSDObject instproc __getXmlPrefix {} {
+	return [my __getRootNamespaceVariable xmlPrefix]
 }
 
-XSDObject instproc getSlots { {-withChildSlots:boolean false} } {
+XSDObject instproc __getSlot {slot} {
+	set s [my __doGetSlot $slot]
+	if { $s == false } {
+		my error "there is no such Element/Attribute to be get: $slot"	
+		return false
+	} 
+	return $s
+}
+
+XSDObject instproc __getSlotClass { {-withChildSlots:boolean false} slot } {
+	set slotclass [my __doGetSlotClass -withChildSlots $withChildSlots $slot]
+	if { $slot == false } {
+		my error "there is no such slot: $slot"	
+		return false
+	} 
+	return $slotclass
+}
+
+XSDObject instproc __getSlots { {-withChildSlots:boolean false} } {
 	if { $withChildSlots } {
 		return [concat [my elements] [my attributes] [my childslots]]
 	} 
 	return [concat [my elements] [my attributes]]
 }
 
-XSDObject instproc getLocalSlots {} {
+XSDObject instproc __getLocalSlots {} {
 	# now create a list of all slots
 	set slots [[my class] info slots]
 	
@@ -534,19 +548,19 @@ XSDObject instproc getLocalSlots {} {
 	return $slots
 }
 
-XSDObject instproc getSlotType {slot} {
+XSDObject instproc __getSlotType {slot} {
 	# returns either XMLAttribute, XMLElement, XMLChild or false
-	set slotclass [my getSlotClass $slot]
+	set slotclass [my __getSlotClass $slot]
 	if { $slotclass == false } { return false }
 	return [namespace tail [$slotclass class]]
 }
 
-XSDObject instproc doGetSlot {slot} {
+XSDObject instproc __doGetSlot {slot} {
 	set slot [namespace tail $slot]
 	
-	if { ![my slotExists $slot] || ![my exists [namespace tail $slot]] } {
+	if { ![my __slotExists $slot] || ![my exists [namespace tail $slot]] } {
 		foreach child [my children] {
-			set ret [$child doGetSlot $slot]
+			set ret [$child __doGetSlot $slot]
 			if { $ret != false } { return $ret }
 		}
 		# there is no such slot:
@@ -557,7 +571,7 @@ XSDObject instproc doGetSlot {slot} {
 	set parent [my info parent]
 	if { [Object isobject $parent] && [$parent class] ne "::xoXSD::CodeGenerator"} {
 		set classname [namespace tail [my class]]
-		set c [$parent getSlotClass -withChildSlots true $classname]
+		set c [$parent __getSlotClass -withChildSlots true $classname]
 	
 		if { [$c multivalued] } {
 			set slots [list]
@@ -576,18 +590,27 @@ XSDObject instproc doGetSlot {slot} {
 	return [my $slot]
 }
 
-XSDObject instproc doSetSlot {slot value} {
+XSDObject instproc __setSlot {slot value} {
+	if { [my __doSetSlot $slot $value] == true } {
+		return true
+	} else {
+		my error "there is no such Element/Attribute to be set: $slot"	
+		return false
+	}
+}
+
+XSDObject instproc __doSetSlot {slot value} {
 	set slot [namespace tail $slot]
-	if { ![my slotExists $slot] } {
+	if { ![my __slotExists $slot] } {
 		if { [my children] eq "" } { return -1 }
 		foreach child [my children] {
-			set result [$child doSetSlot $slot $value]
+			set result [$child __doSetSlot $slot $value]
 			if { $result != -1 } { return $result } 		
 		}
 		return -1
 	} 
 	
-	set c [my getSlotClass $slot]
+	set c [my __getSlotClass $slot]
 	
 	#Check if the given value-object matches the required type
 	if { [$c type] ne [$value class] } {
@@ -610,7 +633,7 @@ XSDObject instproc doSetSlot {slot value} {
 	}
 	
 	#finally set slot
-	if { [$c multivalued] && [my slotFilled $slot] } {
+	if { [$c multivalued] && [my __slotFilled $slot] } {
 		set occurs [llength [my $slot]]
 		set maxOccurs [$c maxOccurs]
 		if { $maxOccurs eq "unbounded" || $occurs < $maxOccurs } {
@@ -626,7 +649,7 @@ XSDObject instproc doSetSlot {slot value} {
 	
 }
 
-Choice instproc doSetSlot {slot value} {
+Choice instproc __doSetSlot {slot value} {
 	if { [my slotfree] } {
 		if { [next] == true } {
 			my slotfree false
@@ -637,7 +660,7 @@ Choice instproc doSetSlot {slot value} {
 		} else {
 			return -1
 		}
-	} elseif { ![my slotfree] && [my slotExists $slot] } {
+	} elseif { ![my slotfree] && [my __slotExists $slot] } {
 		set ret [my tryCreateChild $slot $value]
 		if { $ret != -1 } {
 			return $ret
@@ -645,7 +668,7 @@ Choice instproc doSetSlot {slot value} {
 			
 		if { [my children] eq "" } { return -1 }
 		foreach child [my children] {
-			set result [$child doSetSlot $slot $value]
+			set result [$child __doSetSlot $slot $value]
 			if { $result != -1 } { return $result }
 		}
 		error "Shouldn't reach here!"
@@ -655,7 +678,7 @@ Choice instproc doSetSlot {slot value} {
 	}
 }
 	
-Sequence instproc doSetSlot {slot value} {
+Sequence instproc __doSetSlot {slot value} {
 	set ret [next]
 	if { $ret != -1 } {
 		return $ret
@@ -666,7 +689,7 @@ Sequence instproc doSetSlot {slot value} {
 XSDChildObject instproc tryCreateChild {slot value} {
 	set name [namespace tail [my class]]
 	set parent [my info parent]
-	set c [$parent getSlotClass -withChildSlots true $name]
+	set c [$parent __getSlotClass -withChildSlots true $name]
 	
 	if { ![$c multivalued] } {
 		return -1
@@ -678,25 +701,25 @@ XSDChildObject instproc tryCreateChild {slot value} {
 		set ch [eval [my class] new -childof $parent]
 		
 		$parent $name add $ch
-		$parent addChild $ch
+		$parent __addChild $ch
 		
-		return [$ch doSetSlot $slot $value]
+		return [$ch __doSetSlot $slot $value]
 	} 
 
 	return -1
 }
 
-XSDObject instproc doGetSlotClass { {-withChildSlots:boolean false} slot } {
+XSDObject instproc __doGetSlotClass { {-withChildSlots:boolean false} slot } {
 	set slot [namespace tail $slot]
-	if { ![my slotExists -withChildSlots $withChildSlots $slot] } {
+	if { ![my __slotExists -withChildSlots $withChildSlots $slot] } {
 		foreach child [my children] {
-			set result [$child doGetSlotClass $slot]
+			set result [$child __doGetSlotClass $slot]
 			if { $result != false } { return $result }
 		}
 		return false
 		
 	} else {
-		return [lsearch -inline -glob [my getSlots -withChildSlots $withChildSlots] "*::$slot"]
+		return [lsearch -inline -glob [my __getSlots -withChildSlots $withChildSlots] "*::$slot"]
 	}
 }
 
@@ -704,67 +727,67 @@ XSDObject instproc error {msg} {
 	puts "XML-Error: [self] (type: [my class]) $msg"
 }
 
-XSDObject instproc slotExists { {-withChildSlots:boolean false} slot } {
-	set existance [lsearch [my getSlots -withChildSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
+XSDObject instproc __slotExists { {-withChildSlots:boolean false} slot } {
+	set existance [lsearch [my __getSlots -withChildSlots $withChildSlots] "*::slot::[namespace tail $slot]"]
 	return [expr { $existance != -1 } ]
 }
 
-XSDObject instproc slotFilled {slot} {
+XSDObject instproc __slotFilled {slot} {
 	return [my exists [namespace tail $slot]]
 }
 
-XSDObject instproc getAllChildren {} {
+XSDObject instproc __getAllChildren {} {
 	set children [my children]
 	foreach child [my children] {
-		set children [concat $children [$child getAllChildren]]
+		set children [concat $children [$child __getAllChildren]]
 	}
 	return $children
 }
 	
-XSDObject instproc addElement {element} {
+XSDObject instproc __addElement {element} {
 	my lappend elements $element
 }
 		
-Sequence instproc addElement {element} {
+Sequence instproc __addElement {element} {
 	next
 	my lappend sequence $element
 }	
 	
-XSDObject instproc addAttribute {attribute} {
+XSDObject instproc __addAttribute {attribute} {
 	my lappend attributes $attribute
 }
 
-XSDObject instproc addChild {child} {
+XSDObject instproc __addChild {child} {
 	my lappend children $child
 }
 
-Sequence instproc addChild {child} {
+Sequence instproc __addChild {child} {
 	next
 	my lappend sequence $child
 }
 	
-XSDObject instproc checkAnyNamespaceRestrictions {namespaces inst value} {	
+XSDObject instproc __checkAnyNamespaceRestrictions {namespaces inst value} {	
 	if { [lsearch $namespaces "##any"] != -1 } {
 		return true
 		
 	} elseif { [lsearch $namespaces "##other"] != -1 } {
-		if { [$value getXmlNamespace] ne [$inst getXmlNamespace] } {
+		if { [$value __getXmlNamespace] ne [$inst __getXmlNamespace] } {
 			return true
 		} 
 		
 	} elseif { [lsearch $namespaces "##targetNamespace"] != -1 } {
-		if { [$value getXmlNamespace] eq [$inst getXmlNamespace] } {
+		if { [$value __getXmlNamespace] eq [$inst __getXmlNamespace] } {
 			return true
 		} 
 		
 	} elseif { [lsearch $namespaces "##local"] != -1 } {
-		if { [$value getXmlNamespace] eq "" } {
+		if { [$value __getXmlNamespace] eq "" } {
 			return true
 		} 
 		
 	} else {
 		foreach ns $namespaces {
-			if { $ns eq [$value getXmlNamespace] } {
+			if { $ns eq [$value __getXmlNamespace] } {
 				return true
 			}
 		}
@@ -773,11 +796,11 @@ XSDObject instproc checkAnyNamespaceRestrictions {namespaces inst value} {
 	return false
 }
 
-XSDObject instproc checkMinOccurs {slot} {
+XSDObject instproc __checkMinOccurs {slot} {
 	set name [namespace tail $slot]
 	set validity true
 	if { [$slot minOccurs] > 0 } {
-		if { ![my slotFilled $slot] } {
+		if { ![my __slotFilled $slot] } {
 			set validity false
 			my error "needs object: $name (type: [$slot type])"
 			
@@ -789,7 +812,7 @@ XSDObject instproc checkMinOccurs {slot} {
 	return $validity
 }
 
-XSDObject instproc makeTable {tableheader headers content} {
+XSDObject instproc __makeTable {tableheader headers content} {
 	set width [list]
 	foreach header $headers {
 		lappend width [string length $header]
@@ -813,7 +836,7 @@ XSDObject instproc makeTable {tableheader headers content} {
 	set o "+[string repeat - [expr $lw + 3 * [llength $headers] - 1]]+\n"
 	append o "| [format "%-*s | " [expr $lw + 2 * [llength $headers]] $tableheader]\n"
 	
-	append o "$sep\n[my makeTableRow $width $headers]$sep\n"
+	append o "$sep\n[my __makeTableRow $width $headers]$sep\n"
 	foreach line $content {
 		set colLinesMax 1
 		foreach colLines $line {
@@ -825,14 +848,14 @@ XSDObject instproc makeTable {tableheader headers content} {
 			for {set j 0} {$j < [llength $line]} {incr j} {
 				lappend content [lindex [lindex $line $j] $i]
 			}
-			append o [my makeTableRow $width $content]
+			append o [my __makeTableRow $width $content]
 		}
 		append o "$sep\n"
 	}
 	return $o
 }
 
-XSDObject instproc makeTableRow {width content} {
+XSDObject instproc __makeTableRow {width content} {
 	set line "| "
 	for {set i 0} {$i < [llength $content]} {incr i} {
 		append line [format "%-*s | " [lindex $width $i] [lindex $content $i]]
@@ -845,34 +868,14 @@ XSDObject instproc unknown {cmd args} {
 	
 	#read slot
 	if { $args eq "" } {
-		return [my getSlot $cmd]	
+		return [my __getSlot $cmd]	
 	}
 	
 	#set slot...
-	return [my setSlot $cmd [my lookupObject $args]]
+	return [my __setSlot $cmd [my __lookupObject $args]]
 }
 
-XSDObject instforward export %self marshal
-
-XSDObject instproc . args {
-	set args [split $args [list "." " "]]
-	# remove empty list elements:
-	set args [lsearch -all -inline -not -exact $args ""]
-	set cmd "\[my [lindex $args 0]\]"
-	foreach arg [lrange $args 1 end-1] {
-		set cmd "\[$cmd $arg\]"
-	}
-	eval "$cmd [lindex $args end]"
-}
-
-XSDObject instproc createObject {type {args {}}} {
-	set ns [uplevel 2 namespace current]
-	set obj [Object autoname xoxsdobj] 
-	namespace eval $ns $type $obj $args
-	return "$ns\::$obj"
-}
-
-XSDObject instproc lookupObject {name} {
+XSDObject instproc __lookupObject {name} {
 	set i 1
 	set ns ""
 	while { ![Object isobject "$ns\::$name"] } {
@@ -882,7 +885,7 @@ XSDObject instproc lookupObject {name} {
 	return "$ns\::$name"
 }
 
-XSDObject instproc trySetContent {text} {
+XSDObject instproc __trySetContent {text} {
 	if { [Object isobject $text] } {
 		return false
 	}
