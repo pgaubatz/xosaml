@@ -1,143 +1,514 @@
 
+namespace eval ::ComplexTypes {
+
+#
+# Define the specialised classes:
+#
+
+::xotcl::Class SandboxedTestCase -superclass ::STORM::TestCase \
+	-slots {
+		::xotcl::Attribute sandbox -default ::sandbox
+	} \
+	-instproc do {script} {
+		namespace eval [my sandbox] $script
+	} \
+	-instproc init args {
+        	next
+        	my cleanup_script { 
+        		namespace delete [my sandbox]
+        	}
+	}
+
+::xotcl::Class SandboxedTestScenario -superclass ::STORM::TestScenario \
+	-slots {
+		::xotcl::Attribute sandbox -default ::sandbox
+	} \
+	-instproc do {script} {
+		namespace eval [my sandbox] $script
+	}
+
+
+
+
+#
+# Marshal complexTypes:
+#
+	
 ::STORM::TestCase MarshalComplexTypes \
 	-setup_script {
 		package require xoSAML
 		
-		::xoSAML::load ::sandbox
-	} \
-	-cleanup_script {
-		namespace delete ::sandbox
-	}
+		::xoSAML::load
+	} 
+	
 
 
 ::STORM::TestScenario MarshalComplexTypes::AuthnRequest \
 	-expected_result {<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" AssertionConsumerServiceIndex="1" ID="identifier_1" Version="2.0" IssueInstant="1970-01-01T00:00:00Z"><saml:Issuer>https://sp.example.com/SAML2</saml:Issuer><samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" AllowCreate="true"/></samlp:AuthnRequest>} \
 	-test_body {
-		namespace eval ::sandbox {
-        		Issuer iss1 https://sp.example.com/SAML2
-        		
-        		NameIDPolicy pol1
-        		pol1 AllowCreate true
-        		pol1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
-        		
-        		Request req1
-        		req1 IssueInstant 0
-        		req1 ID identifier_1
-        		req1 AssertionConsumerServiceIndex 1
-        		req1 Issuer iss1
-        		req1 NameIDPolicy pol1
-        		
-        		return [req1 marshal -compact true] 
-		}
-	} 
+    		saml::Issuer iss1 https://sp.example.com/SAML2
+    		
+    		NameIDPolicy pol1
+    		pol1 AllowCreate true
+    		pol1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+    		
+    		Request req1
+    		req1 IssueInstant 0
+    		req1 ID identifier_1
+    		req1 AssertionConsumerServiceIndex 1
+    		req1 Issuer iss1
+    		req1 NameIDPolicy pol1
+    		
+		return [req1 marshal -compact true] 
+	}
 
 ::STORM::TestScenario MarshalComplexTypes::Response \
 	-expected_result {<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="identifier_2" InResponseTo="indentifier_1" Destination="https://sp.example.com/SAML2/SSO/POST" IssueInstant="1970-01-01T00:00:00Z" Version="2.0"><saml:Issuer>https://idp.example.org/SAML2</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/></samlp:Status><saml:Assertion ID="identifier_3" Version="2.0" IssueInstant="1970-01-01T00:00:00Z"><saml:Issuer>https://idp.example.org/SAML2</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">3f7b3dcf-1674-4ecd-92c8-1544f346baf8</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="identifier_1" NotOnOrAfter="1970-01-01T00:00:00Z" Recipient="https://sp.example.com/SAML2/SSO/POST"/></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="1970-01-01T00:00:01Z" NotOnOrAfter="1970-01-01T00:00:00Z"><saml:AudienceRestriction><saml:Audience>https://sp.example.com/SAML2</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement SessionIndex="identifier_3" AuthnInstant="1970-01-01T00:00:00Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion></samlp:Response>} \
 	-test_body { 
-		namespace eval ::sandbox {
-                        Issuer iss2 https://idp.example.org/SAML2
-                         
-                        Status sta1 Success
-                         
-                        NameID nam1 3f7b3dcf-1674-4ecd-92c8-1544f346baf8
-                        nam1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
-                         
-                        SubjectConfirmationData scd1
-                        scd1 InResponseTo identifier_1
-                        scd1 Recipient https://sp.example.com/SAML2/SSO/POST
-                        scd1 NotOnOrAfter 0
-                         
-                        SubjectConfirmation sc1
-                        sc1 Method urn:oasis:names:tc:SAML:2.0:cm:bearer
-                        sc1 SubjectConfirmationData scd1
-                         
-                        Subject sub1
-                        sub1 NameID nam1
-                        sub1 SubjectConfirmation sc1
-                         
-                        Audience aud1 https://sp.example.com/SAML2
-                         
-                        AudienceRestriction aur1
-                        aur1 Audience aud1
-                         
-                        Conditions con1
-                        con1 NotBefore 1
-                        con1 NotOnOrAfter 0
-                        con1 AudienceRestriction aur1
-                         
-                        AuthnContextClassRef ref1 urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
-                         
-                        AuthnContext ctx1
-                        ctx1 AuthnContextClassRef ref1
-                         
-                        AuthnStatement ast1
-                        ast1 AuthnInstant 0
-                        ast1 SessionIndex identifier_3
-                        ast1 AuthnContext ctx1
-                         
-                        Assertion ass1
-        		ass1 IssueInstant 0
-                        ass1 ID identifier_3
-                        ass1 Issuer iss2
-                        ass1 Subject sub1
-                        ass1 Conditions con1
-                        ass1 AuthnStatement ast1
-                         
-                        Response res1
-                        res1 IssueInstant 0
-                        res1 ID identifier_2
-                        res1 InResponseTo indentifier_1
-                        res1 Destination https://sp.example.com/SAML2/SSO/POST
-                        res1 Issuer iss2
-                        res1 Status sta1
-                        res1 Assertion ass1
-        		
-                        return [res1 marshal -compact true]
-		}
+                Issuer iss2 https://idp.example.org/SAML2
+                 
+                Status sta1 Success
+                 
+                NameID nam1 3f7b3dcf-1674-4ecd-92c8-1544f346baf8
+                nam1 Format urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+                 
+                SubjectConfirmationData scd1
+                scd1 InResponseTo identifier_1
+                scd1 Recipient https://sp.example.com/SAML2/SSO/POST
+                scd1 NotOnOrAfter 0
+                 
+                SubjectConfirmation sc1
+                sc1 Method urn:oasis:names:tc:SAML:2.0:cm:bearer
+                sc1 SubjectConfirmationData scd1
+                 
+                Subject sub1
+                sub1 NameID nam1
+                sub1 SubjectConfirmation sc1
+                 
+                Audience aud1 https://sp.example.com/SAML2
+                 
+                AudienceRestriction aur1
+                aur1 Audience aud1
+                 
+                Conditions con1
+                con1 NotBefore 1
+                con1 NotOnOrAfter 0
+                con1 AudienceRestriction aur1
+                 
+                AuthnContextClassRef ref1 urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+                 
+                AuthnContext ctx1
+                ctx1 AuthnContextClassRef ref1
+                 
+                AuthnStatement ast1
+                ast1 AuthnInstant 0
+                ast1 SessionIndex identifier_3
+                ast1 AuthnContext ctx1
+                 
+                Assertion ass1
+		ass1 IssueInstant 0
+                ass1 ID identifier_3
+                ass1 Issuer iss2
+                ass1 Subject sub1
+                ass1 Conditions con1
+                ass1 AuthnStatement ast1
+                 
+                Response res1
+                res1 IssueInstant 0
+                res1 ID identifier_2
+                res1 InResponseTo indentifier_1
+                res1 Destination https://sp.example.com/SAML2/SSO/POST
+                res1 Issuer iss2
+                res1 Status sta1
+                res1 Assertion ass1
+		
+		return [res1 marshal -compact true]
 	} 
 
 
 
+#
+# Roundtrip complexTypes:
+#
 
-::STORM::TestCase RoundtripComplexTypes \
+SandboxedTestCase RoundtripComplexTypes \
         -setup_script {
         	package require xoSAML
 		package require fileutil
 		
-        	::xoSAML::load ::sandbox
-        } \
-	-cleanup_script {
-		namespace delete ::sandbox
-	}
+        	::xoSAML::load
+        } 
 
-	
-::xotcl::Class RoundtripTestScenario -superclass ::STORM::TestScenario -slots {
-	::xotcl::Attribute xml_file
-} 
-
-RoundtripTestScenario instproc init args {
-	next
-	my expected_result true
-	my test_body {
-		namespace eval ::sandbox {
-			set xml [::fileutil::cat [my xml_file]]
-			
-			# strip all whitespaces between elements:
-			regsub -all {>\s+<} $xml {><} xml
-			regsub -all {\n}    $xml {}   xml
-			
-			set obj [::xoSAML::unmarshal $xml]
-			if { [$obj marshal -compact true] eq $xml } {
-				return true
-			}
-			
-			return false
+::xotcl::Class RoundtripTestScenario -superclass SandboxedTestScenario \
+	-slots {
+		::xotcl::Attribute xml_file
+	} \
+	-instproc init args {
+        	next
+        	my preconditions {
+			{expr ![info exists obj]}
+			{expr ![info exists xml]}
+        	}
+        	my test_body {
+        		set xml [::fileutil::cat [my xml_file]]
+        		
+        		# strip all whitespaces between elements:
+        		regsub -all {>\s+<} $xml {><} xml
+        		regsub -all {\n}    $xml {}   xml
+        		
+        		set obj [::xoSAML::unmarshal $xml]
+        	}
+		my postconditions {
+			{expr {[$obj marshal -compact true] eq $xml}}
+		}
+		my cleanup_script {
+			$obj destroy
+			unset xml
+			unset obj
 		}
 	}
-}
 
 RoundtripTestScenario RoundtripComplexTypes::Request   -xml_file tests/request.xml
 RoundtripTestScenario RoundtripComplexTypes::Request2  -xml_file tests/request2.xml
 RoundtripTestScenario RoundtripComplexTypes::Response  -xml_file tests/response.xml
 RoundtripTestScenario RoundtripComplexTypes::Response2 -xml_file tests/response2.xml
 
+
+
+#
+# These XSD constructs are used in the following tests:
+#
+# <complexType name="SubjectType">
+#	<choice>
+#		<sequence>
+#			<choice>
+#				<element ref="saml:BaseID"/>
+#				<element ref="saml:NameID"/>
+#				<element ref="saml:EncryptedID"/>
+#			</choice>
+#			<element ref="saml:SubjectConfirmation" minOccurs="0" maxOccurs="unbounded"/>
+#		</sequence>
+#		<element ref="saml:SubjectConfirmation" maxOccurs="unbounded"/>
+#	</choice>
+# </complexType>
+#
+# <complexType name="SubjectConfirmationType">
+#	<sequence>
+#		<choice minOccurs="0">
+#			<element ref="saml:BaseID"/>
+#			<element ref="saml:NameID"/>
+#			<element ref="saml:EncryptedID"/>
+#		</choice>
+#		<element ref="saml:SubjectConfirmationData" minOccurs="0"/>
+#	</sequence>
+#	<attribute name="Method" type="anyURI" use="required"/>
+# </complexType>
+#
+# <complexType name="AuthnContextType">
+#        <sequence>
+#                <choice>
+#                	<sequence>
+#                		<element ref="saml:AuthnContextClassRef"/>
+#                		<choice minOccurs="0">
+#                        		<element ref="saml:AuthnContextDecl"/>
+#                       		<element ref="saml:AuthnContextDeclRef"/>
+#                		</choice>
+#        		</sequence>
+#        		<choice>
+#        			<element ref="saml:AuthnContextDecl"/>
+#        			<element ref="saml:AuthnContextDeclRef"/>
+#        		</choice>
+#        	</choice>
+#        	<element ref="saml:AuthenticatingAuthority" minOccurs="0" maxOccurs="unbounded"/>
+#        </sequence>
+# </complexType>	
+#
+
+
+#
+# Assignment checks for complexTypes:
+#
+
+SandboxedTestCase AssignmentComplexTypes \
+	-setup_script {
+		package require xoSAML
+
+		::xoSAML::load 
+		::xoSAML::hideErrors true
+	} 
+	
+
+SandboxedTestScenario AssignmentComplexTypes::wrongType \
+        -preconditions {
+        	{expr ![info exists sc]}
+        } \
+	-expected_result false \
+	-test_body {			
+		saml::SubjectConfirmation sc
+		return [sc NameID "this is no NameID object"]
+	} \
+	-cleanup_script {
+		sc destroy
+	}
+
+
+
+#
+# Check Choice-constructs:
+#
+	
+SandboxedTestCase CheckChoices \
+        -setup_script {
+        	package require xoSAML
+        
+        	::xoSAML::load 
+        	::xoSAML::hideErrors true
+        } 
+
+
+SandboxedTestScenario CheckChoices::check \
+	-preconditions {
+		{expr ![info exists base]}
+		{expr ![info exists sub]}
+	} \
+	-test_body {		
+		saml::BaseID base "id1"
+		
+		saml::Subject sub
+		sub BaseID base
+	} \
+	-postconditions {
+		{expr [sub check]}
+	} \
+	-cleanup_script {
+		foreach o {base sub} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario CheckChoices::check2 \
+	-preconditions {
+		{expr ![info exists base]}
+		{expr ![info exists sc1]}
+		{expr ![info exists sc2]}
+		{expr ![info exists sub]}
+	} \
+	-test_body {		
+		saml::BaseID base "id1"
+		
+		saml::SubjectConfirmation sc1
+		sc1 Method "http://host1"
+		
+		saml::SubjectConfirmation sc2
+		sc2 Method "http://host2"
+		
+		saml::Subject sub
+		sub BaseID base
+		sub SubjectConfirmation sc1
+		sub SubjectConfirmation sc2
+	} \
+	-postconditions {
+		{expr {[sub check]}}
+		{expr {[llength [sub SubjectConfirmation]] == 2}}
+		{expr {[sub NameID] eq ""}}
+	} \
+	-cleanup_script {
+		foreach o {base sc1 sc2 sub} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario CheckChoices::check3 \
+	-preconditions {
+		{expr ![info exists ref]}
+		{expr ![info exists ctx]}
+		{expr ![info exists dec]}
+		{expr ![info exists dref]}
+		{expr ![info exists aut1]}
+		{expr ![info exists aut2]}
+	} \
+	-test_body {		
+		saml::AuthnContextClassRef ref "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+		
+		saml::AuthnContextDecl dec "Decl"
+		
+		saml::AuthnContextDeclRef dref "DeclRef"
+		
+		saml::AuthenticatingAuthority aut1 "http://aut1"
+		saml::AuthenticatingAuthority aut2 "http://aut2"
+		
+		saml::AuthnContext ctx
+		ctx AuthnContextClassRef ref
+	} \
+	-postconditions {
+		{expr {[ctx check]}}
+		{expr {[ctx AuthnContextDecl dec] && [ctx check]}}
+		{expr {[ctx AuthenticatingAuthority aut1] && [ctx check]}}
+		{expr {[ctx AuthenticatingAuthority aut2] && [ctx check]}}
+		{expr {[llength [ctx AuthenticatingAuthority]] == 2}}
+		{expr {![ctx AuthnContextDeclRef dref]}}
+	} \
+	-cleanup_script {
+		foreach o {ref ctx dec dref aut1 aut2} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario CheckChoices::check4 \
+	-preconditions {
+		{expr ![info exists ctx]}
+		{expr ![info exists dec]}
+		{expr ![info exists dref]}
+		{expr ![info exists aut1]}
+		{expr ![info exists aut2]}
+	} \
+	-test_body {		
+		saml::AuthnContextDecl dec "Decl"
+		
+		saml::AuthnContextDeclRef dref "DeclRef"
+		
+		saml::AuthenticatingAuthority aut1 "http://aut1"
+		saml::AuthenticatingAuthority aut2 "http://aut2"
+		
+		saml::AuthnContext ctx
+		ctx AuthnContextDecl dec
+	} \
+	-postconditions {
+		{expr {[ctx check]}}
+		{expr {![ctx AuthnContextDeclRef dref]}}
+		{expr {[ctx AuthenticatingAuthority aut1] && [ctx check]}}
+		{expr {[ctx AuthenticatingAuthority aut2] && [ctx check]}}
+		{expr {[llength [ctx AuthenticatingAuthority]] == 2}}
+	} \
+	-cleanup_script {
+		foreach o {ctx dec dref aut1 aut2} {
+			$o destroy
+		}
+	}
+	
+SandboxedTestScenario CheckChoices::violation \
+	-preconditions {
+		{expr ![info exists sub]}
+	} \
+        -test_body {
+        	saml::Subject sub
+        } \
+	-postconditions {
+		{expr {[sub marshal] eq ""}}
+	} \
+        -cleanup_script {
+		sub destroy
+        }
+
+SandboxedTestScenario CheckChoices::violation2 \
+	-preconditions {
+		{expr ![info exists baseid]}
+		{expr ![info exists nameid]}
+		{expr ![info exists sc]}
+	} \
+	-test_body {		
+		saml::BaseID baseid "id1"
+		saml::NameID nameid "nd1"
+		
+		saml::SubjectConfirmation sc
+		sc BaseID baseid
+	} \
+	-postconditions {
+		{expr ![sc NameID nameid]}
+	} \
+	-cleanup_script {
+		foreach o {baseid nameid sc} {
+			$o destroy
+		}
+	}
+ 
+SandboxedTestScenario CheckChoices::violation3 \
+        -preconditions {
+                {expr ![info exists nameid]}
+                {expr ![info exists sc]}
+                {expr ![info exists sub]}
+        } \
+        -test_body {			
+                saml::NameID nameid "nd1"
+                 
+                saml::SubjectConfirmation sc
+                sc Method "http://host"
+                	 
+                saml::SubjectType sub
+                sub SubjectConfirmation sc
+        } \
+        -postconditions {
+       		 {expr ![sub NameID nameid]}
+        } \
+        -cleanup_script {
+                foreach o {nameid sc sub} {
+                	$o destroy
+                }
+        }
+
+
+#
+# Check Sequence-constructs:
+#
+	
+SandboxedTestCase CheckSequences \
+	-setup_script {
+		package require xoSAML
+	
+		::xoSAML::load 
+		::xoSAML::hideErrors true
+	} 
+
+
+SandboxedTestScenario CheckSequences::check \
+	-preconditions {
+		{expr ![info exists dec]}
+		{expr ![info exists ref]}
+		{expr ![info exists aut]}
+		{expr ![info exists ctx]}
+		{expr ![info exists xml]}
+		{expr ![info exists pos1]}
+		{expr ![info exists pos2]}
+		{expr ![info exists pos3]}
+	} \
+	-test_body {		
+		saml::AuthnContextDecl dec "Decl"
+		
+		saml::AuthnContextClassRef ref "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+		
+		saml::AuthenticatingAuthority aut "http://aut"
+		
+		saml::AuthnContext ctx
+		ctx AuthnContextClassRef ref
+		ctx AuthnContextDecl dec
+		ctx AuthenticatingAuthority aut
+		
+		set xml [ctx marshal]
+		
+		# strip all whitespaces between elements:
+		regsub -all {>\s+<} $xml {><} xml
+		regsub -all {\n}    $xml {}   xml
+	} \
+	-postconditions {
+		{expr {[ctx check]}}
+		{expr {[set pos1 [string first "<saml:AuthnContextClassRef>" $xml]] != -1}}
+		{expr {[set pos2 [string first "<saml:AuthnContextDecl>" $xml]] != -1}}
+		{expr {[set pos3 [string first "<saml:AuthenticatingAuthority>" $xml]] != -1}}
+		{expr {$pos1 < $pos2 < $pos3}}
+	} \
+	-cleanup_script {
+		foreach o {ctx dec ref aut} {
+			$o destroy
+		}
+		unset xml
+		unset pos1
+		unset pos2
+		unset pos3
+	}
+	
+
+
+	
+	
+	
+}

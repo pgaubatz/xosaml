@@ -5,8 +5,10 @@ package require XOTcl
 namespace eval ::xoXSD::Slots {
 
 namespace export *
-	
-::xotcl::Class XMLAttribute -superclass ::xotcl::Attribute  -slots {
+
+::xotcl::Class Attribute -superclass ::xotcl::Attribute
+
+::xotcl::Class XMLAttribute -superclass ::xoXSD::Slots::Attribute -slots {
 	::xotcl::Attribute use 	     -default "optional"
 	::xotcl::Attribute namespace -default false
 	
@@ -16,18 +18,26 @@ namespace export *
 	::xotcl::Attribute any	      -default false
 }
 	
-::xotcl::Class XMLElement -superclass ::xotcl::Attribute  -slots {
-	::xotcl::Attribute minOccurs -default 1
-	::xotcl::Attribute maxOccurs -default 1
-	::xotcl::Attribute namespace -default false
+::xotcl::Class XMLElement -superclass ::xoXSD::Slots::Attribute -slots {
+	::xotcl::Attribute minOccurs  -default 1
+	::xotcl::Attribute maxOccurs  -default 1
+	::xotcl::Attribute namespace  -default false
 	
 	# System-specific attributes:
-	::xotcl::Attribute sequence  -default 99999
-	::xotcl::Attribute any	     -default false
+	::xotcl::Attribute sequence   -default 99999
+	::xotcl::Attribute any	      -default false
 	::xotcl::Attribute anyCounter -default 0
 }
 
 ::xotcl::Class XMLChild -superclass ::xoXSD::Slots::XMLElement
+
+
+Attribute instproc __formatType {type} {
+	set pos  [string first ":" $type 2]
+	set type [string range $type [expr $pos + 2] end]
+	set type [string map {"DataTypes" "xsd"} $type]
+	return $type
+}
 
 
 XMLAttribute instproc assign {domain var value} {
@@ -35,7 +45,11 @@ XMLAttribute instproc assign {domain var value} {
 		set value [[[self] type] new $value]
 	} 
 	if { $value eq "" || [$value class] ne [[self] type] || ![$value check] } {
-		$domain error "the content of \"$var\" is not valid."
+		if { $var eq "__text" } {
+			$domain __error "The textual content is not valid."
+		} else {
+			$domain __error "The content of \"$var\" is not valid."
+		}
 		return false
 	}
 	$domain set $var $value
@@ -43,9 +57,10 @@ XMLAttribute instproc assign {domain var value} {
 
 XMLAttribute instproc getInfo {} {
 	set o [list]
-	if { [[self] use] ne "optional" } {
-		lappend o "Use: [[self] use]"
+	if { [[self callingobject] __slotFilled -recursive true -exact true [self]] } {
+		lappend o "Assigned: true"
 	}
+	lappend o "Use: [[self] use]"
 	if { [[self] namespace] != false } {
 		lappend o "Namespace: [[self] namespace]"
 	}
@@ -56,7 +71,7 @@ XMLAttribute instproc getType {} {
 	if { [namespace tail [self]] eq "__anyAttribute" } {
 		return "<<Any>>"
 	} 
-	return [[self] type]
+	return [my __formatType [[self] type]]
 }
 
 XMLAttribute instproc getName {n} {
@@ -72,6 +87,13 @@ XMLAttribute instproc getName {n} {
 
 XMLElement instproc getInfo {} {
 	set o [list]
+	set occurs [[self callingobject] __slotFilled -recursive true -exact true [self]]
+	if { $occurs } {
+		lappend o "Assigned: true"
+	}
+	if { $occurs > 1 } {
+		lappend o "Occurs: $occurs"
+	}
 	if { [[self] minOccurs] != 1 } {
 		lappend o "MinOccurs: [[self] minOccurs]"
 	}
@@ -81,13 +103,13 @@ XMLElement instproc getInfo {} {
 	if { [[self] namespace] != false } {
 		lappend o "Namespace: [[self] namespace]"
 	}
-	if { [my isNested] } {
-		lappend o "Parent: [my getHierarchy]"
+	if { [my __isNested] } {
+		lappend o "Parent: [my __getHierarchy]"
 	}
 	return $o
 }
 
-XMLElement instproc isNested {} {
+XMLElement instproc __isNested {} {
 	if { [string first "__choice" [self]] != -1} {
 		return true
 	}
@@ -97,18 +119,15 @@ XMLElement instproc isNested {} {
 	return false
 }
 	
-XMLElement instproc getHierarchy {} {
-	set h [namespace qualifiers [namespace qualifiers [self]]]
-	set h [string map {"::__choice" " <<Choice ("} $h]
-	set h [string map {"::__sequence" " <<Sequence ("} $h]
-	return "$h)>>"
+XMLElement instproc __getHierarchy {} {
+	return [my __formatType [namespace qualifiers [namespace qualifiers [self]]]]
 }
 
 XMLElement instproc getType {} {
 	if { [namespace tail [self]] eq "__any" } {
 		return "<<Any>>"
 	} 	
-	return [[self] type]
+	return [my __formatType [[self] type]]
 }
 
 XMLElement instproc getName {n} {

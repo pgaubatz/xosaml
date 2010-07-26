@@ -23,8 +23,8 @@ proc luniqueorder {list} {
 foreach test [lsort -dictionary [glob tests/*.test.xotcl]] {
 	if { ![file isfile $test] } continue
 	source $test
-	set cases [join [lappend cases [::STORM::TestCase info instances]]]
+	set cases [join [lappend cases [::STORM::TestCase info instances -closure]]]
 }
 
-::STORM::TestSuite tests -detailed_report 1 -order [luniqueorder $cases]
-tests runAllTestCases
+::STORM::TestSuite xoSAMLTestSuite -detailed_report 1 -order [luniqueorder $cases]
+xoSAMLTestSuite runAllTestCases

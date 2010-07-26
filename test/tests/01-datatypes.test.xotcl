@@ -1,4 +1,34 @@
 
+namespace eval ::DataTypes {
+
+#
+# Define the specialised classes:
+#
+
+::xotcl::Class MarshalDataTypesScenario -superclass ::STORM::TestScenario \
+	-instproc init args {
+		my preconditions  { 
+			{expr ![info exists d]} 
+		}
+		my cleanup_script { d destroy }
+	}
+
+::xotcl::Class CheckDataTypesScenario -superclass MarshalDataTypesScenario \
+	-slots {
+		::xotcl::Attribute valid -default 1
+	} \
+	-instproc init args {
+		my postconditions { 
+			{expr ([my valid] && [d check]) || (![my valid] && ![d check])} 
+		}
+	}
+
+
+
+#
+# Check DataTypes:
+#
+
 ::STORM::TestCase CheckDataTypes \
 	-setup_script {
 		package require xoXSD::DataTypes
@@ -6,112 +36,38 @@
 	}
 
 
-::STORM::TestScenario CheckDataTypes::string \
-	-expected_result true \
-	-test_body { xsd::string d "test 99"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::dateTime \
-	-expected_result true \
-	-test_body { xsd::dateTime d "0"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::dateTime2 \
-	-expected_result false \
-	-test_body { xsd::dateTime d "-1"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::dateTime3 \
-	-expected_result true \
-	-test_body { xsd::dateTime d "now"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::dateTime4 \
-	-expected_result true \
-	-test_body { xsd::dateTime d "1970-01-01T00:00:10Z"; return [d check] } 
-	
-::STORM::TestScenario CheckDataTypes::base64Binary \
-	-expected_result true \
-	-test_body { xsd::base64Binary d "RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ=="; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::base64Binary2 \
-	-expected_result false \
-	-test_body { xsd::base64Binary d "--RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ=="; return [d check] } 	
-
-::STORM::TestScenario CheckDataTypes::boolean \
-	-expected_result true \
-	-test_body { xsd::boolean d "1"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::boolean2 \
-	-expected_result true \
-	-test_body { xsd::boolean d "true"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::decimal \
-	-expected_result true \
-	-test_body { xsd::decimal d "1.123"; return [d check] } 
-	
-::STORM::TestScenario CheckDataTypes::decimal2 \
-	-expected_result true \
-	-test_body { xsd::decimal d "-1.123"; return [d check] } 
-	
-::STORM::TestScenario CheckDataTypes::decimal3 \
-	-expected_result true \
-	-test_body { xsd::decimal d "-1"; return [d check] }	
-
-::STORM::TestScenario CheckDataTypes::integer \
-	-expected_result true \
-	-test_body { xsd::integer d "9999"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::integer2 \
-	-expected_result false \
-	-test_body { xsd::integer d "9999.9"; return [d check] } 
-	
-::STORM::TestScenario CheckDataTypes::nonNegativeInteger \
-	-expected_result true \
-	-test_body { xsd::nonNegativeInteger d "123"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::nonNegativeInteger2 \
-	-expected_result false \
-	-test_body { xsd::nonNegativeInteger d "-123"; return [d check] }
-	
-::STORM::TestScenario CheckDataTypes::unsignedShort \
-	-expected_result true \
-	-test_body { xsd::unsignedShort d "65535"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::unsignedShort2 \
-	-expected_result false \
-	-test_body { xsd::unsignedShort d "-65535"; return [d check] } 
-	
-::STORM::TestScenario CheckDataTypes::unsignedShort3 \
-	-expected_result false \
-	-test_body { xsd::unsignedShort d "65536"; return [d check] } 
-		
-::STORM::TestScenario CheckDataTypes::anyURI \
-	-expected_result true \
-	-test_body { xsd::anyURI d "http://sp.example.com/SAML2"; return [d check] }
-	
-::STORM::TestScenario CheckDataTypes::anyURI2 \
-	-expected_result true \
-	-test_body { xsd::anyURI d "urn:oasis:names:tc:SAML:2.0:status:Success"; return [d check] }
-	
-::STORM::TestScenario CheckDataTypes::anyURI3 \
-	-expected_result false \
-	-test_body { xsd::anyURI d "this_is_no_valid_uri"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::ID \
-	-expected_result true \
-	-test_body { xsd::ID d "test_99"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::NCName \
-	-expected_result true \
-	-test_body { xsd::NCName d "_1950-10-04_10-00"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::NCName2 \
-	-expected_result false \
-	-test_body { xsd::NCName d "_1950-10-04:10-00"; return [d check] } 
-
-::STORM::TestScenario CheckDataTypes::anyType \
-	-expected_result true \
-	-test_body { xsd::anyType d "!¤$%&/()=?"; return [d check] } 
+CheckDataTypesScenario CheckDataTypes::string    		-test_body { xsd::string d "test 99" } 
+CheckDataTypesScenario CheckDataTypes::dateTime  		-test_body { xsd::dateTime d "0" } 
+CheckDataTypesScenario CheckDataTypes::dateTime2 		-test_body { xsd::dateTime d "-1" } -valid 0
+CheckDataTypesScenario CheckDataTypes::dateTime3 		-test_body { xsd::dateTime d "now" } 
+CheckDataTypesScenario CheckDataTypes::dateTime4		-test_body { xsd::dateTime d "1970-01-01T00:00:10Z" }	
+CheckDataTypesScenario CheckDataTypes::base64Binary		-test_body { xsd::base64Binary d "RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ==" }
+CheckDataTypesScenario CheckDataTypes::base64Binary2 		-test_body { xsd::base64Binary d "--RkVJREUgVGVzdCBVc2VyIChnaXZlbk5hbWUpIMO4w6bDpcOYw4bDhQ==" } -valid 0
+CheckDataTypesScenario CheckDataTypes::boolean			-test_body { xsd::boolean d "1" } 
+CheckDataTypesScenario CheckDataTypes::boolean2 		-test_body { xsd::boolean d "1" } 
+CheckDataTypesScenario CheckDataTypes::decimal			-test_body { xsd::decimal d "1.123" }	
+CheckDataTypesScenario CheckDataTypes::decimal2 		-test_body { xsd::decimal d "-1.123" }	
+CheckDataTypesScenario CheckDataTypes::decimal3 		-test_body { xsd::decimal d "-1" }	
+CheckDataTypesScenario CheckDataTypes::integer			-test_body { xsd::integer d "9999" } 
+CheckDataTypesScenario CheckDataTypes::integer2 		-test_body { xsd::integer d "9999.9" } -valid 0	
+CheckDataTypesScenario CheckDataTypes::nonNegativeInteger	-test_body { xsd::nonNegativeInteger d "123" }
+CheckDataTypesScenario CheckDataTypes::nonNegativeInteger2	-test_body { xsd::nonNegativeInteger d "-123" } -valid 0	
+CheckDataTypesScenario CheckDataTypes::unsignedShort 		-test_body { xsd::unsignedShort d "65535" } 
+CheckDataTypesScenario CheckDataTypes::unsignedShort2 		-test_body { xsd::unsignedShort d "-65535" } -valid 0	
+CheckDataTypesScenario CheckDataTypes::unsignedShort3 		-test_body { xsd::unsignedShort d "65536" } -valid 0 		
+CheckDataTypesScenario CheckDataTypes::anyURI 			-test_body { xsd::anyURI d "http://sp.example.com/SAML2" }	
+CheckDataTypesScenario CheckDataTypes::anyURI2			-test_body { xsd::anyURI d "urn:oasis:names:tc:SAML:2.0:status:Success" }	
+CheckDataTypesScenario CheckDataTypes::anyURI3			-test_body { xsd::anyURI d "this_is_no_valid_uri" } -valid 0 
+CheckDataTypesScenario CheckDataTypes::ID 			-test_body { xsd::ID d "test_99" } 
+CheckDataTypesScenario CheckDataTypes::NCName			-test_body { xsd::NCName d "_1950-10-04_10-00" }
+CheckDataTypesScenario CheckDataTypes::NCName2			-test_body { xsd::NCName d "_1950-10-04:10-00" } -valid 0
+CheckDataTypesScenario CheckDataTypes::anyType			-test_body { xsd::anyType d "!¤$%&/()=?" } 
 
 
 
+#
+# Marshal DataTypes:
+#
 
 ::STORM::TestCase MarshalDataTypes \
 	-setup_script {
@@ -120,10 +76,21 @@
 	}
 
 
-::STORM::TestScenario MarshalDataTypes::dateTime \
-	-expected_result "1970-01-01T00:00:10Z" \
-	-test_body { xsd::dateTime d 10; return [d getContent] }
+MarshalDataTypesScenario MarshalDataTypes::dateTime \
+	-test_body { xsd::dateTime d 10 } \
+	-postconditions {{expr {[d getContent] eq "1970-01-01T00:00:10Z"}}}
 
-::STORM::TestScenario MarshalDataTypes::dateTime2 \
-	-expected_result "" \
-	-test_body { xsd::dateTime d -10; return [d getContent] }
+MarshalDataTypesScenario MarshalDataTypes::dateTime2 \
+	-test_body { xsd::dateTime d -10 } \
+	-postconditions {{expr {[d getContent] eq ""}}}
+
+MarshalDataTypesScenario MarshalDataTypes::boolean \
+        -test_body { xsd::boolean d true } \
+        -postconditions {{expr {[d getContent] eq "true"}}}
+
+MarshalDataTypesScenario MarshalDataTypes::boolean2 \
+	-test_body { xsd::boolean d 1 } \
+	-postconditions {{expr {[d getContent] eq "true"}}}
+
+
+}
