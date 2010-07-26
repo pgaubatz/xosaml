@@ -36,7 +36,7 @@ proc loadBinding {binding {targetNamespace ""}} {
 	return [::xoSAML::Bindings::load $binding $targetNamespace]
 }
 
-proc unmarshal {xml} {
+proc unmarshal {xml {execute true}} {
 	variable __codeGenerator
 	if { ![info exists __codeGenerator] } {
 		set __codeGenerator [::xoXSD::CodeGenerator new "::xoSAML::Environment"]
@@ -45,7 +45,14 @@ proc unmarshal {xml} {
 			{xenc http://www.w3.org/2001/04/xmlenc#}
 		}
 	}
-	return [$__codeGenerator unmarshal $xml]
+	if { $execute } {
+		return [$__codeGenerator unmarshal $xml]
+	}
+	return [$__codeGenerator parse $xml]
+}
+
+proc hideErrors {value} {
+	::xoXSD::hideErrors $value
 }
 
 }
