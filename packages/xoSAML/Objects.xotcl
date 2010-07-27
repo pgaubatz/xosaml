@@ -10,11 +10,12 @@ namespace eval Private {
 		::xotcl::Attribute object
 	}
 	
+	Wrapper instforward .       {% my object} %proc
+	Wrapper instforward print   {% my object} %proc
+	Wrapper instforward marshal {% my object} %proc
+	
 	Wrapper instproc initObject {type {args ""}} {
 		my object [$type new $args]
-		foreach cmd [list . print marshal] {
-			my forward $cmd {% my object} %proc
-		}
 	}
 	
 	Wrapper instproc getSubstitutedCommand {} {
