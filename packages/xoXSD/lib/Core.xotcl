@@ -379,6 +379,12 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 }
 	
 XSDObject instproc . {accessor args} {
+	if { [llength [my $accessor]] > 1 } {
+		if { $args ne "" } {
+			my __error "Cannot access \"[string trimleft $args { .}]\" because \"$accessor\" returned multiple objects."
+		}
+		return [my $accessor]
+	}
 	return [[my $accessor] {*}$args]
 }
 
