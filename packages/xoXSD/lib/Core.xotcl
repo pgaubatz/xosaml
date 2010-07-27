@@ -307,7 +307,7 @@ XSDObject instproc addAny {slot} {
 	
 	# check if a slot named $slotname already exists:
 	if { [$inst __slotExists $slotname] } {
-		my __error "There's is already a slot named \"$slotname\"."
+		my __error "An element called \"$slotname\" has already been added before."
 		return false
 	}
 	
@@ -329,17 +329,22 @@ XSDObject instproc addAny {slot} {
 		return false
 	}
 	
-	# dynamically create and add a new slot to the class
-	$cls slots "::xoXSD::Slots::XMLElement $slotname -type [$slot class]"
-	$inst __addElement "$cls\::slot\::$slotname"
+	set slotargs " -type [$slot class]"
+	if { $maxOccurs eq "unbounded" || $maxOccurs > 1 } {
+		append slotargs " -maxOccurs $maxOccurs -multivalued true"
+	}
 	
-	# finally set the newly created slot
-	my __setSlot $slotname $slot
+	# dynamically create and add a new slot to the class
+	$cls slots "::xoXSD::Slots::XMLElement $slotname $slotargs"
+	$inst __addElement "$cls\::slot\::$slotname"
 	
 	# update the anyCounter if necessary
 	if { $maxOccurs ne "unbounded" } {
 		$anyslot anyCounter [incr anyCounter]
 	}
+	
+	# finally set the newly created slot
+	return [my __setSlot $slotname $slot]
 }
 	
 XSDObject instproc addAnyAttribute {slotname type value} {
@@ -347,6 +352,19 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 	set anyAttribute [my __getSlotClass __anyAttribute]
 	if { $anyAttribute == false } {
 		my __error "There is no <anyAttribute> attribute to be set."
+		return false
+	}
+	
+	# check the given type:
+	if { [string equal -length 5 $type "xsd::"] } {
+		set type [string map {"xsd::" "::xoXSD::DataTypes::"} $type]
+	}
+	if { ![::xotcl::Class isclass $type] } {
+		my __error "The given type ($type) is undefined."
+		return false
+	}
+	if { ![lsearch -not [$type info heritage] "::xoXSD::DataTypes::DataType"] } {
+		my __error "The given type ($type) doesn't seem to be a simple datatype."
 		return false
 	}
 	
@@ -375,12 +393,17 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 	$inst __addAttribute "$cls\::slot\::$slotname"
 	
 	# finally set the newly created slot
-	my __setSlot $slotname $content
+	my $slotname $content
 }
 	
 XSDObject instproc . {accessor args} {
-	if { [llength [my $accessor]] > 1 || [llength $args] < 1 } {
-		if { $args ne "" } {
+	if { [llength [my $accessor]] > 1 } {
+		set dots [expr [llength [split $args .]] - 1]
+		if { $dots < 1 && $args ne "" } {
+			my __error "Cannot execute the function \"[string trim $args]\" because \"$accessor\" returned multiple objects."
+			return
+		} 
+		if { $dots > 0 } {
 			my __error "Cannot access \"[string trimleft $args { .}]\" because \"$accessor\" returned multiple objects."
 		}
 		return [my $accessor]
@@ -490,6 +513,8 @@ XSDObject instproc __getXmlElementMarshalName { {element ""} } {
 
 XSDObject instproc __getRootNamespaceVariable {varname} {
 	foreach c [concat [my class] [[my class] info heritage]] {
+		regsub -all {::__choice\d+}   $c {} c
+		regsub -all {::__sequence\d+} $c {} c
 		set qualifiers [namespace qualifiers $c]
 		if { $qualifiers eq "::xoXSD" } break
 		if { [namespace eval $qualifiers info exists $varname] } {
@@ -497,6 +522,7 @@ XSDObject instproc __getRootNamespaceVariable {varname} {
 			return $var
 		}
 	}
+	error "shouldn't reach here"
 }
 
 XSDObject instproc __getXmlNamespace {} {
@@ -872,7 +898,7 @@ XSDObject instproc __checkAnyNamespaceRestrictions {namespaces inst value} {
 	} elseif { [lsearch $namespaces "##other"] != -1 } {
 		if { [$value __getXmlNamespace] ne [$inst __getXmlNamespace] } {
 			return true
-		} 
+		}
 		
 	} elseif { [lsearch $namespaces "##targetNamespace"] != -1 } {
 		if { [$value __getXmlNamespace] eq [$inst __getXmlNamespace] } {

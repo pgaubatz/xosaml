@@ -45,7 +45,7 @@ DataType instproc print {} {
 	puts [my getContent]
 }
 
-DataType instproc getXmlNamespace args {
+DataType instproc __getXmlNamespace args {
 	return "http://www.w3.org/2001/XMLSchema-datatypes"
 }
 
