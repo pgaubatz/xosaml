@@ -51,6 +51,7 @@ DataType instproc getXmlNamespace args {
 
 DataType instforward export  %self getContent
 DataType instforward marshal %self getContent
+DataType instforward printContent %self print
 
 
 # String Data Types

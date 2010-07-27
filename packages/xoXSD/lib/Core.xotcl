@@ -241,18 +241,18 @@ XSDObject instproc printContent {} {
 
 XSDObject instproc getContent {} {
 	set content [my __getSlot __text]
-	if { $content == false } {
-		return ""
+	if { $content ne "" } {
+		return [$content getContent]	
 	}
-	return [$content getContent]
+	return ""
 }
 
 XSDObject instproc setContent {text} {
-	if { [my __trySetContent $text] } {
-		return true
+	if { [my __slotExists __text] } {
+		return [my __text $text]
 	}
 	my __error "There is no textual content to be set."
-	return false
+	return 0
 }
 	
 XSDObject instproc printSlots {} {
@@ -377,16 +377,9 @@ XSDObject instproc addAnyAttribute {slotname type value} {
 	# finally set the newly created slot
 	my __setSlot $slotname $content
 }
-
-XSDObject instproc . args {
-	set args [split $args [list "." " "]]
-	# remove empty list elements:
-	set args [lsearch -all -inline -not -exact $args ""]
-	set cmd "\[my [lindex $args 0]\]"
-	foreach arg [lrange $args 1 end-1] {
-		set cmd "\[$cmd $arg\]"
-	}
-	eval "$cmd [lindex $args end]"
+	
+XSDObject instproc . {accessor args} {
+	return [[my $accessor] {*}$args]
 }
 
 XSDObject instproc createObject {type {args {}}} {
