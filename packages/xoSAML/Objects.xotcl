@@ -12,7 +12,7 @@ namespace eval Private {
 	
 	Wrapper instproc initObject {type {args ""}} {
 		my object [$type new $args]
-		foreach cmd [list print marshal] {
+		foreach cmd [list . print marshal] {
 			my forward $cmd {% my object} %proc
 		}
 	}
@@ -131,16 +131,18 @@ Subject instproc init args {
 	next
 }
 
-Attribute instproc init {{attrName ""} {attrValue ""}} {	
+Attribute instproc init {{name ""} {values ""}} {	
 	next
 	
 	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-	if { $attrName ne "" } {
-		my Name $attrName
+	if { $name ne "" } {
+		my Name $name
 	}
-	if { $attrValue ne "" } {
-		set val [my createObject ::xoSAML::saml::AttributeValue $attrValue]
-		my AttributeValue $val 
+	if { $values ne "" } {
+		foreach v $values {
+			set val [my createObject ::xoSAML::saml::AttributeValue $v]
+			my AttributeValue $val
+		}
 	}
 }
 
