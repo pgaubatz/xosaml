@@ -1,0 +1,92 @@
+
+#
+# Define some specialised classes:
+#
+
+
+namespace eval ::DataTypes {
+
+::xotcl::Class MarshalDataTypesScenario -superclass ::STORM::TestScenario \
+	-instproc init args {
+		my preconditions  { 
+			{expr ![info exists d]} 
+		}
+		my cleanup_script { d destroy }
+	}
+
+::xotcl::Class CheckDataTypesScenario -superclass ::DataTypes::MarshalDataTypesScenario \
+	-slots {
+		::xotcl::Attribute valid -default 1
+	} \
+	-instproc init args {
+		my postconditions { 
+			{expr ([my valid] && [d check]) || (![my valid] && ![d check])} 
+		}
+	}
+
+}
+
+
+namespace eval ::ComplexTypes {
+	
+namespace export SandboxedTestCase SandboxedTestScenario
+
+::xotcl::Class SandboxedTestCase -superclass ::STORM::TestCase \
+	-slots {
+		::xotcl::Attribute sandbox -default ::sandbox
+	} \
+	-instproc do {script} {
+		namespace eval [my sandbox] $script
+	} \
+	-instproc init args {
+		next
+		my cleanup_script { 
+			namespace delete [my sandbox]
+		}
+	}
+
+::xotcl::Class SandboxedTestScenario -superclass ::STORM::TestScenario \
+	-slots {
+		::xotcl::Attribute sandbox -default ::sandbox
+	} \
+	-instproc do {script} {
+		namespace eval [my sandbox] $script
+	}
+
+::xotcl::Class RoundtripTestScenario -superclass ::ComplexTypes::SandboxedTestScenario \
+	-slots {
+		::xotcl::Attribute xml_file
+	} \
+	-instproc init args {
+		next
+		my preconditions {
+			{expr ![info exists obj]}
+			{expr ![info exists xml]}
+		}
+		my test_body {
+			set xml [::fileutil::cat [my xml_file]]
+			
+			# strip all whitespaces between elements:
+			regsub -all {>\s+<} $xml {><} xml
+			regsub -all {\n}    $xml {}   xml
+			
+			set obj [::xoSAML::unmarshal $xml]
+		}
+		my postconditions {
+			{expr {[$obj marshal -compact true] eq $xml}}
+		}
+		my cleanup_script {
+			$obj destroy
+			unset xml
+			unset obj
+		}
+	}
+
+}
+
+
+namespace eval ::xoSAML {
+	
+	namespace import ::ComplexTypes::*
+	
+}

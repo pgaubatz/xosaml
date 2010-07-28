@@ -2,26 +2,42 @@
 namespace eval ::DataTypes {
 
 #
-# Define the specialised classes:
+# Basic checks:
 #
 
-::xotcl::Class MarshalDataTypesScenario -superclass ::STORM::TestScenario \
-	-instproc init args {
-		my preconditions  { 
-			{expr ![info exists d]} 
-		}
-		my cleanup_script { d destroy }
+::STORM::TestCase BasicChecks \
+	-setup_script {
+		package require xoXSD::DataTypes
 	}
-
-::xotcl::Class CheckDataTypesScenario -superclass MarshalDataTypesScenario \
-	-slots {
-		::xotcl::Attribute valid -default 1
+	
+	
+::STORM::TestScenario BasicChecks::load \
+	-test_body {
+		# delete all xsd::* aliases
+		foreach alias [lsearch -inline -all [interp aliases] "xsd::*"] {
+			interp alias {} $alias {}
+		}
+		::xoXSD::DataTypes::load [namespace current]
 	} \
-	-instproc init args {
-		my postconditions { 
-			{expr ([my valid] && [d check]) || (![my valid] && ![d check])} 
-		}
-	}
+	-postconditions {
+		{expr [lsearch -not [interp aliases] "xsd::*"]}
+	} 
+	
+	
+::STORM::TestScenario BasicChecks::assignment \
+	-test_body {
+		::xoXSD::DataTypes::load [namespace current]
+		
+		xsd::string s1 
+		xsd::string s2 "content"
+		xsd::string s3
+		s3 setContent "content"
+	} \
+	-postconditions {
+		{expr {[s1 getContent] eq ""}}
+		{expr {[s2 getContent] eq "content"}}
+		{expr {[s3 getContent] eq "content"}}
+	} 
 
 
 
