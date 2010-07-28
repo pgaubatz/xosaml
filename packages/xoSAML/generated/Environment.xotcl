@@ -31,6 +31,8 @@ namespace forget ::xoSAML::ds::Transforms
 
 }
 
+if { $targetNamespace eq "::" } { set targetNamespace "" }
+
 interp alias {} $targetNamespace\::saml::Action {} ::xoSAML::saml::Action
 interp alias {} $targetNamespace\::saml::ActionType {} ::xoSAML::saml::ActionType
 interp alias {} $targetNamespace\::saml::Advice {} ::xoSAML::saml::Advice
