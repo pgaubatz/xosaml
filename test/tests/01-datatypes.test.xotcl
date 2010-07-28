@@ -13,17 +13,21 @@ namespace eval ::DataTypes {
 	
 ::STORM::TestScenario BasicChecks::load \
 	-test_body {
-		# delete all xsd::* aliases
-		foreach alias [lsearch -inline -all [interp aliases] "xsd::*"] {
-			interp alias {} $alias {}
-		}
 		::xoXSD::DataTypes::load [namespace current]
 	} \
 	-postconditions {
-		{expr [lsearch [interp aliases] "xsd::*"] != -1}
+		{expr {[lsearch [interp aliases] "[namespace current]\::xsd::*"] != -1}}
 	} 
 	
-	
+::STORM::TestScenario BasicChecks::unload \
+	-test_body {
+		::xoXSD::DataTypes::load   [namespace current]
+		::xoXSD::DataTypes::unload [namespace current]
+	} \
+	-postconditions {
+		{expr {[lsearch [interp aliases] "[namespace current]\::xsd::*"] == -1}}
+	} 
+		
 ::STORM::TestScenario BasicChecks::assignment \
 	-test_body {
 		::xoXSD::DataTypes::load [namespace current]
