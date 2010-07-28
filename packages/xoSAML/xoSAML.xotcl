@@ -16,9 +16,6 @@ proc load {{targetNamespace ""}} {
 	if { $targetNamespace eq "" } {
 		set targetNamespace [uplevel 1 namespace current]
 	} 
-	if { $targetNamespace eq "::" } {
-		set targetNamespace ""
-	}
 	::xoSAML::Environment::load $targetNamespace
 	::xoSAML::Bindings::load none $targetNamespace
 	namespace eval $targetNamespace {
@@ -36,9 +33,6 @@ proc unload {{targetNamespace ""}} {
 	if { $targetNamespace eq "" } {
 		set targetNamespace [uplevel 1 namespace current]
 	} 
-	if { $targetNamespace eq "::" } {
-		set targetNamespace ""
-	}
 	namespace eval $targetNamespace {
 		namespace forget -force ::xoSAML::Objects::*
 	}

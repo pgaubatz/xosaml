@@ -101,6 +101,8 @@ SchemaGenerator instproc generateEnvironment {} {
 	}
 	append o "\n\}\n\n"
 	
+	append o "if \{ \$targetNamespace eq \"::\" \} \{ set targetNamespace \"\" \}\n\n"
+	
 	foreach parser [my parsers] {
 		append o [$parser getInterpAliases]
 	}
