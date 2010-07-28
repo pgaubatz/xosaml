@@ -5,6 +5,7 @@ package require XOTcl
 namespace eval ::xoXSD::DataTypes {
 
 proc load {targetNamespace} {
+	if { $targetNamespace eq "::" } { set targetNamespace "" }
 	if { [lsearch [interp aliases] "$targetNamespace\::xsd::*"] == 0 } return
 	foreach c [::xoXSD::DataTypes::DataType info subclass -closure] {
 		if { [namespace qualifiers $c] ne "::xoXSD::DataTypes" } continue

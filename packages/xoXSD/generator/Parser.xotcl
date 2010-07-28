@@ -214,7 +214,15 @@ schema instproc getClasses {{dummy false}} {
 			}
 			
 			#get the index of the dependent class
-			set dep [lsearch -glob $complexTypes *::[namespace tail [$c type]]]
+			set dep -1
+			for {set j 0} {$j < [llength $complexTypes]} {incr j} {
+				set complex [lindex $complexTypes $j]
+				if { [$complex name] eq [namespace tail [$c type]] } {
+					set dep $j
+					break
+				}
+			}
+			if { $dep == -1 } { error "shouldn't reach here" }
 			
 			#skip this, because the dependent class has already been defined
 			if { $i > $dep } {
