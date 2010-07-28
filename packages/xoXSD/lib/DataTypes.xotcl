@@ -5,13 +5,17 @@ package require XOTcl
 namespace eval ::xoXSD::DataTypes {
 
 proc load {targetNamespace} {
-	namespace eval $targetNamespace {
-		if { [lsearch [interp aliases] "xsd::*"] == 0 } return
-		foreach c [::xoXSD::DataTypes::DataType info subclass -closure] {
-			if { [namespace qualifiers $c] ne "::xoXSD::DataTypes" } continue
-			set name [namespace tail $c]
-			interp alias {} xsd::$name {} ::xoXSD::DataTypes::$name
-		}
+	if { [lsearch [interp aliases] "$targetNamespace\::xsd::*"] == 0 } return
+	foreach c [::xoXSD::DataTypes::DataType info subclass -closure] {
+		if { [namespace qualifiers $c] ne "::xoXSD::DataTypes" } continue
+		set name [namespace tail $c]
+		interp alias {} $targetNamespace\::xsd::$name {} ::xoXSD::DataTypes::$name
+	}
+}
+
+proc unload {targetNamespace} {
+	foreach a [lsearch -inline -all [interp aliases] "$targetNamespace\::xsd::*"] {
+		interp alias {} $targetNamespace\::xsd::[namespace tail $a] {}
 	}
 }
 

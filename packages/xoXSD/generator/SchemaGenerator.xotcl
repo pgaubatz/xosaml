@@ -83,7 +83,11 @@ SchemaGenerator instproc generateEnvironment {} {
 	append o "# These classes are ambiguous, so you always have to properly namespace them:\n"
 	set classnames [list]
 	set ambiguous [list]
+	set namespaces [list]
+	set prefixes [list]
 	foreach parser [my parsers] {
+		lappend namespaces [$parser getNamespace]
+		lappend prefixes [$parser getPrefix]
 		set names [lsort -unique [$parser getClassNames]]
 		set intersect [::struct::set intersect $classnames $names]
 		::struct::set add ambiguous $intersect
@@ -91,17 +95,28 @@ SchemaGenerator instproc generateEnvironment {} {
 		::struct::set add classnames $names
 	}
 	foreach a $ambiguous {
-		foreach parser [my parsers] {
-			append o "namespace forget [$parser getNamespace]::$a\n"
+		foreach ns $namespaces {
+			append o "namespace forget $ns\::$a\n"
 		}
 	}
-	append o "\n"
+	append o "\n\}\n\n"
 	
 	foreach parser [my parsers] {
 		append o [$parser getInterpAliases]
 	}
 	
-	append o "\n\}\n\}\n\}\n"
+	append o "\n\}\n\n"
+	
+	append o "proc unload \{targetNamespace\} \{\n"
+	append o "\t::xoXSD::DataTypes::unload \$targetNamespace\n"
+	append o "\tforeach prefix \{[join $prefixes]\} \{\n"
+	append o "\t\tforeach alias \[lsearch -inline -all \[interp aliases\] \"\$targetNamespace\\::\$prefix\\::*\"\] \{\n"
+	append o "\t\t\tinterp alias \{\} \$targetNamespace\\::\$prefix\\::\[namespace tail \$alias\] \{\}\n"
+	append o "\t\t\}\n"
+	append o "\t\}\n"
+	append o "\}\n\n"
+	
+	append o "\}\n"
 	return $o
 }
 
