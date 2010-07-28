@@ -7,21 +7,18 @@ package require base64
 namespace eval ::xoSAML::Bindings {
 
 proc load {binding targetNamespace} {
-	namespace eval $targetNamespace {
-		set binding [uplevel 1 set binding]
-		if { $binding eq "none" } {
-			set ns ::xoSAML::Objects
-		} else {
-			set ns ::xoSAML::Bindings::$binding
-		}
-		foreach r [list Request LogoutRequest NameIDMappingRequest AuthnRequest AssertionIDRequest ManageNameIDRequest] {
-			interp alias {}        $r {} $ns\::Request
-			interp alias {} samlp::$r {} $ns\::Request
-		}
-		foreach r [list ManageNameIDResponse LogoutResponse Response NameIDMappingResponse ArtifactResponse] {
-			interp alias {}        $r {} $ns\::Response
-			interp alias {} samlp::$r {} $ns\::Response
-		}
+	if { $binding eq "none" } {
+		set ns "::xoSAML::Objects"
+	} else {
+		set ns "::xoSAML::Bindings::$binding"
+	}
+	foreach r [list Request LogoutRequest NameIDMappingRequest AuthnRequest AssertionIDRequest ManageNameIDRequest] {
+		interp alias {} $targetNamespace\::$r        {} $ns\::Request
+		interp alias {} $targetNamespace\::samlp::$r {} $ns\::Request
+	}
+	foreach r [list ManageNameIDResponse LogoutResponse Response NameIDMappingResponse ArtifactResponse] {
+		interp alias {} $targetNamespace\::$r        {} $ns\::Response
+		interp alias {} $targetNamespace\::samlp::$r {} $ns\::Response
 	}
 }
 	

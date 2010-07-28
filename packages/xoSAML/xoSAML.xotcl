@@ -15,16 +15,38 @@ namespace eval ::xoSAML {
 proc load {{targetNamespace ""}} {
 	if { $targetNamespace eq "" } {
 		set targetNamespace [uplevel 1 namespace current]
+	} 
+	if { $targetNamespace eq "::" } {
+		set targetNamespace ""
 	}
 	::xoSAML::Environment::load $targetNamespace
 	::xoSAML::Bindings::load none $targetNamespace
 	namespace eval $targetNamespace {
 		namespace import -force ::xoSAML::Objects::*
-		foreach c [list Condition Subject Assertion Attribute] {
-			interp alias {} saml::$c {} ::xoSAML::Objects::$c
-		}
-		foreach c [list Status] {
-			interp alias {} samlp::$c {} ::xoSAML::Objects::$c
+	}
+	foreach c [list Condition Subject Assertion Attribute] {
+		interp alias {} $targetNamespace\::saml::$c {} ::xoSAML::Objects::$c
+	}
+	foreach c [list Status] {
+		interp alias {} $targetNamespace\::samlp::$c {} ::xoSAML::Objects::$c
+	}
+}
+
+proc unload {{targetNamespace ""}} {
+	if { $targetNamespace eq "" } {
+		set targetNamespace [uplevel 1 namespace current]
+	} 
+	if { $targetNamespace eq "::" } {
+		set targetNamespace ""
+	}
+	namespace eval $targetNamespace {
+		namespace forget -force ::xoSAML::Objects::*
+	}
+	::xoXSD::DataTypes::unload $targetNamespace
+	::xoSAML::Environment::unload $targetNamespace
+	foreach a [lsearch -inline -all [interp aliases] "$targetNamespace\::*"] {
+		if { [namespace qualifiers [interp alias {} $a]] eq "::xoSAML::Objects" } {
+			interp alias {} $a {}
 		}
 	}
 }
@@ -33,7 +55,10 @@ proc loadBinding {binding {targetNamespace ""}} {
 	if { $targetNamespace eq "" } {
 		set targetNamespace [uplevel 1 namespace current]
 	}
-	return [::xoSAML::Bindings::load $binding $targetNamespace]
+	if { $targetNamespace eq "::" } {
+		set targetNamespace ""
+	}
+	::xoSAML::Bindings::load $binding $targetNamespace
 }
 
 proc unmarshal {xml {execute true}} {

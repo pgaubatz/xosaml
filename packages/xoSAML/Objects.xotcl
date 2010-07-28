@@ -43,6 +43,7 @@ namespace export *
 ::xotcl::Class Status		-superclass ::xoSAML::samlp::Status
 
 Request instproc init { {type ""} } {
+	puts "REQUEST [self]"
 	set type "::xoSAML::samlp::[namespace tail [my getSubstitutedCommand]]"
 	if { ![Object isobject $type] || ![$type isclass] } {
 		set type "::xoSAML::samlp::AuthnRequest"

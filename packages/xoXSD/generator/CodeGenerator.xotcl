@@ -60,7 +60,10 @@ CodeGenerator instproc parseAndEval {data} {
 	# 3) have the xoXSD script evaluated
 	namespace eval [self] $o
 	
-	# 4) return the root-object
+	# 4) Un-load the xoXSD-Environment from our namespace again
+	[my environment]::unload [self]
+	
+	# 5) return the root-object
 	return [self]::[lindex [my objectnames] end]
 }
 
