@@ -417,13 +417,6 @@ XSDObject instproc . {accessor args} {
 	}
 }
 
-XSDObject instproc createObject {type {args {}}} {
-	set ns [uplevel 2 namespace current]
-	set obj [Object autoname xoxsdobj] 
-	namespace eval $ns $type $obj $args
-	return "$ns\::$obj"
-}
-
 XSDObject instforward export %self marshal
 
 ##############################################

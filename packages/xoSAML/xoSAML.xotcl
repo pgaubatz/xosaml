@@ -28,6 +28,8 @@ proc load {{targetNamespace ""}} {
 	foreach c [list Status] {
 		interp alias {} $targetNamespace\::samlp::$c {} ::xoSAML::Objects::$c
 	}
+	::xoSAML::hideErrors false
+	return
 }
 
 proc unload {{targetNamespace ""}} {
@@ -44,7 +46,7 @@ proc unload {{targetNamespace ""}} {
 			interp alias {} $a {}
 		}
 	}
-	::xoSAML::hideErrors false
+	return
 }
 
 proc loadBinding {binding {targetNamespace ""}} {
@@ -55,6 +57,7 @@ proc loadBinding {binding {targetNamespace ""}} {
 		set targetNamespace ""
 	}
 	::xoSAML::Bindings::load $binding $targetNamespace
+	return
 }
 
 proc unmarshal {xml {execute true}} {
@@ -74,6 +77,7 @@ proc unmarshal {xml {execute true}} {
 
 proc hideErrors {value} {
 	::xoXSD::hideErrors $value
+	return
 }
 
 }
