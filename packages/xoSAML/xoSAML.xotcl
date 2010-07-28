@@ -44,6 +44,7 @@ proc unload {{targetNamespace ""}} {
 			interp alias {} $a {}
 		}
 	}
+	::xoSAML::hideErrors false
 }
 
 proc loadBinding {binding {targetNamespace ""}} {

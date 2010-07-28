@@ -55,7 +55,7 @@ Request instproc init { {type ""} } {
 }
 
 Request instproc send {receiver} {
-	puts "ERROR: Load a SAML Binding if you want to use the function '[self proc]'!"
+	my __error "Load a SAML Binding if you want to use the function '[self proc]'!"
 }
 
 Response instproc init args {
@@ -71,7 +71,7 @@ Response instproc init args {
 }
 
 Response instproc receive {sender} {
-	puts "ERROR: Load a SAML Binding if you want to use the function '[self proc]'!"
+	my __error "Load a SAML Binding if you want to use the function '[self proc]'!"
 }
 
 Status set codes [list \
@@ -111,7 +111,7 @@ Status instproc init { {code ""} } {
 	set found [lsearch -inline -nocase $codes $code]
 	
 	if { $found eq "" } {
-		puts "ERROR: \"$code\" doesn't seem to be a valid StatusCode."
+		my __error "\"$code\" doesn't seem to be a valid StatusCode."
 		return
 	}
 
