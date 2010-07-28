@@ -20,7 +20,7 @@ namespace eval ::DataTypes {
 		::xoXSD::DataTypes::load [namespace current]
 	} \
 	-postconditions {
-		{expr [lsearch -not [interp aliases] "xsd::*"]}
+		{expr [lsearch [interp aliases] "xsd::*"] != -1}
 	} 
 	
 	
