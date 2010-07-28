@@ -21,6 +21,7 @@ proc load {{targetNamespace ""}} {
 	namespace eval $targetNamespace {
 		namespace import -force ::xoSAML::Objects::*
 	}
+	if { $targetNamespace eq "::" } { set targetNamespace "" }
 	foreach c [list Condition Subject Assertion Attribute] {
 		interp alias {} $targetNamespace\::saml::$c {} ::xoSAML::Objects::$c
 	}

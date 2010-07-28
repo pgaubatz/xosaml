@@ -12,6 +12,7 @@ proc load {binding targetNamespace} {
 	} else {
 		set ns "::xoSAML::Bindings::$binding"
 	}
+	if { $targetNamespace eq "::" } { set targetNamespace "" }
 	foreach r [list Request LogoutRequest NameIDMappingRequest AuthnRequest AssertionIDRequest ManageNameIDRequest] {
 		interp alias {} $targetNamespace\::$r        {} $ns\::Request
 		interp alias {} $targetNamespace\::samlp::$r {} $ns\::Request
