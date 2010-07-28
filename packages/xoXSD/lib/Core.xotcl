@@ -825,7 +825,7 @@ XSDObject instproc __error {msg} {
 	puts "  o) Object:  [self]"
 	puts "  o) Type:    [my class]"
 	puts "  o) Proc:    [self callingproc]"
-	puts "  o) Message: $msg"
+	puts "  o) Message: [join $msg]"
 	puts " "
 }
 
