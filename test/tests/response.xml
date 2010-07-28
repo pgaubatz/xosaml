@@ -1,9 +1,9 @@
-<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="identifier_2" InResponseTo="indentifier_1" Destination="https://sp.example.com/SAML2/SSO/POST" IssueInstant="2010-07-21T12:44:27Z" Version="2.0">
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" InResponseTo="indentifier_1" ID="identifier_2" IssueInstant="2010-07-21T12:44:27Z" Version="2.0" Destination="https://sp.example.com/SAML2/SSO/POST">
     <saml:Issuer>https://idp.example.org/SAML2</saml:Issuer>
     <samlp:Status>
         <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
     </samlp:Status>
-    <saml:Assertion ID="identifier_3" Version="2.0" IssueInstant="2010-07-21T12:44:27Z">
+    <saml:Assertion ID="identifier_3" IssueInstant="2010-07-21T12:44:27Z" Version="2.0">
         <saml:Issuer>https://idp.example.org/SAML2</saml:Issuer>
         <saml:Subject>
             <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">3f7b3dcf-1674-4ecd-92c8-1544f346baf8</saml:NameID>
@@ -23,4 +23,3 @@
         </saml:AuthnStatement>
     </saml:Assertion>
 </samlp:Response>
-

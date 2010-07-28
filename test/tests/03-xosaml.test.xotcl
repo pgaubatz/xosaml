@@ -1,5 +1,301 @@
 
 namespace eval ::xoSAML {
 
+
+#
+# Basic checks:
+#
+
+SandboxedTestCase BasicChecks \
+	-setup_script {
+		package require xoSAML
 		
+		proc clearInterpAliases {} {
+			# delete all relevant interp aliases
+        		foreach prefix {xsd saml samlp ds xenc} {
+        			foreach alias [lsearch -inline -all [interp aliases] "$prefix\::*"] {
+        				interp alias {} $alias {}
+        			}
+        		}
+		}
+		
+		clearInterpAliases
+	}
+	
+	
+SandboxedTestScenario BasicChecks::load \
+	-test_body {
+		::xoSAML::load
+	} \
+	-postconditions {
+		{expr [lsearch [interp aliases] "[namespace current]::xsd::*"] != -1}
+		{expr [lsearch [interp aliases] "[namespace current]::saml::*"] != -1}
+		{expr [lsearch [interp aliases] "[namespace current]::samlp::*"] != -1}
+		{expr [lsearch [interp aliases] "[namespace current]::ds::*"] != -1}
+		{expr [lsearch [interp aliases] "[namespace current]::xenc::*"] != -1}
+		{expr {[interp alias {} [namespace current]::samlp::AuthnRequest] eq "::xoSAML::Objects::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Objects::Response"}}
+	} \
+	-cleanup_script {
+		clearInterpAliases
+	}
+	
+SandboxedTestScenario BasicChecks::loadBinding \
+	-test_body {
+		::xoSAML::loadBinding HTTP::Post
+	} \
+	-postconditions {
+		{expr {[interp alias {} [namespace current]::samlp::AuthnRequest] eq "::xoSAML::Bindings::HTTP::Post::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Bindings::HTTP::Post::Response"}}
+		{expr {[::xoSAML::loadBinding none] eq ""}}
+		{expr {[interp alias {} [namespace current]::samlp::AuthnRequest] eq "::xoSAML::Objects::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Objects::Response"}}
+	} \
+	-cleanup_script {
+		clearInterpAliases
+	}
+	
+SandboxedTestScenario BasicChecks::unmarshal \
+	-test_body {
+		::xoSAML::load
+		set xml {
+			<saml:Subject>
+				<saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">3f7b3dcf-1674-4ecd-92c8-1544f346baf8</saml:NameID>
+				<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+					<saml:SubjectConfirmationData NotOnOrAfter="2010-03-29T10:23:44Z" InResponseTo="identifier_1" Recipient="https://sp.example.com/SAML2/SSO/POST"/>
+				</saml:SubjectConfirmation>
+			</saml:Subject>	
+		}
+	} \
+	-postconditions {
+		{expr {[::xoSAML::unmarshal $xml false] ne ""}}
+	} \
+	-cleanup_script {
+		unset xml
+		clearInterpAliases
+	}
+	
+	
+#
+# Check Objects:
+#
+
+SandboxedTestCase ObjectsChecks \
+	-setup_script {
+		package require xoSAML
+		
+		::xoSAML::load
+		::xoSAML::hideErrors true
+	}
+	
+	
+SandboxedTestScenario ObjectsChecks::request \
+	-preconditions {
+		{expr ![info exists req1]}
+		{expr ![info exists req2]}
+		{expr ![info exists req3]}
+		{expr ![info exists req4]}
+		{expr ![info exists req5]}
+		{expr ![info exists req6]}
+	} \
+	-test_body {		
+		Request req1
+		samlp::Request req2
+		
+		AuthnRequest req3
+		samlp::AuthnRequest req4
+		
+		LogoutRequest req5
+		samlp::LogoutRequest req6
+	} \
+	-postconditions {
+		{expr {[req1 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req2 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req3 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req4 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req5 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req6 class] eq "::xoSAML::Objects::Request"}}
+		{expr {[req1 . Version getContent] eq "2.0"}}
+		{expr {[req1 . IssueInstant getContent] ne ""}}
+		{expr {[req1 send "someone"] eq ""}}
+	} \
+	-cleanup_script {
+		foreach o {req1 req2 req3 req4 req5 req6} {
+			$o destroy
+		}
+	}
+	
+SandboxedTestScenario ObjectsChecks::response \
+	-preconditions {
+		{expr ![info exists res1]}
+		{expr ![info exists res2]}
+	} \
+	-test_body {		
+		Response res1
+		samlp::LogoutResponse res2
+	} \
+	-postconditions {
+		{expr {[res1 class] eq "::xoSAML::Objects::Response"}}
+		{expr {[res2 class] eq "::xoSAML::Objects::Response"}}
+		{expr {[res1 . Version getContent] eq "2.0"}}
+		{expr {[res1 . IssueInstant getContent] ne ""}}
+		{expr {[res1 receive "from"] eq ""}}
+	} \
+	-cleanup_script {
+		foreach o {res1 res2} {
+			$o destroy
+		}
+	}
+	
+SandboxedTestScenario ObjectsChecks::status \
+	-preconditions {
+		{expr ![info exists s1]}
+		{expr ![info exists s2]}
+	} \
+	-test_body {		
+		samlp::Status s1
+		samlp::Status s2 "success"
+	} \
+	-postconditions {
+		{expr {[s1 class] eq "::xoSAML::Objects::Status"}}
+		{expr {[s2 class] eq "::xoSAML::Objects::Status"}}
+		{expr {[s1 StatusCode] eq ""}}
+		{expr {[s1 . StatusCode getContent] eq ""}}
+		{expr {[s2 StatusCode] ne ""}}
+		{expr {[s2 . StatusCode getContent] ne "urn:oasis:names:tc:SAML:2.0:status:Success"}}
+	} \
+	-cleanup_script {
+		foreach o {s1 s2} {
+			$o destroy
+		}
+	}
+	
+SandboxedTestScenario ObjectsChecks::assertion \
+	-preconditions {
+		{expr ![info exists a]}
+	} \
+	-test_body {		
+		Assertion a
+	} \
+	-postconditions {
+		{expr {[a class] eq "::xoSAML::Objects::Assertion"}}
+		{expr {[a . Version getContent] eq "2.0"}}
+		{expr {[a . IssueInstant getContent] ne ""}}
+	} \
+	-cleanup_script {
+		a destroy
+	}
+
+SandboxedTestScenario ObjectsChecks::attribute \
+	-preconditions {
+		{expr ![info exists a1]}
+		{expr ![info exists a2]}
+		{expr ![info exists a3]}
+		{expr ![info exists a4]}
+	} \
+	-test_body {		
+		Attribute a1
+		Attribute a2 "SomeName"
+		Attribute a3 "AnotherName" "val"
+		Attribute a4 "SameName" {"val1" "val2" "val3"}
+	} \
+	-postconditions {
+		{expr {[a1 class] eq "::xoSAML::Objects::Attribute"}}
+		{expr {[a1 NameFormat] ne ""}}
+		{expr {[a1 . NameFormat getContent] eq "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"}}
+		{expr {[a2 Name] ne ""}}
+		{expr {[a2 . Name getContent] eq "SomeName"}}
+		{expr {[a3 . AttributeValue getContent] eq "val"}}
+		{expr {[llength [a4 AttributeValue]] == 3}}
+	} \
+	-cleanup_script {
+		foreach o {a1 a2 a3 a4} {
+			$o destroy
+		}
+	}
+	
+
+#
+# Check Bindings:
+#
+
+SandboxedTestCase BindingsChecks \
+	-setup_script {
+		package require xoSAML
+		
+		::xoSAML::load
+		::xoSAML::loadBinding none
+	}
+	
+	
+SandboxedTestScenario BindingsChecks::load \
+	-preconditions {
+		{expr {[interp alias {} [namespace current]::samlp::Request] eq "::xoSAML::Objects::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Objects::Response"}}
+	} \
+	-test_body {
+		::xoSAML::loadBinding HTTP::Post
+	} \
+	-postconditions {
+		{expr {[interp alias {} [namespace current]::samlp::Request] eq "::xoSAML::Bindings::HTTP::Post::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Bindings::HTTP::Post::Response"}}
+	}
+
+SandboxedTestScenario BindingsChecks::httpPost \
+	-preconditions {
+		{expr ![info exists iss]}
+		{expr ![info exists pol]}
+		{expr ![info exists req]}
+	} \
+	-expected_result {PHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiBBc3NlcnRpb25Db25zdW1lclNlcnZpY2VJbmRleD0iMSIgSUQ9ImlkZW50aWZpZXJfMSIgSXNzdWVJbnN0YW50PSIxOTcwLTAxLTAxVDAwOjAwOjAwWiIgVmVyc2lvbj0iMi4wIj4KICAgIDxzYW1sOklzc3Vlcj5odHRwczovL3NwLmV4YW1wbGUuY29tL1NBTUwyPC9zYW1sOklzc3Vlcj4KICAgIDxzYW1scDpOYW1lSURQb2xpY3kgRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDp0cmFuc2llbnQiIEFsbG93Q3JlYXRlPSJ0cnVlIi8+Cjwvc2FtbHA6QXV0aG5SZXF1ZXN0Pgo=} \
+	-test_body {
+		::xoSAML::loadBinding HTTP::Post
+		
+		saml::Issuer iss "https://sp.example.com/SAML2"
+		
+		samlp::NameIDPolicy pol
+		pol AllowCreate true
+		pol Format "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
+		
+		samlp::Request req
+		req IssueInstant 0
+		req ID "identifier_1"
+		req AssertionConsumerServiceIndex 1
+		req Issuer iss
+		req NameIDPolicy pol
+		
+		return [req send]
+	} \
+	-postconditions {
+		{expr {[interp alias {} [namespace current]::samlp::Request] eq "::xoSAML::Bindings::HTTP::Post::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Bindings::HTTP::Post::Response"}}
+	} \
+	-cleanup_script {
+		::xoSAML::loadBinding none
+		foreach o {iss pol req} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario BindingsChecks::httpPost2 \
+	-preconditions {
+		{expr ![info exists res]}
+	} \
+	-test_body {
+		::xoSAML::loadBinding HTTP::Post
+ 
+		samlp::Response res
+		res receive "PHNhbWxwOlJlc3BvbnNlIHhtbG5zOnNhbWxwPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6cHJvdG9jb2wiIElEPSJpZDEiIElzc3VlSW5zdGFudD0iMjAxMC0wNy0yOFQxNTo1NjoyMVoiIFZlcnNpb249IjIuMCI+CiAgICA8c2FtbHA6U3RhdHVzPgogICAgICAgIDxzYW1scDpTdGF0dXNDb2RlIFZhbHVlPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6c3RhdHVzOlN1Y2Nlc3MiLz4KICAgIDwvc2FtbHA6U3RhdHVzPgo8L3NhbWxwOlJlc3BvbnNlPg=="		
+	} \
+	-postconditions {
+		{expr {[res check]}}
+		{expr {[res Status] ne ""}}
+		{expr {[res . Status . StatusCode] ne ""}}
+	} \
+	-cleanup_script {
+		::xoSAML::loadBinding none
+		res destroy
+	}
+
+
 }
