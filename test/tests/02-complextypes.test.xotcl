@@ -2,35 +2,6 @@
 namespace eval ::ComplexTypes {
 
 #
-# Define the specialised classes:
-#
-
-::xotcl::Class SandboxedTestCase -superclass ::STORM::TestCase \
-	-slots {
-		::xotcl::Attribute sandbox -default ::sandbox
-	} \
-	-instproc do {script} {
-		namespace eval [my sandbox] $script
-	} \
-	-instproc init args {
-        	next
-        	my cleanup_script { 
-        		namespace delete [my sandbox]
-        	}
-	}
-
-::xotcl::Class SandboxedTestScenario -superclass ::STORM::TestScenario \
-	-slots {
-		::xotcl::Attribute sandbox -default ::sandbox
-	} \
-	-instproc do {script} {
-		namespace eval [my sandbox] $script
-	}
-
-
-
-
-#
 # Marshal complexTypes:
 #
 	
@@ -126,7 +97,6 @@ namespace eval ::ComplexTypes {
 	} 
 
 
-
 #
 # Roundtrip complexTypes:
 #
@@ -139,40 +109,11 @@ SandboxedTestCase RoundtripComplexTypes \
         	::xoSAML::load
         } 
 
-::xotcl::Class RoundtripTestScenario -superclass SandboxedTestScenario \
-	-slots {
-		::xotcl::Attribute xml_file
-	} \
-	-instproc init args {
-        	next
-        	my preconditions {
-			{expr ![info exists obj]}
-			{expr ![info exists xml]}
-        	}
-        	my test_body {
-        		set xml [::fileutil::cat [my xml_file]]
-        		
-        		# strip all whitespaces between elements:
-        		regsub -all {>\s+<} $xml {><} xml
-        		regsub -all {\n}    $xml {}   xml
-        		
-        		set obj [::xoSAML::unmarshal $xml]
-        	}
-		my postconditions {
-			{expr {[$obj marshal -compact true] eq $xml}}
-		}
-		my cleanup_script {
-			$obj destroy
-			unset xml
-			unset obj
-		}
-	}
 
 RoundtripTestScenario RoundtripComplexTypes::Request   -xml_file tests/request.xml
 RoundtripTestScenario RoundtripComplexTypes::Request2  -xml_file tests/request2.xml
 RoundtripTestScenario RoundtripComplexTypes::Response  -xml_file tests/response.xml
 RoundtripTestScenario RoundtripComplexTypes::Response2 -xml_file tests/response2.xml
-
 
 
 #
@@ -242,15 +183,204 @@ SandboxedTestScenario AssignmentComplexTypes::wrongType \
         -preconditions {
         	{expr ![info exists sc]}
         } \
-	-expected_result false \
 	-test_body {			
 		saml::SubjectConfirmation sc
-		return [sc NameID "this is no NameID object"]
+	} \
+	-postconditions {
+		{expr {![sc check]}}
+		{expr {![sc NameID "this is no NameID object"]}}
 	} \
 	-cleanup_script {
 		sc destroy
 	}
+	
+SandboxedTestScenario AssignmentComplexTypes::textualContent \
+	-preconditions {
+		{expr ![info exists act1]}
+		{expr ![info exists act2]}
+	} \
+	-test_body {			
+		saml::Action act1
+		saml::Action act2 "somestring"
+	} \
+	-postconditions {
+		{expr {[act1 getContent] eq ""}}
+		{expr {[act1 setContent "anotherstring"] ne ""}}
+		{expr {![act1 check]}}
+		{expr {[act1 Namespace "http://ns/"] ne ""}}
+		{expr {[act1 check]}}
+		{expr {[act2 getContent] eq "somestring"}}
+		{expr {[act2 setContent "anotherstring"] ne ""}}
+		{expr {[act2 getContent] eq "anotherstring"}}
+	} \
+	-cleanup_script {
+		foreach o {act1 act2} {
+			$o destroy
+		}
+	}
 
+SandboxedTestScenario AssignmentComplexTypes::dotOperator \
+	-preconditions {
+		{expr ![info exists aud]}
+		{expr ![info exists res]}
+		{expr ![info exists con]}
+	} \
+	-test_body {			
+		saml::Audience aud "https://sp.example.com/SAML2"
+		
+                saml::AudienceRestriction res
+                res Audience aud
+                
+                saml::Conditions con
+                con AudienceRestriction res
+	} \
+	-postconditions {
+		{expr {[con check]}}
+		{expr {[namespace tail [res . Audience]] eq "aud"}}
+		{expr {[namespace tail [con . AudienceRestriction . Audience]] eq "aud"}}
+		{expr {[res . Audience getContent] eq "https://sp.example.com/SAML2"}}
+		{expr {[con . AudienceRestriction . Audience getContent] eq "https://sp.example.com/SAML2"}}	
+	} \
+	-cleanup_script {
+		foreach o {aud res con} {
+			$o destroy
+		}
+	}
+
+
+SandboxedTestScenario AssignmentComplexTypes::dotOperator2 \
+	-preconditions {
+		{expr ![info exists aud1]}
+		{expr ![info exists aud2]}
+		{expr ![info exists res]}
+	} \
+	-test_body {			
+		saml::Audience aud1 "https://sp1.example.com/SAML2"
+		saml::Audience aud2 "https://sp2.example.com/SAML2"
+		
+		saml::AudienceRestriction res
+		res Audience aud1
+		res Audience aud2
+	} \
+	-postconditions {
+		{expr {[res check]}}
+		{expr {[llength [res . Audience]] == 2}}
+		{expr {[llength [res . Audience . Some . Sub . Attribute]] == 2}}
+		{expr {[namespace tail [lindex [res . Audience] 1]] eq "aud1"}}
+		{expr {[res . Audience getContent] eq ""}}
+	} \
+	-cleanup_script {
+		foreach o {aud1 aud2 res} {
+			$o destroy
+		}
+	}
+
+
+#
+# Check any- and anyAttribute-constructs:
+#
+	
+SandboxedTestCase CheckAny \
+	-setup_script {
+		package require xoSAML
+	
+		::xoSAML::load 
+		::xoSAML::hideErrors true
+	} 
+
+SandboxedTestScenario CheckAny::any \
+	-preconditions {
+		{expr ![info exists aud1]}
+		{expr ![info exists aud2]}
+		{expr ![info exists sub]}
+	} \
+	-test_body {			
+		saml::Audience aud1 "https://sp1.example.com/SAML2"
+		saml::Audience aud2 "https://sp2.example.com/SAML2"
+		
+		saml::SubjectConfirmationData sub
+	} \
+	-postconditions {
+		{expr {[sub check]}}
+		{expr {[sub addAny aud1]}}
+		{expr {[sub check]}}
+		{expr {[namespace tail [sub Audience]] eq "aud1"}}
+		{expr {![sub addAny aud2]}}
+		{expr {[sub Audience aud2]}}
+		{expr {[llength [sub Audience]] == 2}}
+	} \
+	-cleanup_script {
+		foreach o {aud1 aud2 sub} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario CheckAny::any2 \
+	-preconditions {
+		{expr ![info exists aud]}
+		{expr ![info exists adv]}
+		{expr ![info exists sub]}
+	} \
+	-test_body {			
+		saml::Audience aud "https://sp1.example.com/SAML2"
+		
+		ds::X509SubjectName sub "me"
+
+		saml::Advice adv
+		adv addAny aud
+		
+	} \
+	-postconditions {
+		{expr {[adv Audience] eq ""}}
+		{expr {[adv addAny sub]}}
+		{expr {[adv . X509SubjectName getContent] eq "me"}}
+	} \
+	-cleanup_script {
+		foreach o {aud adv sub} {
+			$o destroy
+		}
+	}
+
+SandboxedTestScenario CheckAny::anyAttribute \
+	-preconditions {
+		{expr ![info exists sub]}
+	} \
+	-test_body {				
+		saml::SubjectConfirmationData sub
+		sub addAnyAttribute ANewAttribute xsd::string "SomeContent"
+	} \
+	-postconditions {
+		{expr {[sub . ANewAttribute getContent] eq "SomeContent"}}
+		{expr {[sub ANewAttribute "AnotherContent"] ne ""}}
+		{expr {[sub . ANewAttribute getContent] eq "AnotherContent"}}
+	} \
+	-cleanup_script {
+		sub destroy
+	}
+
+SandboxedTestScenario CheckAny::anyAttribute2 \
+	-preconditions {
+		{expr ![info exists sub]}
+	} \
+	-test_body {				
+		saml::SubjectConfirmationData sub
+		sub addAnyAttribute Attribute1 xsd::string 
+		sub addAnyAttribute Attribute2 xsd::string "Content"
+		sub addAnyAttribute Attribute3 ::some::not::existant::class
+		sub addAnyAttribute Attribute4 ::xoXSD::DataTypes::boolean "true"
+	} \
+	-postconditions {
+		{expr {[sub . Attribute1 getContent] eq ""}}
+		{expr {[sub Attribute1 "AnotherContent"] ne ""}}
+		{expr {[sub . Attribute1 getContent] eq "AnotherContent"}}
+		{expr {[sub . Attribute2 getContent] eq "Content"}}
+		{expr {[sub Attribute3] eq ""}}
+		{expr {[sub . Attribute3 getContent] eq ""}}
+		{expr {[sub . Attribute4 getContent] eq "true"}}
+	} \
+	-cleanup_script {
+		sub destroy
+	}
 
 
 #
@@ -505,10 +635,6 @@ SandboxedTestScenario CheckSequences::check \
 		unset pos2
 		unset pos3
 	}
-	
-
-
-	
 	
 	
 }
