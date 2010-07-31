@@ -67,9 +67,19 @@ namespace eval HTTP::Post {
 	}
 	
 	Response instproc receive {sender} {
+		set response [my parseHttpPost $sender]
+		if { $response eq "" } {
+			return false
+		}
+		set xml [::base64::decode $response]
+		my object [::xoSAML::unmarshal $xml]
+		return [self]
+	}
+	
+	Response instproc parseHttpPost {data} {
 		set SAMLResponse ""
 		::xotcl::comm::mime::Url decoder
-		foreach c [split $sender "&"] {
+		foreach c [split $data "&"] {
 			set chunk [split $c "="]
 			set var [decoder decodeItem [lindex $chunk 0]]		
 			set val [decoder decodeItem [lindex $chunk 1]]		
@@ -79,12 +89,7 @@ namespace eval HTTP::Post {
 				my RelayState $val
 			}
 		}
-		if { $SAMLResponse eq "" } {
-			return false
-		}
-		set xml [::base64::decode $SAMLResponse]
-		my object [::xoSAML::unmarshal $xml]
-		return [self]
+		return $SAMLResponse
 	}
 }
 
