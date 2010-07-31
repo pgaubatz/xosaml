@@ -57,6 +57,14 @@ proc loadBinding {binding {targetNamespace ""}} {
 	return
 }
 
+proc unloadBinding {{targetNamespace ""}} {
+	if { $targetNamespace eq "" } {
+		set targetNamespace [uplevel 1 namespace current]
+	}
+	::xoSAML::loadBinding none $targetNamespace
+	return
+}
+
 proc unmarshal {xml {execute true}} {
 	variable __codeGenerator
 	if { ![info exists __codeGenerator] } {

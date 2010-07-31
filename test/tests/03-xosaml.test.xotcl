@@ -222,9 +222,14 @@ SandboxedTestScenario ObjectsChecks::attribute \
 SandboxedTestCase BindingsChecks \
 	-setup_script {
 		package require xoSAML
+		package require tdom
 		
 		::xoSAML::load
 		::xoSAML::loadBinding none
+		::xoSAML::hideErrors true
+	} \
+	-cleanup_script {
+		::xoSAML::unloadBinding
 	}
 	
 	
@@ -241,13 +246,26 @@ SandboxedTestScenario BindingsChecks::load \
 		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Bindings::HTTP::Post::Response"}}
 	}
 
+SandboxedTestScenario BindingsChecks::unload \
+	-preconditions {
+		{expr {[::xoSAML::loadBinding HTTP::Post] eq ""}}
+	} \
+	-test_body {
+		::xoSAML::unloadBinding
+	} \
+	-postconditions {
+		{expr {[interp alias {} [namespace current]::samlp::Request] eq "::xoSAML::Objects::Request"}}
+		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Objects::Response"}}
+	}
+
 SandboxedTestScenario BindingsChecks::httpPost \
 	-preconditions {
 		{expr ![info exists iss]}
 		{expr ![info exists pol]}
 		{expr ![info exists req]}
+		{expr ![info exists html]}
+		{expr ![info exists doc]}
 	} \
-	-expected_result {PHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiBBc3NlcnRpb25Db25zdW1lclNlcnZpY2VJbmRleD0iMSIgSUQ9ImlkZW50aWZpZXJfMSIgSXNzdWVJbnN0YW50PSIxOTcwLTAxLTAxVDAwOjAwOjAwWiIgVmVyc2lvbj0iMi4wIj4KICAgIDxzYW1sOklzc3Vlcj5odHRwczovL3NwLmV4YW1wbGUuY29tL1NBTUwyPC9zYW1sOklzc3Vlcj4KICAgIDxzYW1scDpOYW1lSURQb2xpY3kgRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDp0cmFuc2llbnQiIEFsbG93Q3JlYXRlPSJ0cnVlIi8+Cjwvc2FtbHA6QXV0aG5SZXF1ZXN0Pgo=} \
 	-test_body {
 		::xoSAML::loadBinding HTTP::Post
 		
@@ -264,17 +282,22 @@ SandboxedTestScenario BindingsChecks::httpPost \
 		req Issuer iss
 		req NameIDPolicy pol
 		
-		return [req send]
+		req RelayState "http://some/resource"
+		
+		set html [req send "http://idp.example.org/"] 
+		set doc [[dom parse -html $html] documentElement]
 	} \
 	-postconditions {
-		{expr {[interp alias {} [namespace current]::samlp::Request] eq "::xoSAML::Bindings::HTTP::Post::Request"}}
-		{expr {[interp alias {} [namespace current]::samlp::Response] eq "::xoSAML::Bindings::HTTP::Post::Response"}}
+		{expr {[$doc selectNodes {string(/html/body/form/@action)}] eq "http://idp.example.org/"}}
+		{expr {[$doc selectNodes {string(/html/body/form/input[@name='SAMLRequest']/@value)}] eq "PHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiBBc3NlcnRpb25Db25zdW1lclNlcnZpY2VJbmRleD0iMSIgSUQ9ImlkZW50aWZpZXJfMSIgSXNzdWVJbnN0YW50PSIxOTcwLTAxLTAxVDAwOjAwOjAwWiIgVmVyc2lvbj0iMi4wIj4KICAgIDxzYW1sOklzc3Vlcj5odHRwczovL3NwLmV4YW1wbGUuY29tL1NBTUwyPC9zYW1sOklzc3Vlcj4KICAgIDxzYW1scDpOYW1lSURQb2xpY3kgRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDp0cmFuc2llbnQiIEFsbG93Q3JlYXRlPSJ0cnVlIi8+Cjwvc2FtbHA6QXV0aG5SZXF1ZXN0Pgo="}}
+		{expr {[$doc selectNodes {string(/html/body/form/input[@name='RelayState']/@value)}] eq "http://some/resource"}}	
 	} \
 	-cleanup_script {
 		::xoSAML::loadBinding none
 		foreach o {iss pol req} {
 			$o destroy
 		}
+		unset html doc
 	}
 
 SandboxedTestScenario BindingsChecks::httpPost2 \
@@ -285,12 +308,14 @@ SandboxedTestScenario BindingsChecks::httpPost2 \
 		::xoSAML::loadBinding HTTP::Post
  
 		samlp::Response res
-		res receive "PHNhbWxwOlJlc3BvbnNlIHhtbG5zOnNhbWxwPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6cHJvdG9jb2wiIElEPSJpZDEiIElzc3VlSW5zdGFudD0iMjAxMC0wNy0yOFQxNTo1NjoyMVoiIFZlcnNpb249IjIuMCI+CiAgICA8c2FtbHA6U3RhdHVzPgogICAgICAgIDxzYW1scDpTdGF0dXNDb2RlIFZhbHVlPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6c3RhdHVzOlN1Y2Nlc3MiLz4KICAgIDwvc2FtbHA6U3RhdHVzPgo8L3NhbWxwOlJlc3BvbnNlPg=="		
+		res receive "SAMLResponse=PHNhbWxwOlJlc3BvbnNlIHhtbG5zOnNhbWxwPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6cHJvdG9jb2wiIElEPSJpZDEiIElzc3VlSW5zdGFudD0iMjAxMC0wNy0yOFQxNTo1NjoyMVoiIFZlcnNpb249IjIuMCI%2bCiAgICA8c2FtbHA6U3RhdHVzPgogICAgICAgIDxzYW1scDpTdGF0dXNDb2RlIFZhbHVlPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6c3RhdHVzOlN1Y2Nlc3MiLz4KICAgIDwvc2FtbHA6U3RhdHVzPgo8L3NhbWxwOlJlc3BvbnNlPg%3d%3d&RelayState=http%3a%2f%2fsome%2fresource"
+		
 	} \
 	-postconditions {
 		{expr {[res check]}}
 		{expr {[res Status] ne ""}}
 		{expr {[res . Status . StatusCode] ne ""}}
+		{expr {[res RelayState] eq "http://some/resource"}}
 	} \
 	-cleanup_script {
 		::xoSAML::loadBinding none
