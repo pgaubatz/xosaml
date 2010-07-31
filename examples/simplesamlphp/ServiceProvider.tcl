@@ -64,6 +64,7 @@ Worker instproc respond-default {} {
 }
 
 Worker instproc respond-AuthenticationRequest {} {
+	
 	#
 	# Create the SAML (Authn)Request:
 	#
@@ -80,42 +81,19 @@ Worker instproc respond-AuthenticationRequest {} {
 	request Issuer issuer
 	request NameIDPolicy policy
 	
-	set SAMLRequest [request send] 
-	set RelayState "http://[my HostPort]/[my set resourceName]"
-	
-	my returnResponse [subst {
-		<html>
-		<body>
-		<h1>Restricted area</h1>
-		<p>
-			You're trying to access <i>$RelayState</i>...<br>
-			Please authenticate yourself!
-		</p>
-		<form action="[my IdPUrl]" method="POST">
-			<input type="hidden" name="SAMLRequest" value="$SAMLRequest">
-			<input type="hidden" name="RelayState" value="$RelayState">
-			<input type="submit" value="Continue...">
-		</form>
-		</body>
-		</html>
-	} ]
+	request RelayState "http://[my HostPort]/[my set resourceName]"
+
+	my returnResponse [request send [my IdPUrl]] 
 }
 
 Worker instproc respond-AssertionConsumer {} {
 	
 	#
-	# Read the POST'ed formdata:
-	#
-	
-	set SAMLResponse [[lindex [my set formData] 0] set content]
-	set RelayState   [[lindex [my set formData] 1] set content] 
-
-	#
 	# Create a SAML Response:
 	#
 	
 	samlp::Response response
-	response receive $SAMLResponse
+	response receive [my set data]
 	
 	set o {
 		<html><body>
@@ -137,7 +115,7 @@ Worker instproc respond-AssertionConsumer {} {
 	}
 	append o {
 		</ul>
-		<b>You may now access the restricted resource: <a href="$RelayState">$RelayState</a></b>
+		<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
 		</body></html>
 	}
 	

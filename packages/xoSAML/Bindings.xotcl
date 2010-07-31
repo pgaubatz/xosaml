@@ -3,6 +3,7 @@ package provide xoSAML::Bindings 0.1
 package require XOTcl
 package require xoSAML::Objects
 package require base64
+package require xotcl::comm::mime
 
 namespace eval ::xoSAML::Bindings {
 
@@ -24,16 +25,65 @@ proc load {binding targetNamespace} {
 }
 	
 namespace eval HTTP::Post {
-	::xotcl::Class Request  -superclass ::xoSAML::Objects::Request
-	::xotcl::Class Response -superclass ::xoSAML::Objects::Response
+	::xotcl::Class Request  -superclass ::xoSAML::Objects::Request -slots {
+		::xotcl::Attribute RelayState -default ""
+		::xotcl::Attribute HtmlPage -default ""
+	}
+	::xotcl::Class Response -superclass ::xoSAML::Objects::Response -slots {
+		::xotcl::Attribute RelayState -default ""
+	}
 	
-	Request instproc send args {
-		return [::base64::encode -wrapchar "" [my export]] 
+	Request instproc send {receiver} {
+		if { [my HtmlPage] ne "" } {
+			set html [my HtmlPage]
+		} else {
+			set html {
+				<html>
+					<body>
+						<h1>Restricted area</h1>
+						<p>
+							You're trying to access <i>[my RelayState]</i>...<br>
+							Please authenticate yourself!
+						</p>
+						[my getHtmlForm $receiver]
+					</body>
+				</html>
+			}
+		} 
+		return [subst $html]
+	}
+	
+	Request instproc getHtmlForm {receiver} {
+		set SAMLRequest [::base64::encode -wrapchar "" [my marshal]] 
+		set RelayState [my RelayState]
+		set form {
+			<form action="$receiver" method="POST">
+				<input type="hidden" name="SAMLRequest" value="$SAMLRequest">
+				<input type="hidden" name="RelayState" value="$RelayState">
+				<input type="submit" value="Continue...">
+			</form>
+		}
+		return [subst $form]
 	}
 	
 	Response instproc receive {sender} {
-		set response [::base64::decode $sender]
-		my object [::xoSAML::unmarshal $response]
+		set SAMLResponse ""
+		::xotcl::comm::mime::Url decoder
+		foreach c [split $sender "&"] {
+			set chunk [split $c "="]
+			set var [decoder decodeItem [lindex $chunk 0]]		
+			set val [decoder decodeItem [lindex $chunk 1]]		
+			if { $var eq "SAMLResponse" } {
+				set SAMLResponse $val		
+			} elseif { $var eq "RelayState" } {
+				my RelayState $val
+			}
+		}
+		if { $SAMLResponse eq "" } {
+			return false
+		}
+		set xml [::base64::decode $SAMLResponse]
+		my object [::xoSAML::unmarshal $xml]
 		return [self]
 	}
 }
