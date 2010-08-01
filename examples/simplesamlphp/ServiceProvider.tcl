@@ -43,24 +43,21 @@ Worker instproc respond-default {} {
         			set expires [my getSession $session]
         			set now [clock seconds] 
         			if { $expires != -1 && $now < $expires } {
-        				my returnResponse [subst {
-        					<html>
-        					<body>
-        					<h1>Restricted area</h1>
-        					<p>
-        						You're successfully authenticated and now have access to this restricted resource.<br>
-        						Your session will expire in [expr $expires - $now] seconds...
-        					</p>
-        					</body>
-        					</html>
-        				} ] 
-        				return
+					set expiresIn [expr $expires - $now]
         			} 
         		}
         	}
 	}
-	
-	my respond-AuthenticationRequest
+	if { [info exists expiresIn] } {
+		my returnResponse [subst {
+        		<html><body><h1>Restricted area</h1><p>
+			You're successfully authenticated and now have access to this restricted resource.<br>
+			Your session will expire in $expiresIn seconds...
+			</p></body></html>
+		} ] 
+	} else {
+		my respond-AuthenticationRequest
+	}
 }
 
 Worker instproc respond-AuthenticationRequest {} {
