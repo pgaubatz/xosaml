@@ -2,6 +2,39 @@
 namespace eval ::ComplexTypes {
 
 #
+# Instantiate all defined complexTypes:
+#
+
+SandboxedTestCase InstantiateComplexTypes \
+	-setup_script {
+		package require xoSAML
+		
+		::xoSAML::load
+		::xoSAML::hideErrors true
+	} \
+	-cleanup_script {
+		::xoSAML::unload
+	}
+
+SandboxedTestScenario InstantiateComplexTypes::instantiate \
+	-expected_result {0} \
+	-test_body {
+                foreach xsdclass [lsort -dictionary [::xoXSD::XSDObject info subclass -closure]] {                                                                                                        
+                        if { [string match "*__choice*" $xsdclass] } continue                                                                                                                                 
+                        if { [string match "*__sequence*" $xsdclass] } continue                                                                                                                               
+                        if { [namespace qualifiers $xsdclass] eq "::xoXSD" } continue                                                                                                                         
+                        if { [namespace qualifiers $xsdclass] eq "::xoSAML::Objects" } continue                                                                                                               
+                        																					   
+                        if { [catch { $xsdclass xsdobj }] } {  
+                        	return 1                                                                                                                                                                   
+                        }                                                                                                                                                                              
+                        xsdobj destroy                                                                                                                                                                    
+                }         
+		return 0
+	}
+	
+
+#
 # Marshal complexTypes:
 #
 	
