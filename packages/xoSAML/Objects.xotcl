@@ -4,6 +4,16 @@ package require XOTcl
 package require xoSAML::Schema
 
 namespace eval ::xoSAML::Objects {
+	
+proc isCallerCodeGenerator {caller} {
+	# exit here if the CodeGenerator instantiated this class 
+	if { [Object isobject $caller] && \
+	     [$caller procsearch class] ne "" && \
+	     [$caller class] eq "::xoXSD::CodeGenerator" } {
+		return true
+	}
+	return false
+}
 
 namespace eval Private {
 	::xotcl::Class Wrapper -slots {
@@ -50,6 +60,8 @@ Request instproc init { {type ""} } {
 	}
 	my initObject $type
 	
+	if { [isCallerCodeGenerator [self callingobject]] } return
+	
 	#set reasonable defaults...
 	my Version "2.0"
 	my IssueInstant now
@@ -66,6 +78,8 @@ Response instproc init args {
 	}
 	my initObject $type
 	
+	if { [isCallerCodeGenerator [self callingobject]] } return
+	
 	#set reasonable defaults
 	my Version "2.0"
 	my IssueInstant now
@@ -73,6 +87,14 @@ Response instproc init args {
 
 Response instproc receive {sender} {
 	my __error "Load a SAML Binding if you want to use the function '[self proc]'!"
+}
+
+Response instproc hasRelayState {} {
+	return [expr [my exists RelayState]]
+}
+
+Response instproc getStatusCode { {-short:boolean false} } { 
+	return [my . Status getStatusCode -short $short]
 }
 
 Status set codes [list \
@@ -104,6 +126,7 @@ Status set codes [list \
 Status instproc init { {code ""} } {
 	next
 	
+	if { [isCallerCodeGenerator [self callingobject]] } return
 	if { $code eq "" } return
 	
 	set prefix "urn:oasis:names:tc:SAML:2.0:status:"
@@ -121,12 +144,55 @@ Status instproc init { {code ""} } {
 	my StatusCode $code
 }
 
+Status instproc getStatusCode { {-short:boolean false} } { 
+	set code [my . StatusCode . Value getContent]
+	if { $short } {
+		set pos [expr {[string last ":" $code] + 1}]
+		set code [string range $code $pos end]
+	}
+	return $code
+}
+
 Assertion instproc init args {	
 	next
+	
+	if { [isCallerCodeGenerator [self callingobject]] } return
 	
 	#set reasonable defaults
 	my Version "2.0"
 	my IssueInstant now
+}
+
+Assertion instproc getAttributes {} {
+	return [my . AttributeStatement . Attribute]
+}
+
+Assertion instproc hasAttributes {} {
+	return [expr {[llength [my getAttributes]] > 0}]
+}
+
+Assertion instproc hasAuthenticationStatement {} {
+	return [expr {[my isAssigned AuthnStatement]}]
+}
+
+Assertion instproc getExpiry { {-timestamp:boolean false} } {
+	set expiry [my . Conditions . NotOnOrAfter]
+	if { $timestamp } { 
+		return [$expiry getTimestamp] 
+	}
+	return [$expiry getContent]
+}
+
+Assertion instproc getAuthenticationMechanism {} {
+	if { ![my hasAuthenticationStatement] } return
+	set ctx [my . AuthnStatement . AuthnContext]
+	if { [$ctx isAssigned AuthnContextClassRef] } {
+		return [$ctx . AuthnContextClassRef getContent]
+	} elseif { [$ctx isAssigned AuthnContextDecl] } {
+		return [$ctx . AuthnContextDecl getContent]
+	} elseif { [$ctx isAssigned AuthnContextDeclRef] } {
+		return [$ctx . AuthnContextDeclRef getContent]
+	}
 }
 
 Subject instproc init args {
@@ -136,16 +202,33 @@ Subject instproc init args {
 Attribute instproc init {{name ""} {values ""}} {	
 	next
 	
+	if { [isCallerCodeGenerator [self callingobject]] } return
+	
 	my NameFormat "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
 	if { $name ne "" } {
 		my Name $name
 	}
 	if { $values ne "" } {
-		foreach v $values {
-			set val [::xoSAML::saml::AttributeValue new $v]
-			my AttributeValue $val
+		foreach value $values {
+			my addValue $value
 		}
 	}
+}
+
+Attribute instproc addValue {value} {
+	my AttributeValue [::xoSAML::saml::AttributeValue new $value]
+}
+
+Attribute instproc getName {} {
+	return [my . Name getContent]
+}
+	
+Attribute instproc getValues {} {
+	set values [list]
+	foreach value [my AttributeValue] {
+		lappend values [$value getContent]
+	}
+	return $values
 }
 
 }
