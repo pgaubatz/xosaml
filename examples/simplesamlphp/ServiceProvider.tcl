@@ -67,16 +67,11 @@ Worker instproc respond-AuthenticationRequest {} {
 	#
 	
 	saml::Issuer issuer [my MetadataUrl]
-	
-	samlp::NameIDPolicy policy
-	policy AllowCreate "true"
-	policy Format "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
-	
+		
 	samlp::AuthnRequest request
 	request ID "identifier_1"
-	request AssertionConsumerServiceIndex "1"
 	request Issuer issuer
-	request NameIDPolicy policy
+	request ForceAuthn true
 	
 	request RelayState "http://[my HostPort]/[my set resourceName]"
 
@@ -92,32 +87,35 @@ Worker instproc respond-AssertionConsumer {} {
 	samlp::Response response
 	response receive [my set data]
 	
+	puts [response . Assertion getAuthenticationMechanism]
 	set o {
-		<html><body>
-		<h1>AssertionConsumer</h1>
+		<html><body><h1>AssertionConsumer</h1>
 		<ol>
-			<li>The SAML Response's StatusCode is: <i>[response . Status . StatusCode . Value getContent]</i></li>
-			<li>The Subject has been authenticated via: <i>[response . Assertion . AuthnStatement . AuthnContext . AuthnContextClassRef getContent]</i></li>
-			<li>The Session is valid till: <i>[clock format [response . Assertion . Conditions . NotOnOrAfter getTimestamp]]</i></li>
+			<li>The SAML Response's StatusCode is: <i>[response . Status getStatusCode]</i></li>
+			<li>The Subject has been authenticated via: <i>[response . Assertion getAuthenticationMechanism]</i></li>
+			<li>The Session is valid till: <i>[response . Assertion getExpiry]</i></li>
 		</ol>
-		The following Attributes have been found:
-		<ul>
 	}
-	foreach attribute [response . Assertion . AttributeStatement . Attribute] {
-		append o "<li>[$attribute . Name getContent]:<ul>"
-		foreach value [$attribute AttributeValue] {
-			append o "<li>Value: <i>[$value getContent]</i></li>"	
-		}
-		append o "</ul></li>"
+	if { [response . Assertion hasAttributes] } {
+		append o "The following Attributes have been found:<ul>"
+        	foreach attribute [response . Assertion getAttributes] {
+        		append o "<li>[$attribute getName]:<ul>"
+        		foreach value [$attribute getValues] {
+        			append o "<li>Value: <i>$value</i></li>"	
+        		}
+        		append o "</ul></li>"
+        	}
+		append o "</ul>"
 	}
-	append o {
-		</ul>
-		<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
-		</body></html>
+	if { [response hasRelayState] } {
+        	append o {
+        		<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
+        		</body></html>
+        	}
 	}
 	
 	set uuid [::uuid::uuid generate]
-	set expires [expr {[clock seconds] + [my SessionExpiry]}]
+	set expires [response . Assertion getExpiry -timestamp true]
 	set expires_text [clock format $expires -format {%a, %d %b %Y %T GMT} -gmt true]
 	set cookie "Set-Cookie: xoSAMLSession=$uuid; expires=$expires_text; Version=1"
 	
@@ -159,7 +157,6 @@ Worker instproc returnResponse {content {code 200} {headers {}}} {
 	::xotcl::Attribute MetadataUrl
 	::xotcl::Attribute AssertionConsumerUrl
 	::xotcl::Attribute IdPUrl
-	::xotcl::Attribute SessionExpiry
 }
 
 Server instproc init args {
@@ -196,7 +193,6 @@ Server server 									\
 	-port 8008 								\
 	-root /tmp 								\
 	-httpdWrk Worker 							\
-	-IdPUrl http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php \
-	-SessionExpiry 60
+	-IdPUrl http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php 
 	
 vwait forever

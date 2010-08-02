@@ -395,7 +395,11 @@ XSDObject instproc addAnyAttribute {slotname type {value ""}} {
 	# finally set the newly created slot
 	my $slotname $content
 }
-	
+
+XSDObject instproc isAssigned {slot} {
+	return [my __slotFilled -recursive true $slot]
+}
+
 XSDObject instproc . {accessor args} {
 	if { [llength [my $accessor]] > 1 } {
 		set dots [expr [llength [split $args .]] - 1]
