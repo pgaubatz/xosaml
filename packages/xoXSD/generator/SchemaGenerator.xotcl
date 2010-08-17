@@ -45,8 +45,12 @@ SchemaGenerator instproc addSchema {data} {
 	set targetPrefix [my getTargetPrefix $root]
 	set targetNamespace [$root getAttribute "targetNamespace"]
 	
-	if { [$root nodeName] ne "schema" } {
-		puts stderr "ERROR: $filename is not an XML schema file."
+	set name "schema"
+	if { [$root prefix] ne "" } {
+		set name "[$root prefix]:schema"
+	}
+	if { [$root nodeName] ne $name } {
+		puts stderr "ERROR: This is not an XML schema file."
 		return
 	}
 

@@ -75,6 +75,10 @@ Container instproc init {node {parent ""} {root ""}} {
 	
 	foreach node [[my node] childNodes] {
 		set type [$node nodeName]
+		if { [$node prefix] ne "" && [string index $type 0] ne "#" } {
+			# strip the namespace prefix
+			set type [string range $type [expr [string length [$node prefix]] + 1] end]
+		}
 		
 		if { $type eq "annotation" } continue
 		if { $type eq "documentation" } continue
@@ -155,6 +159,10 @@ Container instproc parentAddSlot {name type {xmltype ""}} {
 }
 	
 Container instproc addSlot {slot} {
+	if { ![my exists xoclass] } {
+		puts stderr "ERROR: Trying to add a slot ([$slot name]) to a non-existant class."
+		return
+	}
 	[my xoclass] addSlot $slot
 }
 
@@ -399,6 +407,11 @@ attribute instproc earlyInit args {
 }
 
 attribute instproc realInit args {
+	if { [[my node] hasAttribute ref] } {
+		puts stderr "ERROR: Attribute references are not implemented."
+		return
+	}
+	
 	set xmlname [[my node] getAttribute name]
 	set xmltype [[my node] getAttribute type]
 	
@@ -411,6 +424,7 @@ attribute instproc realInit args {
 		#our attribute's type is a simpleType:
 		if { [namespace tail $type] eq [$simpleType name] } {
 			#change attribute's type to simpleType's restriction base
+			if { ![$simpleType exists base] } continue
 			set type [$simpleType base]
 			
 			#"extract" the enumeration's values
@@ -440,8 +454,6 @@ attribute instproc realInit args {
 	if { $enumvalues ne "" } {
 		$slot addArg $enumvalues
 	}
-	
-	
 }
 
 
@@ -626,7 +638,7 @@ simpleType instproc earlyInit args {
 			}
 		}
 		[my root] addSimpleType [self]
-	}
+	} 
 }
 
 
@@ -659,7 +671,8 @@ attributeGroup instproc realInit args {
 		} 
 		
 		foreach attr [$cls attributes] {
-			[[my parent] xoclass] addSlot $attr
+			#[[my parent] xoclass] addSlot $attr
+			[my parent] addSlot $attr
 		}
 	}
 }
