@@ -59,7 +59,7 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 }
 ::xotcl::Class simpleType	-superclass Container -slots {
 	::xotcl::Attribute base
-	::xotcl::Attribute enumvalues -default false
+	::xotcl::Attribute slotArgs -default ""
 }
 ::xotcl::Class simpleContent	-superclass Container
 ::xotcl::Class anyAttribute	-superclass Container
@@ -438,12 +438,8 @@ attribute instproc realInit args {
 	
 	#now process the simpleType's restrictions, if existant 
 	if { $simple ne "" } {
-		if { [$simple enumvalues] ne "" } {
-        		set enumvalues ""
-        		foreach value [$simple enumvalues] {
-        			append enumvalues "\"$value\" "
-        		}
-			$slot addArg "-enumvalues \{ $enumvalues\}"
+		foreach arg [$simple slotArgs] {
+			$slot addArg $arg
 		}
 	}
 }
@@ -627,15 +623,28 @@ simpleType instproc earlyInit args {
 			if { $childclass eq "restriction" } {
 				set xmltype [[$child node] getAttribute base]
 				my base [my XMLNametoXOTclClass $xmltype]
-				my enumvalues [list]
+				
+				set enumvalues [list]
+				
+				#iterate over the restrictions:
 				foreach restriction [$child info children] {
 					set restrictionclass [namespace tail [$restriction class]]
 					if { $restrictionclass eq "enumeration" } {
-						my lappend enumvalues [[$restriction node] getAttribute value]
+						lappend enumvalues [[$restriction node] getAttribute value]
 					} else {
 						puts stderr "ERROR: <$restrictionclass>-type restrictions are not implemented for <simpleType>."
 					}
 				}
+				
+				#process the enumvalues:
+				if { [llength $enumvalues] } {
+					set values ""
+					foreach value $enumvalues {
+						append values "\"$value\" "
+					}
+					my lappend slotArgs "-enumvalues \{ $values\}"
+				}
+				
 			} else {
 				puts stderr "ERROR: This type of constellation is not implemented: <simpleType><$childclass>...</$childclass></simpleType>."
 			}
