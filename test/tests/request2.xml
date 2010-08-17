@@ -1,4 +1,4 @@
-<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" AssertionConsumerServiceURL="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" IsPassive="false" ForceAuthn="false" ID="_bec424fa5103428909a30ff1e31168327f79474984" IssueInstant="2007-12-10T11:39:34Z" Version="2.0">
+<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" AssertionConsumerServiceURL="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php" ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" ForceAuthn="false" IsPassive="false" ID="_bec424fa5103428909a30ff1e31168327f79474984" IssueInstant="2007-12-10T11:39:34Z" Version="2.0">
     <saml:Issuer>urn:mace:feide.no:services:no.feide.moodle</saml:Issuer>
     <samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" SPNameQualifier="moodle.bridge.feide.no" AllowCreate="true"/>
     <samlp:RequestedAuthnContext Comparison="exact">

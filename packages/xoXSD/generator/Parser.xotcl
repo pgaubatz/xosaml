@@ -41,7 +41,9 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 }
 	
 ::xotcl::Class element		-superclass Container
-::xotcl::Class attribute	-superclass Container 
+::xotcl::Class attribute	-superclass Container -slots {
+	::xotcl::Attribute type
+}
 ::xotcl::Class complexType	-superclass Container
 ::xotcl::Class sequence		-superclass Container -slots {
 	::xotcl::Attribute isSorted -default false
@@ -416,33 +418,17 @@ attribute instproc realInit args {
 	set xmltype [[my node] getAttribute type]
 	
 	my name [my getXMLName $xmlname] 
-	set type [my XMLNametoXOTclClass $xmltype] 
+	my type [my XMLNametoXOTclClass $xmltype] 
 	
 	#search for simpleType's restrictions (e.g. enumerations)
-	set enumvalues ""
-	foreach simpleType [[my root] simpleTypes] {
-		#our attribute's type is a simpleType:
-		if { [namespace tail $type] eq [$simpleType name] } {
-			#change attribute's type to simpleType's restriction base
-			if { ![$simpleType exists base] } continue
-			set type [$simpleType base]
-			
-			#"extract" the enumeration's values
-			set enumvalues "-enumvalues \{ "
-			foreach value [$simpleType enumvalues] {
-				append enumvalues "\"$value\" "
-			}
-			append enumvalues "\}"
-			
-		}
-	}
+	set simple [my findSimpleType]
 	
-	#finally create the slot
+	#create the slot
 	if { [namespace tail [[my parent] class]] eq "attributeGroup" } {
-		set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new [my name] "XMLAttribute" $type]
+		set slot [::xoXSD::SchemaGenerator::Virtual::xoSlot new [my name] "XMLAttribute" [my type]]
 		[my parent] addAttribute $slot
 	} else {
-		set slot [my parentAddSlot [my name] "XMLAttribute" $type]
+		set slot [my parentAddSlot [my name] "XMLAttribute" [my type]]
 	}
 	
 	#search for "use" - attribute
@@ -450,12 +436,29 @@ attribute instproc realInit args {
 		$slot addArg "-use [[my node] getAttribute use]"
 	}
 	
-	#add the "-enumvalues" slot
-	if { $enumvalues ne "" } {
-		$slot addArg $enumvalues
+	#now process the simpleType's restrictions, if existant 
+	if { $simple ne "" } {
+		if { [$simple enumvalues] ne "" } {
+        		set enumvalues ""
+        		foreach value [$simple enumvalues] {
+        			append enumvalues "\"$value\" "
+        		}
+			$slot addArg "-enumvalues \{ $enumvalues\}"
+		}
 	}
 }
 
+attribute instproc findSimpleType {} {
+	foreach simpleType [[my root] simpleTypes] {
+		#our attribute's type is a simpleType:
+		if { [namespace tail [my type]] eq [$simpleType name] } {
+			#change attribute's type to simpleType's restriction base
+			if { ![$simpleType exists base] } continue
+			my type [$simpleType base]
+			return $simpleType
+		}
+	}
+}
 
 
 
