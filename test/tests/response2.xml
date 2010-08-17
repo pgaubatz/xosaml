@@ -1,4 +1,4 @@
-<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" InResponseTo="_bec424fa5103428909a30ff1e31168327f79474984" ID="s2a0da3504aff978b0f8c80f6a62c713c4a2f64c5b" IssueInstant="2007-12-10T11:39:48Z" Version="2.0" Destination="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php">
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" InResponseTo="_bec424fa5103428909a30ff1e31168327f79474984" ID="s2a0da3504aff978b0f8c80f6a62c713c4a2f64c5b" Version="2.0" Destination="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php" IssueInstant="2007-12-10T11:39:48Z">
     <saml:Issuer>max.feide.no</saml:Issuer>
     <samlp:Status>
         <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
@@ -27,7 +27,7 @@
         <saml:Subject>
             <saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" SPNameQualifier="urn:mace:feide.no:services:no.feide.moodle" NameQualifier="max.feide.no">UB/WJAaKAPrSHbqlbcKWu7JktcKY</saml:NameID>
             <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                <saml:SubjectConfirmationData InResponseTo="_bec424fa5103428909a30ff1e31168327f79474984" NotOnOrAfter="2007-12-10T19:39:48Z" Recipient="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php"/>
+                <saml:SubjectConfirmationData NotOnOrAfter="2007-12-10T19:39:48Z" InResponseTo="_bec424fa5103428909a30ff1e31168327f79474984" Recipient="http://moodle.bridge.feide.no/simplesaml/saml2/sp/AssertionConsumerService.php"/>
             </saml:SubjectConfirmation>
         </saml:Subject>
         <saml:Conditions NotBefore="2007-12-10T11:29:48Z" NotOnOrAfter="2007-12-10T19:39:48Z">
