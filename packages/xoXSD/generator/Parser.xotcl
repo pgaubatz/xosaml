@@ -30,6 +30,7 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 	::xotcl::Attribute xoNamespacePrefix -default ""
 	::xotcl::Attribute xoTargetPrefix
 	::xotcl::Attribute xoTargetNamespace
+	::xotcl::Attribute importedSchemas
 	::xotcl::Attribute simpleTypes
 	::xotcl::Attribute complexTypes
 	::xotcl::Attribute elements
@@ -51,7 +52,6 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 ::xotcl::Class enumeration	-superclass Container
 ::xotcl::Class any		-superclass Container
 ::xotcl::Class restriction	-superclass Container
-::xotcl::Class import		-superclass Container
 ::xotcl::Class attributeGroup	-superclass Container -slots {
 	::xotcl::Attribute attributes
 }
@@ -61,7 +61,7 @@ proc parse {document targetprefix targetnamespace {prefix ""}} {
 }
 ::xotcl::Class simpleContent	-superclass Container
 ::xotcl::Class anyAttribute	-superclass Container
-
+::xotcl::Class import		-superclass Container
 
 
 
@@ -73,8 +73,6 @@ Container instproc init {node {parent ""} {root ""}} {
 		my root [self]	
 	}
 	
-	#puts "INIT -> [$node nodeName] SELF=[self] PARENT=[my parent] ROOT=[my root]"
-	
 	foreach node [[my node] childNodes] {
 		set type [$node nodeName]
 		
@@ -82,6 +80,11 @@ Container instproc init {node {parent ""} {root ""}} {
 		if { $type eq "documentation" } continue
 		if { $type eq "#text" } continue
 		if { $type eq "#comment" } continue
+		
+		if { ![::xotcl::Class isclass ::xoXSD::SchemaGenerator::Parser::$type] } {
+			puts stderr "ERROR: The XSD artifact <$type> is not implemented."
+			continue
+		}
 		
 		eval ::xoXSD::SchemaGenerator::Parser::$type new -childof [self] $node [self] [my root]
 	}
@@ -176,6 +179,7 @@ Container instproc addMinMaxOccurs {slot} {
 
 schema instproc init args {
 	my xoClasses [list]
+	my importedSchemas [list]
 	my simpleTypes [list]
 	my complexTypes [list]
 	my elements [list]
@@ -555,13 +559,8 @@ complexType instproc realInit args {
 	
 	foreach child [my info children] {
 		set name [[$child node] nodeName]
-		if { $name ne "complexContent" && $name ne "simpleContent" } {
-			#
-			# FIXME!!!
-			#
-			#puts "#Ignoring1 [my name]'s child: $name"
-			continue
-		}
+		if { $name ne "complexContent" && $name ne "simpleContent" } continue
+		
 		#search for <restriction> or <extension>:
 		foreach grandchild [$child info children] {
 			set n [[$grandchild node] nodeName]
@@ -588,7 +587,7 @@ complexType instproc realInit args {
 				[my xoclass] addSlot $slot
 				
 			} else {
-				puts "#HUH? -> $n --> $name"
+				puts stderr "ERROR: I don't know how to handle this constellation: <complexType><$n><$name>...</$name></$n></complexType>."
 			}
 			
 			#adjust the "parent"-slot...
@@ -619,17 +618,14 @@ simpleType instproc earlyInit args {
 					if { $grandchildclass eq "enumeration" } {
 						my lappend enumvalues [[$grandchild node] getAttribute value]
 					} else {
-						puts "#IGNORING $name's grandchild: $grandchildclass"
+						puts stderr "ERROR: <$grandchildclass>-type restrictions are not implemented for <simpleType>."
 					}
 				}
 			} else {
-				puts "#IGNORING $name's child: $childclass"
+				puts stderr "ERROR: This type of constellation is not implemented: <simpleType><$childclass>...</$childclass></simpleType>."
 			}
 		}
 		[my root] addSimpleType [self]
-		
-	} else {
-		puts "#EARLY -> ignored [self] [[self] class]"
 	}
 }
 
@@ -671,5 +667,15 @@ attributeGroup instproc realInit args {
 attributeGroup instproc addAttribute {attr} {
 	my lappend attributes $attr
 }
-	
+
+
+
+
+
+import instproc earlyInit args {
+	if { ![[my node] hasAttribute namespace] } return
+	set ns [[my node] getAttribute namespace]
+	[my root] lappend importedSchemas $ns
+}
+
 }
