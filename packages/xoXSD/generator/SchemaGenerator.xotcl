@@ -36,7 +36,7 @@ SchemaGenerator instproc getTargetPrefix {document} {
 
 SchemaGenerator instproc addSchema {data} {
 	if { [my xoNamespacePrefix] eq "" } {
-		puts "ERROR: A namespace has to be defined before! (via \"setNamespace\")"
+		puts stderr "ERROR: A namespace has to be defined before! (via \"setNamespace\")"
 		return
 	}	
 	
@@ -46,13 +46,15 @@ SchemaGenerator instproc addSchema {data} {
 	set targetNamespace [$root getAttribute "targetNamespace"]
 	
 	if { [$root nodeName] ne "schema" } {
-		error "ERROR: $filename is not an XML schema file."
+		puts stderr "ERROR: $filename is not an XML schema file."
+		return
 	}
 
 	my lappend parsers [::xoXSD::SchemaGenerator::Parser::parse $root $targetPrefix $targetNamespace [my xoNamespacePrefix]]
 }
 
 SchemaGenerator instproc generateSchema {} {
+	my checkForMissingSchemas
 	set o ""
 	append o "package require XOTcl\n"
 	append o "package require xoXSD\n\n"
@@ -120,6 +122,20 @@ SchemaGenerator instproc generateEnvironment {} {
 	
 	append o "\}\n"
 	return $o
+}
+
+SchemaGenerator instproc checkForMissingSchemas {} {
+	set defined [list]
+	set needed  [list]
+	foreach parser [my parsers] {
+		lappend defined [$parser xoTargetNamespace]
+		set needed [concat $needed [$parser importedSchemas]]
+	}
+	foreach ns [lsort -unique $needed] {
+		if { [lsearch $defined $ns] == -1 } {
+			puts stderr "ERROR: One (or more) XSD file has an unresolved dependency on another XSD file with the namespace \"$ns\". Please include the missing XSD file an re-run the SchemaGenerator!"
+		}
+	}
 }
 
 }
