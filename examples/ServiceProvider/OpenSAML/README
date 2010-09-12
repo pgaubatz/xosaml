@@ -1,0 +1,2 @@
+Put the "opensaml" folder into Apache Tomcat's "webapps" folder
+and "endorsed" into Tomcat's root directory.

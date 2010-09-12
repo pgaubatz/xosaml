@@ -118,3 +118,15 @@ diff -uraN simplesamlphp-1.5.1/metadata/saml20-sp-remote.php simplesaml/metadata
 +	'AssertionConsumerService' => 'http://localhost:8008/AssertionConsumer'
 +);
 +
++$metadata['http://localhost/~patailama/simplesaml/SP/index.php?Metadata'] = array(
++	'AssertionConsumerService' => 'http://localhost/~patailama/simplesaml/SP/index.php?AssertionConsumer'
++);
++
++$metadata['http://localhost:8080/opensaml/Metadata.xml'] = array(
++	'AssertionConsumerService' => 'http://localhost:8080/opensaml/AssertionConsumer'
++);
++
++$metadata['http://localhost:8080/jaxbsaml/Metadata.xml'] = array(
++	'AssertionConsumerService' => 'http://localhost:8080/jaxbsaml/AssertionConsumer'
++);
++
