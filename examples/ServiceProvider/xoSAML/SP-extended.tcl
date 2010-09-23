@@ -29,9 +29,35 @@ Worker instforward SessionExpiry	{% my info parent} %proc
 Worker instproc respond {} {
 	set response respond-[my set resourceName] 
 	if { [my procsearch $response] eq ""} {
-		set response respond-AuthenticationRequest
+		set response respond-default
 	} 
 	my $response
+}
+
+Worker instproc respond-default {} {
+	if { [my exists meta(cookie)] } {
+        	foreach c [split [my set meta(cookie)] ";"] {
+        		set c [split [string trim $c] "="]
+        		if { [lindex $c 0] eq "xoSAMLSession" } {
+        			set session [lindex $c 1]
+        			set expires [my getSession $session]
+        			set now [clock seconds] 
+        			if { $expires != -1 && $now < $expires } {
+					set expiresIn [expr $expires - $now]
+        			} 
+        		}
+        	}
+	}
+	if { [info exists expiresIn] } {
+		my returnResponse [subst {
+        		<html><body><h1>Restricted area</h1><p>
+			You're successfully authenticated and now have access to this restricted resource.<br>
+			Your session will expire in $expiresIn seconds...
+			</p></body></html>
+		} ] 
+	} else {
+		my respond-AuthenticationRequest
+	}
 }
 
 Worker instproc respond-AuthenticationRequest {} {
@@ -69,7 +95,7 @@ Worker instproc respond-AssertionConsumer {} {
 			<li>The Session is valid till: <i>[response . Assertion getExpiry]</i></li>
 		</ol>
 	}
-	if { [llength [response . Assertion getAttributes]] } {
+	if { [response . Assertion hasAttributes] } {
 		append o "The following Attributes have been found:<ul>"
         	foreach attribute [response . Assertion getAttributes] {
         		append o "<li>[$attribute getName]:<ul>"
@@ -80,14 +106,21 @@ Worker instproc respond-AssertionConsumer {} {
         	}
 		append o "</ul>"
 	}
-	if { [response RelayState] ne "" } {
+	if { [response hasRelayState] } {
         	append o {
         		<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
         		</body></html>
         	}
 	}
 	
-	my returnResponse [subst $o]
+	set uuid [::uuid::uuid generate]
+	set expires [response . Assertion getExpiry -timestamp true]
+	set expires_text [clock format $expires -format {%a, %d %b %Y %T GMT} -gmt true]
+	set cookie "Set-Cookie: xoSAMLSession=$uuid; expires=$expires_text; Version=1"
+	
+	my addSession $uuid $expires
+	
+	my returnResponse [subst $o] 200 [list $cookie]
 }
 
 Worker instproc respond-Metadata {} {
@@ -102,9 +135,12 @@ Worker instproc respond-Metadata {} {
 	} ]
 }
 
-Worker instproc returnResponse {content} { 
-	my replyCode 200
+Worker instproc returnResponse {content {code 200} {headers {}}} { 
+	my replyCode $code
 	my connection puts "Content-Type: text/html"
+	foreach h $headers {
+		my connection puts $h
+	}
 	my connection puts "Content-Length: [string length $content]\n"
 	my connection puts-nonewline $content
 	my close   
@@ -128,6 +164,22 @@ Server instproc init args {
 	my HostPort		"[my ipaddr]:[my port]"
 	my MetadataUrl 	 	"http://[my HostPort]/Metadata" 					
 	my AssertionConsumerUrl "http://[my HostPort]/AssertionConsumer"
+	
+	my instvar Sessions
+	set Sessions() [list]
+}
+
+Server instproc getSession {uuid} {
+	my instvar Sessions
+	if { [info exists Sessions($uuid)] } {
+		return $Sessions($uuid)
+	}
+	return -1
+}
+
+Server instproc addSession {uuid expires} {
+	my instvar Sessions
+	set Sessions($uuid) $expires
 }
 
 
