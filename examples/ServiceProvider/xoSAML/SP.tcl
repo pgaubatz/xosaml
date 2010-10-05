@@ -17,117 +17,71 @@ package require xoSAML
 
 ::xotcl::Class Worker -superclass Httpd::Wrk 
 
-Worker instforward getSession		{% my info parent} %proc
-Worker instforward addSession		{% my info parent} %proc
-
-Worker instforward HostPort		{% my info parent} %proc
-Worker instforward MetadataUrl		{% my info parent} %proc
-Worker instforward AssertionConsumerUrl	{% my info parent} %proc
-Worker instforward IdPUrl		{% my info parent} %proc
-Worker instforward SessionExpiry	{% my info parent} %proc
-
 Worker instproc respond {} {
-	set response respond-[my set resourceName] 
-	if { [my procsearch $response] eq ""} {
-		set response respond-AuthenticationRequest
-	} 
-	my $response
-}
-
-Worker instproc respond-AuthenticationRequest {} {
+	set httpd [my info parent]
+	set protoHostPort "http://[$httpd ipaddr]:[$httpd port]"
 	
-	#
-	# Create the SAML (Authn)Request:
-	#
-	
-	saml::Issuer issuer [my MetadataUrl]
+	if { [my set resourceName] eq "AssertionConsumer" } {
+		samlp::Response response
+		response receive [my set data]
 		
-	samlp::AuthnRequest request
-	request ID "identifier_1"
-	request Issuer issuer
-	request ForceAuthn true
+		set o {
+			<html><body><h1>AssertionConsumer</h1>
+			<ol>
+				<li>The SAML Response's StatusCode is: <i>[response . Status getStatusCode]</i></li>
+				<li>The Subject has been authenticated via: <i>[response . Assertion getAuthenticationMechanism]</i></li>
+				<li>The Session is valid till: <i>[response . Assertion getExpiry]</i></li>
+			</ol>
+		}
+		if { [llength [response . Assertion getAttributes]] } {
+			append o "The following Attributes have been found:<ul>"
+			foreach attribute [response . Assertion getAttributes] {
+				append o "<li>[$attribute getName]:<ul>"
+				foreach value [$attribute getValues] {
+					append o "<li>Value: <i>$value</i></li>"	
+				}
+				append o "</ul></li>"
+			}
+			append o "</ul>"
+		}
+		if { [response RelayState] ne "" } {
+			append o {
+				<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
+				</body></html>
+			}
+		}
+		
+		set content [subst $o]
+		
+	} elseif { [my set resourceName] eq "Metadata" } {
+		set content [subst {
+			 <?xml version="1.0"?>
+			 <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="$protoHostPort/Metadata"> 
+				 <SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"> 
+					 <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat> 
+					 <AssertionConsumerService index="0" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="$protoHostPort/AssertionConsumer"/> 
+				 </SPSSODescriptor>
+			 </EntityDescriptor> 
+		 } ]
+		
+	} else {
+		saml::Issuer issuer "$protoHostPort/Metadata"
+			
+		samlp::AuthnRequest request
+		request ID "identifier_1"
+		request Issuer issuer
+		request ForceAuthn true
+		
+		request RelayState "$protoHostPort/[my set resourceName]"
 	
-	request RelayState "http://[my HostPort]/[my set resourceName]"
-
-	my returnResponse [request send [my IdPUrl]] 
-}
-
-Worker instproc respond-AssertionConsumer {} {
-	
-	#
-	# Create a SAML Response:
-	#
-	
-	samlp::Response response
-	response receive [my set data]
-	
-	set o {
-		<html><body><h1>AssertionConsumer</h1>
-		<ol>
-			<li>The SAML Response's StatusCode is: <i>[response . Status getStatusCode]</i></li>
-			<li>The Subject has been authenticated via: <i>[response . Assertion getAuthenticationMechanism]</i></li>
-			<li>The Session is valid till: <i>[response . Assertion getExpiry]</i></li>
-		</ol>
+		set content [request send "http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php"] 
 	}
-	if { [llength [response . Assertion getAttributes]] } {
-		append o "The following Attributes have been found:<ul>"
-        	foreach attribute [response . Assertion getAttributes] {
-        		append o "<li>[$attribute getName]:<ul>"
-        		foreach value [$attribute getValues] {
-        			append o "<li>Value: <i>$value</i></li>"	
-        		}
-        		append o "</ul></li>"
-        	}
-		append o "</ul>"
-	}
-	if { [response RelayState] ne "" } {
-        	append o {
-        		<b>You may now access the restricted resource: <a href="[response RelayState]">[response RelayState]</a></b>
-        		</body></html>
-        	}
-	}
 	
-	my returnResponse [subst $o]
-}
-
-Worker instproc respond-Metadata {} {
-	my returnResponse [subst {
-		<?xml version="1.0"?>
-		<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="[my MetadataUrl]"> 
-			<SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"> 
-				<NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat> 
-				<AssertionConsumerService index="0" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="[my AssertionConsumerUrl]"/> 
-			</SPSSODescriptor>
-		</EntityDescriptor> 
-	} ]
-}
-
-Worker instproc returnResponse {content} { 
 	my replyCode 200
 	my connection puts "Content-Type: text/html"
 	my connection puts "Content-Length: [string length $content]\n"
 	my connection puts-nonewline $content
-	my close   
-}
-
-
-#
-# Implement a specialised Http-Server:
-#
-
-::xotcl::Class Server -superclass ::xotcl::comm::httpd::Httpd -slots {
-	::xotcl::Attribute HostPort
-	::xotcl::Attribute MetadataUrl
-	::xotcl::Attribute AssertionConsumerUrl
-	::xotcl::Attribute IdPUrl
-}
-
-Server instproc init args {
-	next
-	
-	my HostPort		"[my ipaddr]:[my port]"
-	my MetadataUrl 	 	"http://[my HostPort]/Metadata" 					
-	my AssertionConsumerUrl "http://[my HostPort]/AssertionConsumer"
+	my close
 }
 
 
@@ -135,11 +89,10 @@ Server instproc init args {
 # Finally start the Http-Server:
 #
 
-Server server 									\
-	-ipaddr localhost 							\
-	-port 8008 								\
-	-root /tmp 								\
-	-httpdWrk Worker 							\
-	-IdPUrl http://localhost/~patailama/simplesaml/saml2/idp/SSOService.php 
+::xotcl::comm::httpd::Httpd server \
+	-ipaddr localhost 	   \
+	-port 8008 		   \
+	-root /tmp 		   \
+	-httpdWrk Worker
 	
 vwait forever
