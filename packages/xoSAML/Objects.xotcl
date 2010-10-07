@@ -171,10 +171,6 @@ Assertion instproc hasAttributes {} {
 	return [expr {[llength [my getAttributes]] > 0}]
 }
 
-Assertion instproc hasAuthenticationStatement {} {
-	return [expr {[my isAssigned AuthnStatement]}]
-}
-
 Assertion instproc getExpiry { {-timestamp:boolean false} } {
 	set expiry [my . Conditions . NotOnOrAfter]
 	if { $timestamp } { 
@@ -184,7 +180,7 @@ Assertion instproc getExpiry { {-timestamp:boolean false} } {
 }
 
 Assertion instproc getAuthenticationMechanism {} {
-	if { ![my hasAuthenticationStatement] } return
+	if { ![my isAssigned AuthnStatement] } return
 	set ctx [my . AuthnStatement . AuthnContext]
 	if { [$ctx isAssigned AuthnContextClassRef] } {
 		return [$ctx . AuthnContextClassRef getContent]
